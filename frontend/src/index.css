@@ -28,6 +28,7 @@ body,
 #root {
   width: 100%;
   height: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -36,7 +37,19 @@ body {
 }
 
 .body {
-  padding: 0 80px;
+  padding: 0 clamp(12px, 4vw, 80px);
+}
+
+@media (max-width: 640px) {
+  .body {
+    padding: 0 12px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .body {
+    padding: 0 24px;
+  }
 }
 
 h1 {

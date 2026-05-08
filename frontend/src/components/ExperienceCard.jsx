@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 function ExperienceCard({ experience }) {
+  const experienceId = experience.public_id;
   const images = String(experience.image_url || "")
     .split(",")
     .map((url) => url.trim())
@@ -21,7 +22,7 @@ function ExperienceCard({ experience }) {
   };
 
   return (
-    <Link to={`/experience/${experience.id}`}>
+    <Link to={`/experience/${experienceId}`}>
       <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] overflow-hidden border border-gray-100 flex flex-col">
         {/* <div className="relative h-56 w-full"></div>
         <span className="absolute top-3 left-3 bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-1 rounded">
