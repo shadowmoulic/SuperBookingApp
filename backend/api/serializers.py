@@ -5,6 +5,40 @@ from user.models import User_Data
 # from django.contrib.auth.models import User as AuthUser
 from .paginations import StandardResultsSetPagination
 import uuid
+from reviews.models import Review as ReviewModel
+
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        request = self.context.get("request")
+        if request is None:#or not request.user.is_authenticated
+            raise serializers.ValidationError("Authentication required to create review.")
+
+        validated_data["user_id"] = request.user.user_data
+        return super().create(validated_data)
+
+    class Meta:
+        model = ReviewModel
+        fields = [
+            "id",
+            "user_id",
+            "experience_id",
+            "rating",
+            "review_text",
+            "helpful_count",
+            "created_at",
+            "updated_at",
+            "deleted_at",
+        ]
+        read_only_fields = [
+            "id",
+            "user_id",
+            "helpful_count",
+            "created_at",
+            "updated_at",
+            "deleted_at",
+        ]
 
 
 

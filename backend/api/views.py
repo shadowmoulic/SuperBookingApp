@@ -17,11 +17,16 @@ import datetime
 from django.utils import timezone
 import json
 
+
 from . import serializers as ContentSerializer
 from .serializers import UserDataRegisterSerializer
 from .paginations import StandardResultsSetPagination
 from content import models as ContentModel
 from booking import models as BookingModel
+from reviews.models import Review as ReviewModel
+from .serializers import ReviewSerializer
+
+
 
 client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
@@ -462,3 +467,136 @@ class SignupView(generics.CreateAPIView):
     serializer_class = UserDataRegisterSerializer
     permission_classes = [AllowAny]
     queryset = User_Data.objects.all()
+
+
+
+
+# class CreateBookingView(APIView):
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         serializer_class = ContentSerializer.BookingCreateSerializer(data=request.data)
+
+#         if serializer_class.is_valid():
+#             booking = serializer_class.save() #user_id = request.user_id, this creates the instance, as serialiser class had it already
+#             response_serialser = ContentSerializer.BookingDetailSerializer(booking)
+#             return Response(
+#                 {
+#                     "message": "Booking created successfully",
+#                     "booking_reference": booking.booking_reference,
+#                     "data": response_serialser.data,
+#                 },
+#                 status=status.HTTP_201_CREATED,
+#             )
+#         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class CreateReviewView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        serializer_class = ReviewSerializer(data=request.data, context={"request": request})
+
+        if serializer_class.is_valid():
+            review_ = serializer_class.save()
+
+            response = ReviewSerializer(review_)
+
+            return Response(
+                {
+                    "message":"Response save successfully",
+                    "data": response.data,
+                },
+                status = status.HTTP_201_CREATED,
+            )
+        return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+# Retreive has multiple options, see first we can retrieve by user_id and experience_d
+class RetrieveReviewView(APIView):
+    serializer_class = ReviewSerializer
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        user_id = request.query_params.get("user_id")
+        experience_id = request.query_params.get("experience_id")
+
+        if not user_id or not experience_id:
+            return Response(
+                {"error": "user_id and experience_id are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        review = ReviewModel.objects.filter(
+            user_id=user_id,
+            experience_id=experience_id,
+            deleted_at__isnull=True,
+        ).first()
+
+        if not review:
+            return Response(
+                {"error": "Review not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        serializer = ReviewSerializer(review)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UpdateReviewView(APIView):
+    permission_classes = [AllowAny]
+
+    def patch(self, request):
+        review_id = request.query_params.get("review_id")
+        if not review_id:
+            return Response(
+                {"error": "review_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            review = ReviewModel.objects.get(id=review_id, deleted_at__isnull=True)
+        except ReviewModel.DoesNotExist:
+            return Response(
+                {"error": "Review not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        update_data = {k: v for k, v in request.data.items() if k in ("rating", "review_text")}
+        serializer = ReviewSerializer(review, data=update_data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DeleteReviewView(APIView):
+    permission_classes = [AllowAny]
+
+    def delete(self, request):
+        review_id = request.query_params.get("review_id")
+        if not review_id:
+            return Response(
+                {"error": "review_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            review = ReviewModel.objects.get(id=review_id, deleted_at__isnull=True)
+        except ReviewModel.DoesNotExist:
+            return Response(
+                {"error": "Review not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        review.soft_delete()
+        return Response({"message": "Review deleted successfully"}, status=status.HTTP_200_OK)
+
+
+
+
+
+
+

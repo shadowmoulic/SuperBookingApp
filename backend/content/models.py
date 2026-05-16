@@ -78,16 +78,16 @@ class Experience(models.Model):
     class Meta:
         db_table = "experience"
         indexes = [
-            models.Index(fields=["category_id"], name="idx_experience_category_id"),
+            models.Index(fields=["category"], name="idx_experience_category_id"),
             models.Index(fields=["name"], name="idx_experience_name"),
             models.Index(
-                fields=["category_id", "is_open"],
+                fields=["category", "is_open"],
                 name="idx_category_is_open",
             ),
         ]
 
     def __str__(self):
-        return f"{self.name} ({self.category_id})"
+        return f"{self.name} ({self.category})"
 
     def soft_delete(self):
         """Mark the record as deleted without removing it from the DB."""
@@ -166,16 +166,16 @@ class PricingRule(models.Model):
         return self.valid_to is None
 
     def __str__(self):
-        return f"{self.experience_id.name} - {self.ticket_type} (₹{self.base_price})"
+        return f"{self.experience.name} - {self.ticket_type} (₹{self.base_price})"
 
     class Meta:
         db_table = "pricing_rules"
         ordering = ["-valid_from"]
-        unique_together = [("experience_id", "ticket_type", "valid_from", "valid_to")]
+        unique_together = [("experience", "ticket_type", "valid_from", "valid_to")]
         indexes = [
-            models.Index(fields=["experience_id"]),
+            models.Index(fields=["experience"]),
             models.Index(
-                fields=["experience_id", "ticket_type", "valid_from", "valid_to"],
+                fields=["experience", "ticket_type", "valid_from", "valid_to"],
                 name="pricing_composite_idx",
             ),
         ]

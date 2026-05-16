@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     "content",
     "user",
     "corsheaders",
+    "reviews",
 ]
 
 MIDDLEWARE = [
