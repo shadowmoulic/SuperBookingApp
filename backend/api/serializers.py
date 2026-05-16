@@ -5,16 +5,16 @@ from user.models import User_Data
 
 # from django.contrib.auth.models import User as AuthUser
 from .paginations import StandardResultsSetPagination
-import uuid
 from reviews.models import Review as ReviewModel
-
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context.get("request")
-        if request is None:#or not request.user.is_authenticated
-            raise serializers.ValidationError("Authentication required to create review.")
+        if request is None:  # or not request.user.is_authenticated
+            raise serializers.ValidationError(
+                "Authentication required to create review."
+            )
 
         validated_data["user_id"] = request.user.user_data
         return super().create(validated_data)
@@ -235,7 +235,12 @@ class CreatePaymentSerializer(serializers.ModelSerializer):
         ]
 
     def validate_booking(self, booking):
-
+        request = self.context.get("request")
+        if request and hasattr(request, "user") and request.user.is_authenticated:
+            if booking.user.user != request.user:
+                raise serializers.ValidationError(
+                    "You do not have permission to create a payment for this booking."
+                )
         if booking.status == "cancelled":
             raise serializers.ValidationError(
                 "Cannot create payment for cancelled booking."
@@ -259,6 +264,17 @@ class CreatePaymentSerializer(serializers.ModelSerializer):
         validated_data["status"] = "pending"
 
         return BookingModel.Payment.objects.create(**validated_data)
+
+
+class TicketSerializer(serializers.ModelSerializer):
+    qr_image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BookingModel.Ticket
+        fields = ["qr_code", "qr_image"]
+
+    def get_qr_image(self, obj):
+        return obj.get_qr_code_image_base64()
 
 
 class UserDataRegisterSerializer(serializers.ModelSerializer):

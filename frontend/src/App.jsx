@@ -13,7 +13,7 @@ import LoginSignup from "./components/LoginSignup";
 import Footer from "./components/Footer";
 import SuccessPage from "./pages/SuccessPage";
 import FailedPage from "./pages/FailedPage";
-
+import PaymentPage from "./pages/PaymentPage";
 
 function AppContent() {
   const { isLoginModalOpen } = useContext(ModalContext);
@@ -27,9 +27,10 @@ function AppContent() {
         <Route path="/experience/:id" element={<ExperienceDetails />} />
         <Route path="/location/:id" element={<LocationDetails />} />
         <Route path="/booking/:id" element={<BookingPage />} />
+        <Route path="/payment/:id" element={<PaymentPage />} />
         <Route path="/my-bookings" element={<MyBookings />} />
-        <Route path="/success"element={<SuccessPage/>}/>
-       <Route path="/failed" element={<FailedPage />} />
+        <Route path="/payments/success" element={<SuccessPage />} />
+        <Route path="/payments/failed" element={<FailedPage />} />
       </Routes>
       <Footer />
     </main>

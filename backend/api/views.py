@@ -1,3 +1,4 @@
+import uuid
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import ValidationError
@@ -25,7 +26,6 @@ from content import models as ContentModel
 from booking import models as BookingModel
 from reviews.models import Review as ReviewModel
 from .serializers import ReviewSerializer
-
 
 
 client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
@@ -157,57 +157,6 @@ class CreatePaymentView(APIView):
         )
 
 
-class CreatePaymentPageView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        serializer = ContentSerializer.CreatePaymentSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        booking = serializer.validated_data["booking"]
-
-        if hasattr(booking, "payment"):
-            payment = booking.payment
-            return render(
-                request,
-                "payments/checkout.html",
-                {
-                    "razorpay_key": settings.RAZORPAY_KEY_ID,
-                    "razorpay_order_id": payment.gateway_transaction_id,
-                    "amount": int(payment.amount * 100),
-                    "currency": "INR",
-                    "payment_reference": payment.reference,
-                    "booking_reference": booking.reference,
-                },
-            )
-
-        payment = serializer.save()
-        amount_ = int(payment.amount * 100)
-
-        razorpay_order = client.order.create(
-            data={
-                "amount": amount_,
-                "currency": "INR",
-                "receipt": str(payment.booking),
-            }
-        )
-
-        payment.gateway_transaction_id = razorpay_order["id"]
-        payment.save(update_fields=["gateway_transaction_id", "updated_at"])
-
-        return render(
-            request,
-            "payments/checkout.html",
-            {
-                "razorpay_key": settings.RAZORPAY_KEY_ID,
-                "razorpay_order_id": razorpay_order["id"],
-                "amount": amount_,
-                "currency": "INR",
-                "payment_reference": payment.id,
-                "booking_reference": booking.id,
-            },
-        )
-
-
 class VerifyPaymentView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -254,10 +203,23 @@ class VerifyPaymentView(APIView):
             payment.save(update_fields=["status", "paid_at", "updated_at"])
 
             booking = payment.booking
+            ticket_code = str(uuid.uuid4().hex[:6].upper())
+            ticket = BookingModel.Ticket.objects.create(
+                booking=booking,
+                ticket_type="adult",
+                price=booking.total_amount,
+                qr_code=f"{booking.reference}_{ticket_code}",
+            )
             booking.status = "confirmed"
             booking.save(update_fields=["status", "updated_at"])
 
-            return Response({"message": "Payment verified"}, status=status.HTTP_200_OK)
+            return Response(
+                {
+                    "message": "Payment verified",
+                    "ticket": ticket.qr_code,
+                },
+                status=status.HTTP_200_OK,
+            )
 
         except razorpay.errors.SignatureVerificationError:
             payment.status = "failed"
@@ -452,40 +414,55 @@ class HomeView(generics.RetrieveAPIView):
         return Response(response_data)
 
 
+class BookingTicketView(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.is_authenticated:
+            user_data, _ = User_Data.objects.get_or_create(
+                user=request.user, defaults={"role": "user"}
+            )
+
+            pending_bookings = Booking.objects.filter(
+                user_id=user_data, status="pending", deleted_at__isnull=True
+            ).order_by("-created_at")
+
+            bookings_serializer = ContentSerializer.BookingSerializer(
+                pending_bookings, many=True
+            )
+            continue_bookings = bookings_serializer.data
+
+            confirmed_bookings = Booking.objects.filter(
+                user_id=user_data, status="confirmed", deleted_at__isnull=True
+            ).order_by("-created_at")
+
+            # collect unused ticket QR codes for confirmed bookings
+            tickets_qs = BookingModel.Ticket.objects.filter(
+                booking__in=confirmed_bookings, is_used=False
+            )
+            tickets = ContentSerializer.TicketSerializer(tickets_qs, many=True).data
+        else:
+            continue_bookings = {}
+            tickets = []
+
+        response_data = {"bookings": continue_bookings, "tickets": tickets}
+
+        return Response(response_data)
+
+
 class SignupView(generics.CreateAPIView):
     serializer_class = UserDataRegisterSerializer
     permission_classes = [AllowAny]
     queryset = User_Data.objects.all()
 
 
-
-
-# class CreateBookingView(APIView):
-#     permission_classes = [AllowAny]
-
-#     def post(self, request):
-#         serializer_class = ContentSerializer.BookingCreateSerializer(data=request.data)
-
-#         if serializer_class.is_valid():
-#             booking = serializer_class.save() #user_id = request.user_id, this creates the instance, as serialiser class had it already
-#             response_serialser = ContentSerializer.BookingDetailSerializer(booking)
-#             return Response(
-#                 {
-#                     "message": "Booking created successfully",
-#                     "booking_reference": booking.booking_reference,
-#                     "data": response_serialser.data,
-#                 },
-#                 status=status.HTTP_201_CREATED,
-#             )
-#         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
 class CreateReviewView(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request):
-        serializer_class = ReviewSerializer(data=request.data, context={"request": request})
+        serializer_class = ReviewSerializer(
+            data=request.data, context={"request": request}
+        )
 
         if serializer_class.is_valid():
             review_ = serializer_class.save()
@@ -494,13 +471,12 @@ class CreateReviewView(APIView):
 
             return Response(
                 {
-                    "message":"Response save successfully",
+                    "message": "Response save successfully",
                     "data": response.data,
                 },
-                status = status.HTTP_201_CREATED,
+                status=status.HTTP_201_CREATED,
             )
         return Response(serializer_class.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 # Retreive has multiple options, see first we can retrieve by user_id and experience_d
@@ -553,7 +529,9 @@ class UpdateReviewView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        update_data = {k: v for k, v in request.data.items() if k in ("rating", "review_text")}
+        update_data = {
+            k: v for k, v in request.data.items() if k in ("rating", "review_text")
+        }
         serializer = ReviewSerializer(review, data=update_data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -581,11 +559,6 @@ class DeleteReviewView(APIView):
             )
 
         review.soft_delete()
-        return Response({"message": "Review deleted successfully"}, status=status.HTTP_200_OK)
-
-
-
-
-
-
-
+        return Response(
+            {"message": "Review deleted successfully"}, status=status.HTTP_200_OK
+        )

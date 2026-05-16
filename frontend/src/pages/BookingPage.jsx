@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
 import "../styles/BookingPage.css";
 
 function BookingPage() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const [experience, setExperience] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -153,11 +154,10 @@ function BookingPage() {
     };
 
     try {
-      console.log(bookingData);
       const response = await api.post("/api/booking/create/", bookingData);
       console.log("Booking created successfully:", response.data);
-      alert("Booking created successfully!");
-      // Optional: Navigate to my-bookings or booking confirmation page
+      alert("Booking created successfully! Redirecting to payment...");
+      navigate(`/payment/${response.data.booking_reference}`);
     } catch (error) {
       console.error("Booking creation failed:", error);
       alert(
