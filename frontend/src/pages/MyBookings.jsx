@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
 
@@ -7,7 +7,7 @@ function formatCurrency(amount) {
   if (Number.isNaN(value)) return amount || "-";
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency: "INR",
   }).format(value);
 }
 
@@ -58,8 +58,7 @@ function statusStyles(status) {
 
 function TicketCard({ ticket, onShowQr }) {
   const styles = statusStyles(ticket?.status);
-  const reference =
-    ticket?.booking_reference || ticket?.reference || ticket?.ticket_reference || "-";
+  const reference = ticket?.booking_reference || "-";
   const experienceName = ticket?.experience_name || ticket?.experience?.name || "Experience";
 
   return (
@@ -123,6 +122,8 @@ function MyBookings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const bookings = Array.isArray(bookingData?.bookings) ? bookingData.bookings : [];
+  const tickets = Array.isArray(bookingData?.tickets) ? bookingData.tickets : [];
 
   useEffect(() => {
     fetchBookingData();
@@ -144,16 +145,6 @@ function MyBookings() {
       })
       .finally(() => setLoading(false));
   };
-
-  const bookings = useMemo(
-    () => (Array.isArray(bookingData?.bookings) ? bookingData.bookings : []),
-    [bookingData]
-  );
-
-  const tickets = useMemo(
-    () => (Array.isArray(bookingData?.tickets) ? bookingData.tickets : []),
-    [bookingData]
-  );
 
   if (loading) return <div className="body">Loading your bookings...</div>;
 
@@ -307,7 +298,7 @@ function MyBookings() {
             </div>
 
             <p className="text-sm mb-4" style={{ color: "var(--md-sys-color-on-surface-variant)" }}>
-              Ref: {selectedTicket?.booking_reference || selectedTicket?.reference || "-"}
+              Ref: {selectedTicket?.booking_reference || "-"}
             </p>
 
             {selectedTicket?.qr_image ? (

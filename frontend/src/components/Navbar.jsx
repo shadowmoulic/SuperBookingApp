@@ -11,7 +11,7 @@ function Navbar() {
   return (
     <nav className="pt-6 pb-6 px-8 border-b border-gray-100">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-8">
-        <div className="w-15 h-15 flex-shrink-0">
+        <Link to="/" className="w-15 h-15 flex-shrink-0 block" aria-label="Go to home">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 793.71 610.28"
@@ -24,7 +24,7 @@ function Navbar() {
               transform="translate(-86.38 -156.36)"
             />
           </svg>
-        </div>
+        </Link>
         <div className="flex-1 max-w-xl relative">
           <div class="rounded-full bg-gradient-to-r from-[var(--md-sys-color-primary-bright-src)] to-[var(--md-sys-color-primary)] p-[3px]">
             <div class="rounded-[calc(theme(borderRadius.lg)-2px)] bg-white rounded-full">
