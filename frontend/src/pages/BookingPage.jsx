@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/api";
 import "../styles/BookingPage.css";
+import Loading from "../components/Loading";
 
 function BookingPage() {
   const navigate = useNavigate();
@@ -189,7 +190,7 @@ function BookingPage() {
     : "Loading booking details";
 
   if (loading) {
-    return <div className="booking-page">Loading booking experience…</div>;
+    return <Loading />;
   }
 
   if (error) {

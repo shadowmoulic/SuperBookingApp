@@ -5,6 +5,7 @@ import LocationCard from "../components/LocationCard";
 import CategoryCard from "../components/CategoryCard";
 import image1 from "../assets/image1.png";
 import BookingCard from "../components/BookingCard";
+import Loading from "../components/Loading";
 
 const heroSlides = [
   {
@@ -97,7 +98,7 @@ function Home() {
       .finally(() => setLoading(false));
   };
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (loading) return <Loading />;
   if (error) return <div className="error">Error: {error}</div>;
   if (!homeData) return <div className="error">No data available</div>;
 

@@ -7,7 +7,7 @@ export default AuthContext;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [_loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   const checkUserStatus = useCallback(async () => {
     try {
@@ -88,6 +88,8 @@ export const AuthProvider = ({ children }) => {
 
   const contextData = {
     user,
+    isAuthenticated: !!user,
+    loading,
     login,
     loginWithFirebaseToken,
     logout,

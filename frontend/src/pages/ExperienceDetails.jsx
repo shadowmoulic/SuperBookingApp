@@ -4,6 +4,7 @@ import api from "../api/api";
 import AuthContext from "../context/AuthContext";
 import ModalContext from "../context/ModalContext";
 import "../styles/ExperienceDetails.css";
+import Loading from "../components/Loading";
 
 export function ExperienceDetails() {
   const { id } = useParams();
@@ -96,9 +97,7 @@ export function ExperienceDetails() {
   }, [experience]);
 
   if (loading) {
-    return (
-      <div className="experience-details-state">Loading experience...</div>
-    );
+    return <Loading />;
   }
 
   if (error || !experience) {
