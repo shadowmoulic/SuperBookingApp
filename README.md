@@ -1,115 +1,169 @@
-# Project: SuperBookingApp
+# SuperBookingApp
 
-## Table of Contents:
+A modern booking platform built with Django REST Framework and React, with Razorpay payments and Firebase authentication.
 
-1.  Steps to Install and setup.
+## Table of Contents
 
-### Setup Guide
+1. [Quick Start](#quick-start)
+2. [Development Setup](#development-setup)
+3. [Running the Application](#running-the-application)
+4. [Deployment](#deployment)
+5. [Environment Variables](#environment-variables)
+6. [Project Structure](#project-structure)
 
-# SuperBookingApp Setup Guide
+## Quick Start
 
-## Prerequisites
+**For Development:**
+```bash
+# Backend
+cd backend
+python manage.py migrate --settings=backend.settings.dev
+python manage.py runserver
+
+# Frontend (in another terminal)
+cd frontend
+npm install
+npm run dev
+```
+
+**For Deployment:**
+See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for complete production deployment instructions.
+
+## Development Setup
+
+### Prerequisites
 
 Ensure you have the following installed on your system:
 
-- Python (3.8 or higher)
-- Node.js (16.x or higher)
+- Python 3.10 or higher
+- Node.js 18.x or higher
 - Git
+- PostgreSQL (for testing production settings locally)
 
-## Setup Instructions
+### Backend Setup
 
-### 1. Clone the Repository
-
-1. Open a terminal.
-2. Run the following command to clone the repository:
-
-```bash
-git clone <repository-url>
-```
-
-3. Navigate to the project directory:
-
-```bash
-cd SuperBookingApp
-```
-
-### 2. Backend Setup
-
-#### Create and Activate Python Virtual Environment
-
-1. Create a Python virtual environment:
+1. **Create Python Virtual Environment:**
 
 ```bash
 python -m venv env
 ```
 
-2. Activate the virtual environment:
+2. **Activate Virtual Environment:**
 
-- On Windows:
-
+- Windows:
 ```bash
 .\env\Scripts\activate
 ```
 
-- On macOS/Linux:
-
+- macOS/Linux:
 ```bash
 source env/bin/activate
 ```
 
-#### Install Python Dependencies
-
-1. Install the required Python packages:
-
-```bash
-pip install -r requirements.txt
-```
-
-2. Navigate to the `backend` directory:
+3. **Install Dependencies:**
 
 ```bash
 cd backend
+pip install -r requirements.txt
 ```
 
-### 3. Frontend Setup
-
-1. Navigate back to the `frontend` directory:
+4. **Set Up Environment Variables:**
 
 ```bash
-cd ../frontend
+# Copy template
+cp .env.example .env
+
+# Edit .env with your values:
+# - RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET
+# - FIREBASE_CREDENTIALS_PATH
 ```
 
-2. Install the required Node.js packages:
+5. **Run Migrations:**
 
 ```bash
+python manage.py migrate --settings=backend.settings.dev
+```
+
+6. **Create Superuser (Admin):**
+
+```bash
+python manage.py createsuperuser --settings=backend.settings.dev
+```
+
+### Frontend Setup
+
+1. **Install Dependencies:**
+
+```bash
+cd frontend
 npm install
+```
+
+2. **Set Up Environment Variables:**
+
+```bash
+# Copy template
+cp .env.example .env
+
+# Edit .env with your values:
+# - VITE_API_URL=http://localhost:8000
+# - VITE_FIREBASE_* (from Firebase Console)
+```
+
+3. **Verify Configuration:**
+
+```bash
+npm run dev  # Opens http://localhost:5173
 ```
 
 ## Running the Application
 
-### Backend
+### Development Mode
 
-1. Ensure the virtual environment is activated.
-2. Run the Django development server:
-
+**Terminal 1 - Backend:**
 ```bash
-python manage.py runserver
+cd backend
+python manage.py runserver --settings=backend.settings.dev
+# Backend runs on http://localhost:8000
 ```
 
-**Note:** Run this command at "backend/"
-
-### Frontend
-
-1. Start the frontend development server:
-
+**Terminal 2 - Frontend:**
 ```bash
+cd frontend
 npm run dev
+# Frontend runs on http://localhost:5173
 ```
 
-**Note:** Run this command at "frontend/"
+### Production Mode (Local Testing)
 
-## Notes
+Test production settings locally before deploying:
 
-- Replace `<repository-url>` with the actual URL of the repository.
-- Ensure the backend server is running before accessing the frontend.
-- For any issues, refer to the project documentation or contact the project head.
+```bash
+# Backend with production settings
+export DJANGO_SETTINGS_MODULE=backend.settings.prod
+python manage.py migrate
+python manage.py collectstatic --noinput
+gunicorn backend.wsgi:application --bind 0.0.0.0:8000
+
+# Frontend build
+cd frontend
+npm run build  # Creates dist/ folder
+```
+
+## Deployment
+
+Complete deployment instructions are in [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md).
+
+**Quick Deploy Summary:**
+- **Frontend:** Vercel (auto-deploys from GitHub)
+- **Backend:** Render (auto-deploys from GitHub)
+- **Database:** PostgreSQL (Render free tier)
+- **Domain:** GoDaddy (point DNS to Vercel + Render)
+
+**Deployment Branches:**
+- `main` → Production (Vercel + Render)
+- `develop` → Staging (Vercel Preview + Render)
+
+**See Also:**
+- [Environment Variables Reference](./ENVIRONMENT_VARIABLES.md)
+- [Deployment Guide](./DEPLOYMENT_GUIDE.md)

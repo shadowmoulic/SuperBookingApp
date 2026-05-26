@@ -68,11 +68,15 @@ export const AuthProvider = ({ children }) => {
       const response = await api.post("/auth/login/", {
         firebase_token: firebaseToken,
       });
-      if (response.status === 200) {
-        checkUserStatus();
+      // Handle both 200 (Login) and 201 (Social Signup/Created)
+      if (response.status === 200 || response.status === 201) {
+        await checkUserStatus();
       }
     } catch (error) {
-      console.error("Firebase login error:", error);
+      console.error(
+        "[Auth] Firebase token login failed:",
+        error.response?.data || error.message,
+      );
       throw error;
     }
   };
@@ -84,6 +88,8 @@ export const AuthProvider = ({ children }) => {
 
   const contextData = {
     user,
+    isAuthenticated: !!user,
+    loading,
     login,
     loginWithFirebaseToken,
     logout,

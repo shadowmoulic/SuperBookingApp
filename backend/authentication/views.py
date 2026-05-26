@@ -1,7 +1,7 @@
-from django.shortcuts import render
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import status
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
@@ -16,29 +16,67 @@ logger = logging.getLogger(__name__)
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
+    def _get_or_create_firebase_user(self, decoded_token):
+        email = decoded_token.get("email")
+        phone = decoded_token.get("phone_number")
+        uid = decoded_token.get("uid")
+        name = decoded_token.get("name", "")
+
+        # Determine a unique username (Firebase UID is most reliable)
+        username = email or phone or uid
+
+        user, created = User.objects.get_or_create(
+            username=username,
+            defaults={
+                "email": email or "",
+                "first_name": name.split(" ")[0] if name else "",
+                "last_name": " ".join(name.split(" ")[1:])
+                if name and " " in name
+                else "",
+            },
+        )
+
+        if created:
+            user.set_unusable_password()
+            user.save()
+
+        # Ensure User_Data profile exists
+        User_Data.objects.get_or_create(
+            user=user, defaults={"mobile": phone or "", "role": "customer"}
+        )
+        return user
+
     def post(self, request):
         firebase_token = request.data.get("firebase_token")
         user = None
-        logger.info(f"{firebase_token}")
+
         if firebase_token:
             try:
-                decoded_token = auth.verify_id_token(firebase_token)
-                email = decoded_token.get("email")
+                # Ensure firebase_admin is initialized
+                if not firebase_admin._apps:
+                    firebase_admin.initialize_app()
 
-                if not email:
-                    return Response(
-                        {"detail": "Firebase token must contain an email."}, status=400
-                    )
-                user, created = User.objects.get_or_create(
-                    username=email, defaults={"email": email}
+                # Add logging for debugging
+                logger.info("[Firebase] Attempting to verify token")
+                decoded_token = auth.verify_id_token(firebase_token)
+                logger.info(
+                    f"[Firebase] Token verified successfully for user: {decoded_token.get('email', decoded_token.get('phone_number'))}"
                 )
-                if created:
-                    user.set_unusable_password()
-                    user.save()
-            except Exception as e:
-                # logger.error(f"Firebase token verification failed: {e}", exc_info=True)
+                user = self._get_or_create_firebase_user(decoded_token)
+            except ValueError as e:
+                # Token format is invalid or malformed
+                logger.error(f"[Firebase] Token format error: {str(e)}")
                 return Response(
-                    {"detail": "Invalid Firebase token", "error": str(e)},
+                    {"detail": "Invalid Firebase token format", "error": str(e)},
+                    status=400,
+                )
+            except Exception as e:
+                # Other Firebase errors (expired, wrong project, etc)
+                logger.error(
+                    f"[Firebase] Token verification failed: {type(e).__name__}: {str(e)}"
+                )
+                return Response(
+                    {"detail": "Firebase authentication failed", "error": str(e)},
                     status=400,
                 )
         else:
@@ -50,11 +88,12 @@ class LoginView(APIView):
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             response = Response({"detail": "Login successful"})
+            # secure=False is used for local development over HTTP
             response.set_cookie(
                 key="access_token",
                 value=access_token,
                 httponly=True,
-                secure=True,
+                secure=False,
                 samesite="Lax",
                 max_age=1800,
             )
@@ -62,7 +101,7 @@ class LoginView(APIView):
                 key="refresh_token",
                 value=str(refresh),
                 httponly=True,
-                secure=True,
+                secure=False,
                 samesite="Lax",
                 max_age=86400,
             )
@@ -89,7 +128,7 @@ class RefreshView(APIView):
             key="access_token",
             value=new_access,
             httponly=True,
-            secure=True,
+            secure=False,
             samesite="Lax",
             max_age=1800,
         )
@@ -118,3 +157,58 @@ class MeView(APIView):
                 "last_name": user.last_name,
             }
         )
+
+
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        # Import here to avoid circular imports
+        from api.serializers import UserDataRegisterSerializer
+
+        serializer = UserDataRegisterSerializer(data=request.data)
+
+        if serializer.is_valid():
+            user_data = serializer.save()
+            auth_user = user_data.user
+
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(auth_user)
+            access_token = str(refresh.access_token)
+
+            response = Response(
+                {
+                    "message": "User registered successfully",
+                    "access_token": access_token,
+                    "user": {
+                        "id": auth_user.id,
+                        "username": auth_user.username,
+                        "email": auth_user.email,
+                        "first_name": auth_user.first_name,
+                        "last_name": auth_user.last_name,
+                    },
+                },
+                status=status.HTTP_201_CREATED,
+            )
+
+            # Set cookies for session persistence
+            response.set_cookie(
+                key="access_token",
+                value=access_token,
+                httponly=True,
+                secure=True,
+                samesite="Lax",
+                max_age=1800,
+            )
+            response.set_cookie(
+                key="refresh_token",
+                value=str(refresh),
+                httponly=True,
+                secure=True,
+                samesite="Lax",
+                max_age=86400,
+            )
+
+            return response
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

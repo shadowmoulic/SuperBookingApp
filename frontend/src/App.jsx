@@ -6,20 +6,23 @@ import { LocationDetails } from "./pages/LocationDetails";
 import BookingPage from "./pages/BookingPage";
 import MyBookings from "./pages/MyBookings";
 import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import { ModalProvider } from "./context/ModalContext";
 import ModalContext from "./context/ModalContext";
 import LoginSignup from "./components/LoginSignup";
 import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
 import SuccessPage from "./pages/SuccessPage";
 import FailedPage from "./pages/FailedPage";
-
+import PaymentPage from "./pages/PaymentPage";
 
 function AppContent() {
   const { isLoginModalOpen } = useContext(ModalContext);
 
   return (
     <main>
+      <ScrollToTop />
       <Navbar />
       {isLoginModalOpen && <LoginSignup />}
       <Routes>
@@ -27,9 +30,17 @@ function AppContent() {
         <Route path="/experience/:id" element={<ExperienceDetails />} />
         <Route path="/location/:id" element={<LocationDetails />} />
         <Route path="/booking/:id" element={<BookingPage />} />
-        <Route path="/my-bookings" element={<MyBookings />} />
-        <Route path="/success"element={<SuccessPage/>}/>
-       <Route path="/failed" element={<FailedPage />} />
+        <Route path="/payment/:id" element={<PaymentPage />} />
+        <Route
+          path="/my-bookings"
+          element={
+            <ProtectedRoute>
+              <MyBookings />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/payments/success" element={<SuccessPage />} />
+        <Route path="/payments/failed" element={<FailedPage />} />
       </Routes>
       <Footer />
     </main>

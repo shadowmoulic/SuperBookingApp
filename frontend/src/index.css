@@ -11,6 +11,11 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --f1: 'Syne', sans-serif;
+
+  --white: #fff;
+  --teal: #00d4aa;
+  --teal2: #00b894;
 }
 
 a {
@@ -28,15 +33,29 @@ body,
 #root {
   width: 100%;
   height: 100%;
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
   min-width: 320px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
 .body {
-  padding: 0 80px;
+  padding: 0 clamp(12px, 4vw, 80px);
+}
+
+@media (max-width: 640px) {
+  .body {
+    padding: 0 12px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .body {
+    padding: 0 24px;
+  }
 }
 
 h1 {
@@ -48,16 +67,63 @@ button {
   font-family: inherit;
   border: none;
   cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+button:active {
+  transform: translateY(0);
 }
 
 div::-webkit-scrollbar {
   display: none;
 }
 
+.nav-logo {
+  font-family: var(--f1);
+  font-size: 1.5rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 2px
+}
+
+.nz {
+  color: #00382b;
+}
+
+.nq {
+  color: var(--teal);
+}
+
+.ndot {
+  font-size: .55rem;
+  color: var(--teal);
+  margin-left: 2px;
+  animation: blink 2s ease infinite
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1
+  }
+
+  50% {
+    opacity: .15
+  }
+}
+
+/* Card Animations */
 .experience-grid,
 .location-grid {
   display: grid;
-  padding: 20px;
+  padding: 20px 0;
 
   --visible-cols: 5;
 
@@ -83,6 +149,134 @@ div::-webkit-scrollbar {
   .location-grid {
     --visible-cols: 2;
   }
+}
+
+/* Modern Card Styles */
+.card {
+  padding: 2em;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.1);
+}
+
+/* Smooth Transitions */
+/* * {
+  transition: background-color 0.3s ease, color 0.3s ease;
+} */
+
+button,
+a,
+input {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+
+  0%,
+  100% {
+    background-position: -1000px 0;
+  }
+
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(99, 102, 241, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+  }
+}
+
+/* Apply animations to elements */
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.slide-in {
+  animation: slideIn 0.6s ease-out;
+}
+
+.scale-in {
+  animation: scaleIn 0.6s ease-out;
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Skeleton Loading Animation */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
 }
 
 @media (min-width: 600px) and (max-width: 840px) {
