@@ -175,7 +175,7 @@ function Home() {
             Browse by Categories
           </h2>
           <div className="relative mb-8">
-            <div className="flex items-center gap-2 border-b border-gray-200 overflow-x-auto overflow-y-hidden scrollbar-hide">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
               {homeData.all_categories.map((category) => (
                 <CategoryCard key={category.id} category={category} />
               ))}

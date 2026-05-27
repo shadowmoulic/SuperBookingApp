@@ -16,6 +16,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import SuccessPage from "./pages/SuccessPage";
 import FailedPage from "./pages/FailedPage";
 import PaymentPage from "./pages/PaymentPage";
+import SingleCategoryPage from "./pages/SingleCategoryCard";
 
 function AppContent() {
   const { isLoginModalOpen } = useContext(ModalContext);
@@ -41,6 +42,7 @@ function AppContent() {
         />
         <Route path="/payments/success" element={<SuccessPage />} />
         <Route path="/payments/failed" element={<FailedPage />} />
+        <Route path="/category/:id" element={<SingleCategoryPage />} />
       </Routes>
       <Footer />
     </main>
