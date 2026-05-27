@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
-
-
 function ExperienceCard({ experience }) {
-  
+  const experienceId = experience.public_id;
   const images = String(experience.image_url || "")
     .split(",")
     .map((url) => url.trim())
@@ -25,11 +23,10 @@ function ExperienceCard({ experience }) {
   };
 
   return (
-    <Link to={`/booking/${experience.id}`} className="block h-full">
+    <Link to={`/experience/${experienceId}`} className="block h-full">
       <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] overflow-hidden border border-gray-100 flex flex-col h-full">
-
         {/* Image Carousel Container */}
-        <div   className="relative w-full h-56 flex-shrink-0 overflow-hidden">
+        <div className="relative w-full h-56 flex-shrink-0 overflow-hidden">
           <img
             src={images[currentImageIndex] || experience.image_url}
             alt={experience.name}
@@ -63,7 +60,10 @@ function ExperienceCard({ experience }) {
                     style={{
                       width: i === currentImageIndex ? "16px" : "6px",
                       height: "6px",
-                      background: i === currentImageIndex ? "#fff" : "rgba(255,255,255,0.5)",
+                      background:
+                        i === currentImageIndex
+                          ? "#fff"
+                          : "rgba(255,255,255,0.5)",
                     }}
                   />
                 ))}
@@ -74,7 +74,14 @@ function ExperienceCard({ experience }) {
 
         {/* Card Body */}
         <div className="p-5 flex-1 flex flex-col">
-          <p className="text-sm text-gray-500 mb-1">{experience.location}</p>
+          <div className="flex flex-row justify-between">
+            <p className="text-sm text-gray-500 mb-1">{experience.location}</p>
+            {experience.average_rating && (
+              <p className="meta-value">
+                {experience.average_rating}⭐({experience.total_reviews})
+              </p>
+            )}
+          </div>
 
           <h3 className="font-bold text-lg text-gray-900 leading-snug mb-4 overflow-hidden whitespace-nowrap overflow-ellipsis">
             {experience.name}
@@ -82,10 +89,11 @@ function ExperienceCard({ experience }) {
 
           <div className="mt-auto">
             <span className="text-sm text-gray-500 block mb-0.5">from</span>
-            <span className="font-bold text-xl">₹{experience.entry_fee_base}</span>
+            <span className="font-bold text-xl">
+              ₹{experience.entry_fee_base}
+            </span>
           </div>
         </div>
-
       </div>
     </Link>
   );
