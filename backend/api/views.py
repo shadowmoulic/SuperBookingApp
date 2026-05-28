@@ -67,7 +67,7 @@ class ExperienceListView(generics.ListAPIView):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return (
+        queryset = (
             ContentModel.Experience.objects.filter(deleted_at__isnull=True)
             .annotate(
                 average_rating=Avg(
@@ -80,33 +80,40 @@ class ExperienceListView(generics.ListAPIView):
             .select_related("category", "location")
         )
 
+        location_param = self.request.query_params.get("location")
+        category_param = self.request.query_params.get("category")
+        search_query = self.request.query_params.get("search")
+
+        if location_param:
+            queryset = queryset.filter(
+                Q(location__name__iexact=location_param) | Q(location__public_id__iexact=location_param)
+            )
+
+        if category_param:
+            normalized_cat = category_param.strip().lower()
+            if normalized_cat.endswith("s") and normalized_cat != "religious sites":
+                normalized_cat_singular = normalized_cat[:-1]
+            else:
+                normalized_cat_singular = normalized_cat
+
+            queryset = queryset.filter(
+                Q(category__name__iexact=category_param) |
+                Q(category__name__iexact=normalized_cat_singular) |
+                Q(category__name__icontains=normalized_cat_singular) |
+                Q(category__id=category_param if category_param.isdigit() else None)
+            )
+
+        if search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=search_query) | Q(description__icontains=search_query)
+            )
+
+        return queryset
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context.update({"request": self.request})
         return context
-
-
-class ExperienceCategoryView(generics.ListAPIView):
-    serializer_class = ContentSerializer.ExperienceSerializer
-    permission_classes = [AllowAny]
-
-    def get_queryset(self):
-        category_name = self.kwargs["category"]
-        return (
-            ContentModel.Experience.objects.filter(
-                category_id__name=category_name, deleted_at__isnull=True
-            )
-            .annotate(
-                average_rating=Avg(
-                    "reviews__rating", filter=Q(reviews__deleted_at__isnull=True)
-                ),
-                total_reviews=Count(
-                    "reviews", filter=Q(reviews__deleted_at__isnull=True)
-                ),
-            )
-            .select_related("category", "location")
-            .prefetch_related("reviews")
-        )
 
 
 class LocationListView(generics.ListAPIView):
@@ -124,28 +131,6 @@ class LocationView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         return ContentModel.Location.objects.filter(public_id=self.kwargs["public_id"])
-
-
-class LocationExperienceListView(generics.ListAPIView):
-    serializer_class = ContentSerializer.ExperienceShortSerializer
-    permission_classes = [AllowAny]
-
-    def get_queryset(self):
-        return (
-            ContentModel.Experience.objects.filter(
-                location__public_id=self.kwargs["public_id"], deleted_at__isnull=True
-            )
-            .annotate(
-                average_rating=Avg(
-                    "reviews__rating", filter=Q(reviews__deleted_at__isnull=True)
-                ),
-                total_reviews=Count(
-                    "reviews", filter=Q(reviews__deleted_at__isnull=True)
-                ),
-            )
-            .select_related("category", "location")
-            .order_by("name")
-        )
 
 
 class BookingView(generics.RetrieveAPIView):

@@ -58,8 +58,8 @@ jobs:
           DEBUG=False
           SECRET_KEY=test-secret-key-12345
           DATABASE_URL=postgresql://postgres:postgres@localhost:5432/superbooking_test
-          RAZORPAY_KEY_ID=rzp_test_SaqA5ki8ESwOpk
-          RAZORPAY_KEY_SECRET=jYR1w5QLPbGVdbyId6bzY7QE
+          RAZORPAY_KEY_ID=rzp_test_key
+          RAZORPAY_KEY_SECRET=rzp_test_secret
           RAZORPAY_WEBHOOK_SECRET=test-webhook-secret
           FIREBASE_CREDENTIALS_PATH=./firebase-service-account.json
           EOF

@@ -1,6 +1,59 @@
 @import "tailwindcss";
 @import "./styles/light.css";
 
+@theme {
+  --color-primary: var(--md-sys-color-primary);
+  --color-on-primary: var(--md-sys-color-on-primary);
+  --color-primary-fixed: var(--md-sys-color-primary-fixed);
+  --color-on-primary-fixed: var(--md-sys-color-on-primary-fixed);
+  --color-primary-fixed-dim: var(--md-sys-color-primary-fixed-dim);
+  --color-on-surface-variant: var(--md-sys-color-on-surface-variant);
+  --color-background: var(--md-sys-color-background);
+  --color-surface-container-lowest: var(--md-sys-color-surface-container-lowest);
+  --color-surface-container-low: var(--md-sys-color-surface-container-low);
+  --color-surface-container: var(--md-sys-color-surface-container);
+  --color-surface-container-high: var(--md-sys-color-surface-container-high);
+  --color-surface-container-highest: var(--md-sys-color-surface-container-highest);
+  --color-outline-variant: var(--md-sys-color-outline-variant);
+  --color-outline: var(--md-sys-color-outline);
+  --color-error: var(--md-sys-color-error);
+  --color-on-error: var(--md-sys-color-on-error);
+  --color-error-container: var(--md-sys-color-error-container);
+  --color-on-error-container: var(--md-sys-color-on-error-container);
+
+  /* Dynamic color mappings to make standard Tailwind classes respect design system themes */
+  --color-white: var(--md-sys-color-surface-container-lowest);
+  --color-gray-50: var(--md-sys-color-surface-container-low);
+  --color-gray-100: var(--md-sys-color-surface-container);
+  --color-gray-150: var(--md-sys-color-surface-container-high);
+  --color-gray-200: var(--md-sys-color-surface-container-highest);
+  --color-gray-250: var(--md-sys-color-outline-variant);
+  --color-gray-300: var(--md-sys-color-outline-variant);
+  --color-gray-400: var(--md-sys-color-outline-variant);
+  --color-gray-450: var(--md-sys-color-outline);
+  --color-gray-500: var(--md-sys-color-outline);
+  --color-gray-550: var(--md-sys-color-outline);
+  --color-gray-650: var(--md-sys-color-on-surface-variant);
+  --color-gray-600: var(--md-sys-color-on-surface-variant);
+  --color-gray-700: var(--md-sys-color-on-surface);
+  --color-gray-750: var(--md-sys-color-on-surface);
+  --color-gray-800: var(--md-sys-color-on-surface);
+  --color-gray-855: var(--md-sys-color-on-surface);
+  --color-gray-900: var(--md-sys-color-on-surface);
+  --color-gray-950: var(--md-sys-color-on-surface);
+
+  --spacing-margin-mobile: 20px;
+  --spacing-gutter-desktop: 32px;
+  --spacing-stack-md: 16px;
+  --spacing-container-max: 1280px;
+  --spacing-stack-lg: 32px;
+  --spacing-margin-desktop: 64px;
+  --spacing-stack-sm: 8px;
+
+  --animate-fade-in: fadeIn 0.6s ease-out;
+  --animate-scale-in: scaleIn 0.6s ease-out;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -29,37 +82,28 @@ a:hover {
 }
 
 html,
-body,
+body {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
 #root {
   width: 100%;
-  height: 100%;
-  overflow-x: hidden;
+  min-height: 100%;
 }
 
 body {
   margin: 0;
   min-width: 320px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
 }
 
-.body {
-  padding: 0 clamp(12px, 4vw, 80px);
-}
 
-@media (max-width: 640px) {
-  .body {
-    padding: 0 12px;
-  }
-}
-
-@media (min-width: 641px) and (max-width: 1024px) {
-  .body {
-    padding: 0 24px;
-  }
-}
 
 h1 {
-  font-size: 3.2em;
+  /* font-size: 3.2em; */
   line-height: 1.1;
 }
 
@@ -93,7 +137,7 @@ div::-webkit-scrollbar {
 }
 
 .nz {
-  color: #00382b;
+  color: var(--md-sys-color-on-surface);
 }
 
 .nq {
@@ -119,58 +163,28 @@ div::-webkit-scrollbar {
   }
 }
 
-/* Card Animations */
-.experience-grid,
-.location-grid {
-  display: grid;
-  padding: 20px 0;
 
-  --visible-cols: 5;
 
-  --col-gap: 0px;
-
-  --col-hint: 0px;
-
-  --scrollbar-padding: 20px;
-
-  --col-size: calc(100% / var(--visible-cols));
-  gap: 20px;
-  grid-auto-flow: column;
-  grid-template-columns: var(--col-size);
-  grid-auto-columns: var(--col-size);
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding-bottom: var(--scrollbar-padding);
+/* Smooth Transitions for theme toggling */
+body,
+header,
+nav,
+footer,
+div,
+a,
+button,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+input,
+select {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
-
-@media (max-width: 600px) {
-
-  .experience-grid,
-  .location-grid {
-    --visible-cols: 2;
-  }
-}
-
-/* Modern Card Styles */
-.card {
-  padding: 2em;
-  border-radius: 16px;
-  background: white;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15);
-  border-color: rgba(99, 102, 241, 0.1);
-}
-
-/* Smooth Transitions */
-/* * {
-  transition: background-color 0.3s ease, color 0.3s ease;
-} */
 
 button,
 a,
@@ -191,17 +205,7 @@ input {
   }
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
 
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
 
 @keyframes scaleIn {
   from {
@@ -227,50 +231,7 @@ input {
   }
 }
 
-@keyframes float {
 
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-@keyframes glow {
-
-  0%,
-  100% {
-    box-shadow: 0 0 5px rgba(99, 102, 241, 0.2);
-  }
-
-  50% {
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
-  }
-}
-
-/* Apply animations to elements */
-.fade-in {
-  animation: fadeIn 0.6s ease-out;
-}
-
-.slide-in {
-  animation: slideIn 0.6s ease-out;
-}
-
-.scale-in {
-  animation: scaleIn 0.6s ease-out;
-}
-
-.float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.glow {
-  animation: glow 2s ease-in-out infinite;
-}
 
 /* Skeleton Loading Animation */
 .skeleton {
@@ -279,26 +240,8 @@ input {
   animation: shimmer 2s infinite;
 }
 
-@media (min-width: 600px) and (max-width: 840px) {
-
-  .experience-grid,
-  .location-grid {
-    --visible-cols: 3;
-  }
-}
-
-@media (min-width: 840px) and (max-width: 1200px) {
-
-  .experience-grid,
-  .location-grid {
-    --visible-cols: 4;
-  }
-}
-
-@media (min-width: 1200px) {
-
-  .experience-grid,
-  .location-grid {
-    --visible-cols: 5;
+@media (max-width: 850px) {
+  .navbar-content {
+    padding-left: 0 !important;
   }
 }

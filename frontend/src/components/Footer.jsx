@@ -1,5 +1,13 @@
+import { useContext } from "react";
+import { Link } from "react-router-dom";
+import LocationContext from "../context/LocationContext";
+import ThemeContext from "../context/ThemeContext";
+
 export default function Footer() {
+  const { selectedLocation } = useContext(LocationContext);
+  const { theme, toggleTheme } = useContext(ThemeContext);
   const currentYear = new Date().getFullYear();
+  const locSlug = selectedLocation ? selectedLocation.toLowerCase().replace(/\s+/g, "-") : "all";
 
   return (
     <footer className="mt-16 relative overflow-hidden">
@@ -25,7 +33,7 @@ export default function Footer() {
                 aria-label="Facebook"
               >
                 <svg
-                  className="w-5 h-5 text-black"
+                  className="w-5 h-5 text-gray-900"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -38,7 +46,7 @@ export default function Footer() {
                 aria-label="Twitter"
               >
                 <svg
-                  className="w-5 h-5 text-black"
+                  className="w-5 h-5 text-gray-900"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -51,7 +59,7 @@ export default function Footer() {
                 aria-label="Instagram"
               >
                 <svg
-                  className="w-5 h-5 text-black"
+                  className="w-5 h-5 text-gray-900"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -64,7 +72,7 @@ export default function Footer() {
                 aria-label="YouTube"
               >
                 <svg
-                  className="w-5 h-5 text-black"
+                  className="w-5 h-5 text-gray-900"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -74,48 +82,47 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Discover Monuments */}
           <nav className="col-span-1">
-            <h3 className="text-lg font-semibold text-black mb-4">Discover</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Discover</h3>
             <ul className="space-y-3">
               <li>
-                <a
-                  href="/category/museum"
+                <Link
+                  to={`/${locSlug}/museum`}
                   className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
                 >
                   Museums
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="/category/religious-site"
+                <Link
+                  to={`/${locSlug}/religious-site`}
                   className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
                 >
                   Temples & Heritage
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="/category/fort"
+                <Link
+                  to={`/${locSlug}/fort`}
                   className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
                 >
                   Forts & Palaces
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="/category/experiences"
+                <Link
+                  to={`/${locSlug}/all`}
                   className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
                 >
                   All Experiences
-                </a>
+                </Link>
               </li>
             </ul>
           </nav>
 
           {/* Help & Support */}
           <nav className="col-span-1">
-            <h3 className="text-lg font-semibold text-black mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Help & Support
             </h3>
             <ul className="space-y-3">
@@ -156,7 +163,7 @@ export default function Footer() {
 
           {/* Legal & Privacy */}
           <nav className="col-span-1">
-            <h3 className="text-lg font-semibold text-black mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Legal & Privacy
             </h3>
             <ul className="space-y-3">
@@ -205,7 +212,7 @@ export default function Footer() {
             © {currentYear} ZeQue. All rights reserved. | Bringing history to
             life
           </p>
-          <div className="flex gap-4 flex-wrap justify-center">
+          <div className="flex gap-4 flex-wrap justify-center items-center">
             <a
               href="#"
               className="text-xs text-gray-500 hover:text-teal-400 transition-colors"
@@ -226,6 +233,18 @@ export default function Footer() {
             >
               Feedback
             </a>
+            <span className="text-gray-700">•</span>
+            <button
+              onClick={toggleTheme}
+              className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-primary transition-colors bg-transparent border-none py-0 px-1 cursor-pointer focus:outline-none"
+              style={{ transform: 'none', boxShadow: 'none' }}
+              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            >
+              <span className="material-symbols-outlined text-base leading-none">
+                {theme === "dark" ? "light_mode" : "dark_mode"}
+              </span>
+              <span>{theme === "dark" ? "Light Theme" : "Dark Theme"}</span>
+            </button>
           </div>
         </div>
       </div>

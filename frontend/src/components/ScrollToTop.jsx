@@ -10,6 +10,12 @@ export default function ScrollToTop() {
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
+
+      // Also reset root container scroll if height constraints ever return
+      const root = document.getElementById("root");
+      if (root) {
+        root.scrollTop = 0;
+      }
     }, 0);
 
     return () => clearTimeout(timer);
