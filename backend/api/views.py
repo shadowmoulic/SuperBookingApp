@@ -57,7 +57,14 @@ class ExperienceListView(generics.ListAPIView):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return ContentModel.Experience.objects.all()
+        queryset = ContentModel.Experience.objects.all()
+        location_id = self.request.query_params.get("location")
+        if location_id:
+            if location_id.startswith("l-"):
+                queryset = queryset.filter(location__public_id=location_id)
+            else:
+                queryset = queryset.filter(location_id=location_id)
+        return queryset
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

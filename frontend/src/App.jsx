@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useContext } from "react";
 import Home from "./pages/Home";
+import DemoHome from "./pages/DemoHome";
 import { ExperienceDetails } from "./pages/ExperienceDetails";
 import { LocationDetails } from "./pages/LocationDetails";
 import BookingPage from "./pages/BookingPage";
@@ -13,6 +14,7 @@ import LoginSignup from "./components/LoginSignup";
 import Footer from "./components/Footer";
 import SuccessPage from "./pages/SuccessPage";
 import FailedPage from "./pages/FailedPage";
+import Chatbot from "./components/Chatbot";
 
 import PaymentPage from "./pages/PaymentPage";
 import SingleCategoryPage from "./pages/SingleCategoryPage";
@@ -24,8 +26,10 @@ function AppContent() {
     <main>
       <Navbar />
       {isLoginModalOpen && <LoginSignup />}
+      <Chatbot />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/demo" element={<DemoHome />} />
         <Route path="/experience/:id" element={<ExperienceDetails />} />
         <Route path="/location/:id" element={<LocationDetails />} />
         <Route path="/booking/:id" element={<BookingPage />} />

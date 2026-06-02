@@ -1,0 +1,47 @@
+// Hero Banner slides
+const HERO_SLIDES = [
+  {
+    image: "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1200&q=70",
+    title: "Taj Mahal",
+    location: "Agra, Uttar Pradesh"
+  },
+  {
+    image: "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=70",
+    title: "Amer Fort",
+    location: "Jaipur, Rajasthan"
+  },
+  {
+    image: "https://www.hampitrip.com/_next/image?url=https%3A%2F%2Fstorage.hampitrip.com%2Fhampitrip%2Fhampi%2Fhampi03.webp&w=1920&q=80",
+    title: "Hampi Monuments",
+    location: "Hampi, Karnataka"
+  },
+  {
+    image: "https://www.oberoihotels.com/-/media/oberoi-hotel/kolkata_8-aug-24/destination/banner1920x980.jpg",
+    title: "Victoria Memorial",
+    location: "Kolkata, West Bengal"
+  },
+  {
+    image: "https://s7ap1.scene7.com/is/image/incredibleindia/qutab-minar-delhi-attr-hero?qlt=82&ts=1742169673469",
+    title: "Qutub Minar",
+    location: "New Delhi, Delhi"
+  },
+  {
+    image: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0f/98/f7/df/charminar.jpg?w=1400&h=-1&s=1",
+    title: "Charminar",
+    location: "Hyderabad, Telangana"
+  }
+];
+
+// Explore by City Data
+const CITIES = [
+  { name: "Delhi", count: "24+ Attractions", season: "Oct - Mar", image: "https://www.mistay.in/travel-blog/content/images/size/w2000/2020/06/cover-10.jpg" },
+  { name: "Agra", count: "8+ Attractions", season: "Nov - Feb", image: "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=600&q=80" },
+  { name: "Jaipur", count: "18+ Attractions", season: "Oct - Mar", image: "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=600&q=80" },
+  { name: "Kolkata", count: "15+ Attractions", season: "Oct - Feb", image: "https://www.oberoihotels.com/-/media/oberoi-hotel/kolkata_8-aug-24/destination/banner1920x980.jpg" },
+  { name: "Hyderabad", count: "12+ Attractions", season: "Nov - Feb", image: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0f/98/f7/df/charminar.jpg?w=1400&h=-1&s=1" },
+  { name: "Mumbai", count: "14+ Attractions", season: "Oct - Mar", image: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=600&q=80" },
+  { name: "Udaipur", count: "10+ Attractions", season: "Sep - Mar", image: "https://images.unsplash.com/photo-1604328698692-f76ea9498e76?auto=format&fit=crop&w=600&q=80" },
+  { name: "Varanasi", count: "9+ Attractions", season: "Oct - Mar", image: "https://theorionhotels.com/_next/image?url=https%3A%2F%2Fassets.theasar.com%2Fblogs%2F1768561498185_top_10_places_to_visit_in_varanasi.webp&w=3840&q=75" },
+  { name: "Mysore", count: "7+ Attractions", season: "Oct - Mar", image: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=600&q=80" },
+  { name: "Hampi", count: "11+ Attractions", season: "Oct - Feb", image: "https://www.hampitrip.com/_next/image?url=https%3A%2F%2Fstorage.hampitrip.com%2Fhampitrip%2Fhampi%2Fhampi03.webp&w=1920&q=80" }
+];

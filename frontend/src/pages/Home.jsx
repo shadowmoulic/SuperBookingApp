@@ -108,6 +108,7 @@ function Home() {
 
   return (
     <div className="body">
+      <h1 className="sr-only">ZeQue — Skip the Queue, Book Tickets Online</h1>
 
       {/* Hero Banner  */}
       <HeroBanner />

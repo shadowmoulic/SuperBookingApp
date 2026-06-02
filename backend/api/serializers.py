@@ -88,6 +88,8 @@ class LocationSerializer(serializers.ModelSerializer):
 class ExperienceShortSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
+    average_rating = serializers.SerializerMethodField()
+    total_reviews = serializers.SerializerMethodField()
 
     class Meta:
         model = ContentModel.Experience
@@ -99,6 +101,8 @@ class ExperienceShortSerializer(serializers.ModelSerializer):
             "image_url",
             "entry_fee_base",
             "is_open",
+            "average_rating",
+            "total_reviews",
         ]
 
     def get_category(self, obj):
@@ -106,6 +110,17 @@ class ExperienceShortSerializer(serializers.ModelSerializer):
 
     def get_location(self, obj):
         return obj.location.name
+
+    def get_average_rating(self, obj):
+        from django.db.models import Avg
+        result = obj.reviews.filter(
+            deleted_at__isnull=True
+        ).aggregate(avg=Avg("rating"))
+        avg = result.get("avg")
+        return round(float(avg), 1) if avg is not None else None
+
+    def get_total_reviews(self, obj):
+        return obj.reviews.filter(deleted_at__isnull=True).count()
 
 
 class CategorySerializer(serializers.ModelSerializer):

@@ -148,8 +148,8 @@ function SingleCategoryPage() {
                   {place.name}
                 </h3>
 
-                <span className="bg-yellow-400 px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap">
-                  ⭐ {place.rating}
+                <span className="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full text-sm font-semibold whitespace-nowrap flex items-center gap-1">
+                  <span className="text-amber-500">★</span> {place.rating}
                 </span>
               </div>
 

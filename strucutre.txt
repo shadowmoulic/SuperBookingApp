@@ -1,0 +1,185 @@
+India
+
+├── States
+│   ├── Rajasthan
+│   │    ├── Jaipur
+│   │    ├── Udaipur
+│   │    └── Jodhpur
+│   │
+│   └── West Bengal
+│        ├── Kolkata
+│        ├── Darjeeling
+│        └── Murshidabad
+
+├── Cities
+│   ├── Jaipur
+│   ├── Kolkata
+│   └── Agra
+
+├── Categories
+│   ├── Forts
+│   ├── Palaces
+│   ├── Museums
+│   ├── UNESCO Sites
+│   └── Temples
+
+├── Collections
+│   ├── Best Places In Rajasthan
+│   ├── Hidden Gems Of Kolkata
+│   ├── Top UNESCO Sites
+│   └── Student Budget Trips
+
+└── Attractions
+     ├── Amer Fort
+     ├── Taj Mahal
+     └── Victoria Memorial
+
+     Example
+Monument Page
+
+Amer Fort
+
+Contains:
+
+Nearby Places
+Jaigarh Fort
+Nahargarh Fort
+Jal Mahal
+Same Category
+Mehrangarh Fort
+Chittorgarh Fort
+Same City
+Hawa Mahal
+City Palace
+Jantar Mantar
+Similar Experiences
+Heritage Walk Jaipur
+Night Tour Jaipur
+
+Google absolutely loves this.
+
+The Internal Linking Flywheel
+
+Let's say somebody lands on:
+
+/monuments/amer-fort
+
+They should have pathways to:
+
+/cities/jaipur
+
+/categories/forts
+
+/states/rajasthan
+
+/nearby/amer-fort
+
+/itineraries/2-days-jaipur
+
+/collections/top-forts-in-india
+
+One page should create 10+ navigation opportunities.
+
+Programmatic SEO
+
+This is where traffic explodes.
+
+Imagine your database:
+
+Monument	City	State	Category
+Taj Mahal	Agra	UP	Monument
+Red Fort	Delhi	Delhi	Fort
+Amer Fort	Jaipur	Rajasthan	Fort
+
+Now auto-generate:
+
+City Pages
+Places To Visit In Jaipur
+Things To Do In Jaipur
+Historical Places In Jaipur
+Museums In Jaipur
+One Day Jaipur Itinerary
+State Pages
+Best Places In Rajasthan
+Historical Places In Rajasthan
+UNESCO Sites In Rajasthan
+Weekend Trips In Rajasthan
+Category Pages
+Best Forts In India
+Best Museums In India
+Top Palaces In India
+UNESCO Sites In India
+Comparison Pages
+Amer Fort vs Nahargarh Fort
+
+Red Fort vs Agra Fort
+
+Qutub Minar vs Charminar
+
+These rank surprisingly well.
+
+The AI Discovery Tool Idea
+
+This is probably the most interesting thing you mentioned.
+
+Instead of:
+
+Search Monument
+
+Do:
+
+Tell us where you are.
+
+User enters:
+
+Kolkata
+
+You show:
+
+Within 5 km
+Victoria Memorial
+St. Paul's Cathedral
+Indian Museum
+Half-Day Plan
+Victoria Memorial
+Indian Museum
+Park Street
+Full-Day Plan
+Victoria Memorial
+Marble Palace
+Kumartuli
+Dakshineswar
+Weekend Plan
+Bishnupur
+Murshidabad
+Santiniketan
+Even Better
+
+Ask:
+
+Trip Type
+History Buff
+Family
+Student
+Photography
+Architecture
+Religious
+Couple
+
+Now recommendations become personalized.
+
+Example:
+
+Location:
+Jaipur
+
+Interest:
+Architecture
+
+Output:
+
+Amer Fort
+Jantar Mantar
+Hawa Mahal
+City Palace
+Albert Hall Museum
