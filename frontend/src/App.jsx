@@ -18,6 +18,17 @@ import Chatbot from "./components/Chatbot";
 
 import PaymentPage from "./pages/PaymentPage";
 import SingleCategoryPage from "./pages/SingleCategoryPage";
+import UserDashboard from "./pages/UserDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import StateIndex from "./pages/StateIndex";
+import CityIndex from "./pages/CityIndex";
+import CategoryIndex from "./pages/CategoryIndex";
+import TrailIndex from "./pages/TrailIndex";
+import AttractionIndex from "./pages/AttractionIndex";
+import ItineraryIndex from "./pages/ItineraryIndex";
+import UnescoSites from "./pages/UnescoSites";
+import TopPlaces from "./pages/TopPlaces";
+import ExploreNearMe from "./pages/ExploreNearMe";
 
 function AppContent() {
   const { isLoginModalOpen } = useContext(ModalContext);
@@ -40,6 +51,17 @@ function AppContent() {
         <Route path="/payments/success" element={<SuccessPage />} />
         <Route path="/payments/failed" element={<FailedPage />} />
         <Route path="/category/:id" element={<SingleCategoryPage />} />
+        <Route path="/dashboard" element={<UserDashboard />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/states" element={<StateIndex />} />
+        <Route path="/cities" element={<CityIndex />} />
+        <Route path="/categories" element={<CategoryIndex />} />
+        <Route path="/trails" element={<TrailIndex />} />
+        <Route path="/attractions" element={<AttractionIndex />} />
+        <Route path="/itineraries" element={<ItineraryIndex />} />
+        <Route path="/unesco-sites" element={<UnescoSites />} />
+        <Route path="/top-places" element={<TopPlaces />} />
+        <Route path="/explore-near-me" element={<ExploreNearMe />} />
       </Routes>
       <Footer />
     </main>

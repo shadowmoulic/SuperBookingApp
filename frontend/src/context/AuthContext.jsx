@@ -1,5 +1,5 @@
-import { createContext, useState, useEffect, useCallback } from "react";
-import api from "../api/api";
+import { createContext, useState, useEffect } from "react";
+import { supabase } from "../config/supabaseClient";
 
 const AuthContext = createContext();
 
@@ -7,89 +7,53 @@ export default AuthContext;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [_loading, setLoading] = useState(true);
-
-  const checkUserStatus = useCallback(async () => {
-    try {
-      const response = await api.get("/auth/me/");
-      // console.log(response.data);
-      setUser(response.data);
-      // console.log("User authenticated:", userData);
-      setLoading(false);
-    } catch (error) {
-      console.log(error.response?.data?.detail);
-      // console.log("User not authenticated:", error.response?.status);
-      setUser(null);
-      setLoading(false);
-    }
-    // .then((response) => {
-    //   const userData = response.data;
-    //   setUser(userData);
-    //   setToken(userData.id); // Store something meaningful
-    //   // console.log("User authenticated:", userData);
-    //   setLoading(false);
-    // })
-    // .catch((error) => {
-    //   // console.log("User not authenticated:", error.response?.status);
-    //   setUser(null);
-    //   setToken(null);
-    //   setLoading(false);
-    // });
-  }, []);
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkUserStatus();
-  }, [checkUserStatus]);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-  const login = async (username, password) => {
-    try {
-      // console.log("[Auth] Attempting login with:", username);
-      const response = await api.post("/auth/login/", {
-        username: username,
-        password: password,
-      });
-      // console.log("[Auth] Login response status:", response.status);
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-      if (response.status === 200) {
-        checkUserStatus();
-      }
-    } catch (error) {
-      // console.error(
-      //   "[Auth] Login error:",
-      //   error.response?.status,
-      //   error.message,
-      // );
-      console.log(error.response?.data?.detail);
-    }
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // For compatibility with any old references, we expose logout and login wrappers
+  // However, UI components should ideally use AuthServices directly for detailed error handling.
+  
+  const loginWrapper = async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
   };
 
-  const loginWithFirebaseToken = async (firebaseToken) => {
-    try {
-      const response = await api.post("/auth/login/", {
-        firebase_token: firebaseToken,
-      });
-      if (response.status === 200) {
-        checkUserStatus();
-      }
-    } catch (error) {
-      console.error("Firebase login error:", error);
-      throw error;
-    }
-  };
-
-  const logout = async () => {
-    await api.post("/auth/logout/");
-    setUser(null);
+  const logoutWrapper = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   };
 
   const contextData = {
     user,
-    login,
-    loginWithFirebaseToken,
-    logout,
+    session,
+    loading,
+    login: loginWrapper,
+    logout: logoutWrapper,
   };
 
   return (
-    <AuthContext.Provider value={contextData}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={contextData}>
+      {!loading && children}
+    </AuthContext.Provider>
   );
 };

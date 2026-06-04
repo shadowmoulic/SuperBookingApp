@@ -4,7 +4,7 @@ import { MessageCircle, X, Send, Sparkles } from "lucide-react";
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: "assistant", content: "Hi there! I'm your cute ZeQue travel buddy 🎒 Need help planning your trip?" }
+    { role: "assistant", content: "Hello. I am the ZeQue travel assistant. How may I help you plan your itinerary today?" }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -41,11 +41,11 @@ export default function Chatbot() {
         body: JSON.stringify({
           model: "llama-3.1-8b-instant",
           messages: [
-            { role: "system", content: "You are a cute, helpful, friendly travel assistant for an app called ZeQue. You use emojis and keep answers brief and helpful." },
+            { role: "system", content: "You are a professional, highly knowledgeable travel assistant for an application called ZeQue. You provide concise, accurate, and professional advice without using emojis." },
             ...messages.map(m => ({ role: m.role, content: m.content })),
             { role: "user", content: userMsg }
           ],
-          temperature: 0.6, 
+          temperature: 0.5, 
           max_tokens: 300
         })
       });
@@ -53,7 +53,7 @@ export default function Chatbot() {
       const data = await response.json();
       setMessages(prev => [...prev, { role: "assistant", content: data.choices[0].message.content }]);
     } catch (err) {
-      setMessages(prev => [...prev, { role: "assistant", content: "Oops! I'm having a little trouble connecting right now 🙈 Try again later!" }]);
+      setMessages(prev => [...prev, { role: "assistant", content: "I am currently unable to connect to the server. Please try again later." }]);
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +69,7 @@ export default function Chatbot() {
               <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-amber-300" />
               </div>
-              <span className="font-bold text-sm">ZeQue Buddy</span>
+              <span className="font-bold text-sm">ZeQue Assistant</span>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-white/80 hover:text-white hover:bg-white/10 rounded-full p-1 transition-colors">
               <X className="w-5 h-5" />
@@ -103,7 +103,7 @@ export default function Chatbot() {
               type="text" 
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask me anything..." 
+              placeholder="Ask a question..." 
               className="flex-1 bg-slate-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#136b55]/30 text-slate-700"
             />
             <button type="submit" disabled={isLoading || !input.trim()} className="w-9 h-9 bg-[#136b55] hover:bg-[#0c4c3b] disabled:bg-slate-300 text-white rounded-full flex items-center justify-center transition-colors shrink-0">
@@ -121,7 +121,7 @@ export default function Chatbot() {
           
           {/* Tooltip */}
           <div className="absolute right-full mr-4 bg-white text-slate-800 text-sm font-bold px-4 py-2 rounded-xl shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300">
-            Need help? 👋
+            Assistance Available
             {/* Arrow */}
             <div className="absolute top-1/2 -right-2 -translate-y-1/2 w-4 h-4 bg-white rotate-45"></div>
           </div>
