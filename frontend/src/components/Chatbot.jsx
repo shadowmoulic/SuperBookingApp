@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { MessageCircle, X, Send, Sparkles } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,14 +10,9 @@ export default function Chatbot() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const location = useLocation();
 
-  // Proactive open after 3 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsOpen(true);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
+
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -58,6 +54,10 @@ export default function Chatbot() {
       setIsLoading(false);
     }
   };
+
+  if (location.pathname === "/explore-near-me") {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-6 right-6 z-50">

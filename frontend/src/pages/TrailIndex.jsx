@@ -20,15 +20,15 @@ const TrailIndex = () => {
             <div key={index} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all cursor-pointer group flex flex-col sm:flex-row border border-gray-100 h-full">
               <div className="w-full sm:w-1/3 bg-gray-200 relative overflow-hidden min-h-[200px]">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10" />
-                <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold text-indigo-600">
+                <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold text-[#136b55]">
                   {trail.days} Days
                 </div>
               </div>
               <div className="p-6 sm:p-8 flex-1 flex flex-col justify-center">
-                <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">{trail.name}</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-[#136b55] transition-colors">{trail.name}</h3>
                 <p className="text-gray-500 mb-6">{trail.desc}</p>
                 <div className="flex items-center gap-6 text-sm font-semibold text-gray-400 mt-auto">
-                  <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg"><Map className="w-4 h-4 text-indigo-500" /> Route Map</span>
+                  <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg"><Map className="w-4 h-4 text-[#136b55]" /> Route Map</span>
                   <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg"><IndianRupee className="w-4 h-4 text-emerald-500" /> Est. Budget</span>
                 </div>
               </div>

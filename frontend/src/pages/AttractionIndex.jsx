@@ -13,7 +13,7 @@ const AttractionIndex = () => {
           
           <div className="flex items-center gap-3">
              <div className="relative">
-               <input type="text" placeholder="Search attractions..." className="pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64" />
+               <input type="text" placeholder="Search attractions..." className="pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#136b55] w-full md:w-64" />
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
              </div>
              <button className="bg-white border border-gray-200 p-3 rounded-xl hover:bg-gray-50 text-gray-600">
@@ -32,12 +32,12 @@ const AttractionIndex = () => {
                 </div>
               </div>
               <div className="p-5 flex-1 flex flex-col">
-                <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">Monument {i + 1}</h3>
+                <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-[#136b55] transition-colors">Monument {i + 1}</h3>
                 <p className="text-gray-500 text-sm flex items-center gap-1.5 mb-4">
                   <MapPin className="w-4 h-4 text-gray-400" /> Jaipur, Rajasthan
                 </p>
                 <div className="flex items-center justify-between text-sm mt-auto pt-4 border-t border-gray-50">
-                  <span className="text-indigo-600 font-bold bg-indigo-50 px-2 py-1 rounded-md">₹50</span>
+                  <span className="text-[#136b55] font-bold bg-emerald-50 px-2 py-1 rounded-md">₹50</span>
                   <span className="text-gray-500 flex items-center gap-1 font-medium"><Clock className="w-4 h-4" /> 2h</span>
                 </div>
               </div>
@@ -46,7 +46,7 @@ const AttractionIndex = () => {
         </div>
         
         <div className="mt-12 flex justify-center">
-           <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full transition-colors shadow-lg shadow-indigo-200">
+           <button className="bg-[#136b55] hover:bg-[#0c4c3b] text-white font-bold py-3 px-8 rounded-full transition-colors shadow-lg shadow-emerald-200">
              Load More Attractions
            </button>
         </div>

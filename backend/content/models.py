@@ -300,3 +300,48 @@ class OperatingHours(models.Model):
         indexes = [
             models.Index(fields=["experience"]),
         ]
+
+
+class Trip(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    public_id = models.CharField(max_length=15, unique=True, blank=True, editable=False)
+    # The user is the Django auth.User (which stores the Supabase UUID in its username)
+    user = models.ForeignKey("auth.User", on_delete=models.CASCADE, related_name="trips")
+    title = models.CharField(max_length=255)
+    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, blank=True, related_name="trips")
+    days = models.IntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "trips"
+
+    def __str__(self):
+        return f"{self.title} by {self.user.username}"
+
+    def save(self, *args, **kwargs):
+        if not self.public_id:
+            while True:
+                random_id = generate_random_id()
+                if not Trip.objects.filter(public_id=f"t-{random_id}").exists():
+                    self.public_id = f"t-{random_id}"
+                    break
+        super().save(*args, **kwargs)
+
+
+class TripAttraction(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="trip_attractions")
+    experience = models.ForeignKey(Experience, on_delete=models.CASCADE)
+    day_number = models.IntegerField(default=1)
+    sequence = models.IntegerField(default=1)
+    notes = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = "trip_attractions"
+        ordering = ["day_number", "sequence"]
+        unique_together = [("trip", "experience")]
+
+    def __str__(self):
+        return f"{self.trip.title} - Day {self.day_number}: {self.experience.name}"
+

@@ -1,159 +1,330 @@
-import React, { useState } from 'react';
-import { MapPin, Navigation, Sparkles, Compass, Send } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import { MapPin, Sparkles, Navigation, X, Clock, Navigation as NavigationIcon, Loader2, CalendarPlus } from 'lucide-react';
+import { getExperiences } from '../api/api';
+import { supabase } from '../config/supabaseClient';
+
+// Fix for default Leaflet markers in React
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Component to handle map centering based on user location
+const MapCenterer = ({ location }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (location) {
+      map.setView(location, 13, { animate: true });
+    }
+  }, [location, map]);
+  return null;
+};
 
 const ExploreNearMe = () => {
-  const [locationGranted, setLocationGranted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [chatInput, setChatInput] = useState('');
-  const [chatMessages, setChatMessages] = useState([
-    { role: 'assistant', content: 'Hi! I can help you plan an itinerary based on your current location. What kind of places are you in the mood for today?' }
-  ]);
-  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+  const [experiences, setExperiences] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedExperience, setSelectedExperience] = useState(null);
+  const [showTripModal, setShowTripModal] = useState(false);
+  const [tripModalData, setTripModalData] = useState({ title: "", days: 1, currentDay: 1 });
+  const [isSavingTrip, setIsSavingTrip] = useState(false);
 
-  const requestLocation = () => {
-    setLoading(true);
-    // Simulate location fetch
-    setTimeout(() => {
-      setLocationGranted(true);
-      setLoading(false);
-    }, 1500);
+  useEffect(() => {
+    const fetchExperiences = async () => {
+      try {
+        const res = await getExperiences();
+        // Handle paginated response structure from Django
+        const experiencesData = res.data.results || res.data;
+        
+        if (Array.isArray(experiencesData)) {
+          // Filter out experiences without coordinates
+          const validExperiences = experiencesData.filter(exp => exp.latitude && exp.longitude);
+          setExperiences(validExperiences);
+        } else {
+          console.error("Unexpected API response format:", res.data);
+        }
+      } catch (err) {
+        console.error("Failed to load experiences:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchExperiences();
+    
+    // Automatically attempt geolocation
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation([position.coords.latitude, position.coords.longitude]);
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          // Default to New Delhi if denied
+          setUserLocation([28.6139, 77.2090]);
+        }
+      );
+    } else {
+      // Default to New Delhi if not supported
+      setUserLocation([28.6139, 77.2090]);
+    }
+  }, []);
+
+  const handleAddToTrip = () => {
+    setShowTripModal(true);
   };
 
-  const handleChatSubmit = async (e) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
-
-    const userMessage = chatInput.trim();
-    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-    setChatInput('');
-    setIsChatLoading(true);
-
+  const handleSaveTrip = async () => {
+    setIsSavingTrip(true);
     try {
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json", 
-          "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}` 
-        },
-        body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
-          messages: [
-            { role: "system", content: "You are an AI travel itinerary planner. The user is asking for places nearby. Suggest a brief, customized day itinerary." },
-            ...chatMessages,
-            { role: "user", content: userMessage }
-          ],
-          temperature: 0.7, 
-          max_tokens: 400
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert("Please login first to save a trip!");
+        setIsSavingTrip(false);
+        return;
+      }
+
+      // 1. Create the Trip
+      const { data: trip, error: tripError } = await supabase
+        .from('trips')
+        .insert({
+          user_id: user.id,
+          title: tripModalData.title,
+          days: tripModalData.days
         })
-      });
-      if (!response.ok) throw new Error("API error");
-      const data = await response.json();
-      setChatMessages(prev => [...prev, { role: "assistant", content: data.choices[0].message.content }]);
+        .select()
+        .single();
+        
+      if (tripError) throw tripError;
+
+      // 2. Create the Trip Attraction
+      const { error: attrError } = await supabase
+        .from('trip_attractions')
+        .insert({
+          trip_id: trip.id,
+          experience_public_id: selectedExperience.public_id,
+          day_number: tripModalData.currentDay
+        });
+
+      if (attrError) throw attrError;
+
+      setShowTripModal(false);
+      setSelectedExperience(null);
+      alert("Successfully added to your trip!");
     } catch (err) {
-      setChatMessages(prev => [...prev, { role: "assistant", content: "Sorry, I'm having trouble connecting right now." }]);
+      console.error("Error saving trip:", err);
+      alert("Failed to save trip. Make sure you created the Supabase schema!");
     } finally {
-      setIsChatLoading(false);
+      setIsSavingTrip(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Explore Near Me</h1>
-          <p className="text-gray-600 text-lg">Discover incredible attractions, museums, and weekend trips right in your backyard.</p>
+  if (loading || !userLocation) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4 text-slate-500">
+          <Loader2 className="w-10 h-10 animate-spin text-[#136b55]" />
+          <p className="font-bold">Locating nearby heritage sites...</p>
         </div>
-
-        {!locationGranted ? (
-          <div className="bg-white rounded-3xl p-12 text-center shadow-sm max-w-2xl mx-auto border border-gray-100">
-            <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6 text-indigo-600">
-              <Navigation className="w-10 h-10" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Allow Location Access</h2>
-            <p className="text-gray-500 mb-8">We need your location to show you the best attractions and hidden gems nearby.</p>
-            <button 
-              onClick={requestLocation}
-              disabled={loading}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-8 rounded-xl transition-all disabled:opacity-50 flex items-center gap-2 mx-auto"
-            >
-              {loading ? (
-                <>Finding you...</>
-              ) : (
-                <><MapPin className="w-5 h-5" /> Grant Permission</>
-              )}
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Nearby Places */}
-            <div className="lg:col-span-2 space-y-8">
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <MapPin className="w-6 h-6 text-indigo-600" /> Nearby Attractions
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {[1, 2, 3, 4].map(item => (
-                  <div key={item} className="bg-white rounded-2xl p-4 flex gap-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                    <div className="w-24 h-24 bg-gray-200 rounded-xl flex-shrink-0"></div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 mb-1">Local Museum {item}</h3>
-                      <p className="text-sm text-gray-500 mb-2">2.{item} km away</p>
-                      <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">Open Now</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* AI Itinerary Planner */}
-            <div className="bg-white rounded-3xl shadow-lg border border-indigo-50 flex flex-col h-[600px] sticky top-24">
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 rounded-t-3xl text-white">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-5 h-5 text-amber-300" />
-                  <h2 className="text-xl font-bold">AI Itinerary Planner</h2>
-                </div>
-                <p className="text-indigo-100 text-sm">Tell me your interests, and I'll build a custom day trip nearby!</p>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
-                {chatMessages.map((msg, i) => (
-                  <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-br-sm' : 'bg-white border border-gray-100 text-gray-700 rounded-bl-sm shadow-sm'}`}>
-                      {msg.content}
-                    </div>
-                  </div>
-                ))}
-                {isChatLoading && (
-                   <div className="flex justify-start">
-                     <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm flex items-center gap-1.5">
-                       <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
-                       <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-75"></span>
-                       <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-150"></span>
-                     </div>
-                   </div>
-                )}
-              </div>
-
-              <form onSubmit={handleChatSubmit} className="p-4 bg-white border-t border-gray-100 rounded-b-3xl">
-                <div className="flex gap-2 relative">
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    placeholder="E.g., I have 3 hours, love history..."
-                    className="flex-1 bg-gray-100 rounded-xl px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-gray-700"
-                  />
-                  <button type="submit" disabled={isChatLoading || !chatInput.trim()} className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center disabled:bg-gray-300 transition-colors">
-                    <Send className="w-4 h-4 ml-0.5" />
-                  </button>
-                </div>
-              </form>
-            </div>
-
-          </div>
-        )}
-
       </div>
+    );
+  }
+
+  return (
+    <div className="h-screen pt-16 flex flex-col relative">
+      
+      {/* Floating Header */}
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[400] bg-white/90 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-slate-200/60 flex items-center gap-3">
+        <Sparkles className="w-5 h-5 text-amber-500" />
+        <h1 className="font-black text-slate-900 tracking-tight text-lg">Explore India Map</h1>
+      </div>
+
+      {/* Recenter Button */}
+      <button 
+        onClick={() => {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => setUserLocation([pos.coords.latitude, pos.coords.longitude])
+            );
+          }
+        }}
+        className="absolute bottom-8 right-8 z-[400] bg-white text-slate-700 p-4 rounded-full shadow-xl hover:bg-slate-50 hover:text-[#136b55] transition-all border border-slate-200/60"
+      >
+        <NavigationIcon className="w-6 h-6" />
+      </button>
+
+      {/* The Map */}
+      <div className="flex-1 z-0">
+        <MapContainer 
+          center={userLocation} 
+          zoom={13} 
+          style={{ height: '100%', width: '100%' }}
+          zoomControl={false}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          />
+          <MapCenterer location={userLocation} />
+
+          {/* User Location Marker */}
+          <Marker 
+            position={userLocation} 
+            icon={L.divIcon({
+              html: `<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg animate-pulse"></div>`,
+              className: 'custom-user-marker',
+              iconSize: [16, 16],
+              iconAnchor: [8, 8]
+            })} 
+          >
+            <Popup>You are here</Popup>
+          </Marker>
+
+          {/* Experience Markers */}
+          {experiences.map((exp) => (
+            <Marker 
+              key={exp.id} 
+              position={[exp.latitude, exp.longitude]}
+              eventHandlers={{
+                click: () => setSelectedExperience(exp)
+              }}
+            >
+              {/* Optional: Add a simple popup here too, but the slide-out panel handles the main UI */}
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
+
+      {/* Slide-out Panel for Attraction Details */}
+      {selectedExperience && (
+        <div className="absolute top-20 bottom-8 left-8 z-[500] w-96 bg-white rounded-3xl shadow-2xl border border-slate-200/60 flex flex-col overflow-hidden animate-in slide-in-from-left-8 duration-300">
+          <div className="relative h-56 bg-slate-200">
+            {selectedExperience.image_url ? (
+              <img src={selectedExperience.image_url} alt={selectedExperience.name} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-slate-200">
+                <MapPin className="w-12 h-12 text-slate-400" />
+              </div>
+            )}
+            <button 
+              onClick={() => setSelectedExperience(null)}
+              className="absolute top-4 right-4 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full text-white flex items-center justify-center hover:bg-black/60 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+              <span className="bg-white/90 backdrop-blur-md text-[#136b55] text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-lg">
+                {selectedExperience.category?.name || "Attraction"}
+              </span>
+            </div>
+          </div>
+          
+          <div className="p-6 flex-1 flex flex-col">
+            <h2 className="text-2xl font-black text-slate-900 mb-2 leading-tight">
+              {selectedExperience.name}
+            </h2>
+            <p className="text-sm text-slate-500 mb-6 line-clamp-3">
+              {selectedExperience.description || "A magnificent historical site rich with cultural heritage and architectural brilliance."}
+            </p>
+            
+            <div className="flex items-center gap-6 mb-8 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Ticket</span>
+                <span className="font-black text-slate-900 text-lg">
+                  ₹{selectedExperience.entry_fee_base || 100}
+                </span>
+              </div>
+              <div className="w-px h-8 bg-slate-200"></div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Duration</span>
+                <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-amber-500" /> 2-3 Hrs
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-auto pt-4 border-t border-slate-100 space-y-3">
+              <button 
+                onClick={handleAddToTrip}
+                className="w-full flex items-center justify-center gap-2 bg-[#136b55] hover:bg-[#0c4c3b] text-white px-6 py-4 rounded-2xl text-sm font-bold transition-all shadow-lg hover:-translate-y-1"
+              >
+                <CalendarPlus className="w-5 h-5" /> Add To Trip
+              </button>
+              <button className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3.5 rounded-2xl text-sm font-bold transition-all">
+                Buy Tickets Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add To Trip Modal */}
+      {showTripModal && (
+        <div className="absolute inset-0 z-[600] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-black text-slate-900">Add to Trip</h3>
+              <button onClick={() => setShowTripModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Trip Title</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. Jaipur Weekend Getaway"
+                  value={tripModalData.title}
+                  onChange={e => setTripModalData({...tripModalData, title: e.target.value})}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#136b55]/30"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Total Days</label>
+                  <select 
+                    value={tripModalData.days}
+                    onChange={e => setTripModalData({...tripModalData, days: parseInt(e.target.value)})}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#136b55]/30"
+                  >
+                    {[1,2,3,4,5,6,7].map(d => <option key={d} value={d}>{d} Days</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Add to Day</label>
+                  <select 
+                    value={tripModalData.currentDay}
+                    onChange={e => setTripModalData({...tripModalData, currentDay: parseInt(e.target.value)})}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#136b55]/30"
+                  >
+                    {Array.from({length: tripModalData.days}, (_, i) => i + 1).map(d => (
+                      <option key={d} value={d}>Day {d}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100">
+                <button 
+                  onClick={handleSaveTrip}
+                  disabled={isSavingTrip || !tripModalData.title.trim()}
+                  className="w-full flex items-center justify-center gap-2 bg-[#136b55] hover:bg-[#0c4c3b] disabled:bg-slate-300 text-white px-6 py-4 rounded-xl text-sm font-bold transition-all shadow-md"
+                >
+                  {isSavingTrip ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save to Trip"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

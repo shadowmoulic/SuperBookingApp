@@ -21,7 +21,7 @@ const CategoryIndex = () => {
             const IconComponent = category.icon;
             return (
               <div key={index} className={`bg-white p-6 rounded-3xl shadow-sm hover:shadow-xl transition-all cursor-pointer text-center group border ${category.highlight ? 'border-amber-400 bg-amber-50/30' : 'border-gray-100'}`}>
-                <div className={`w-16 h-16 ${category.highlight ? 'bg-amber-100 text-amber-600' : 'bg-indigo-50 text-indigo-600'} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-inner`}>
+                <div className={`w-16 h-16 ${category.highlight ? 'bg-amber-100 text-amber-600' : 'bg-emerald-50 text-[#136b55]'} rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform shadow-inner`}>
                   <IconComponent className="w-8 h-8" />
                 </div>
                 <h3 className={`font-bold ${category.highlight ? 'text-amber-800' : 'text-gray-900'}`}>{category.name}</h3>

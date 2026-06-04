@@ -1,6 +1,8 @@
 import axios from "axios";
 import { getApiUrl } from "../config";
 
+import { supabase } from "../config/supabaseClient";
+
 const api = axios.create({
   baseURL: getApiUrl(),
   withCredentials: true,
@@ -8,6 +10,14 @@ const api = axios.create({
 
 api.interceptors.request.use(
   async (config) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        config.headers.Authorization = `Bearer ${session.access_token}`;
+      }
+    } catch (err) {
+      console.error("Error getting Supabase session for request:", err);
+    }
     return config;
   },
   (error) => {
@@ -17,53 +27,14 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    const requestUrl = originalRequest?.url || "";
-    const isRefreshRequest = requestUrl.includes("/auth/refresh/");
-    const { status, data } = error.response || {};
-
-    // console.log(
-    //   `[Interceptor] Request: ${originalRequest.method?.toUpperCase()} ${requestUrl}, Status: ${status}, IsRefresh: ${isRefreshRequest}, Retry: ${originalRequest._retry}`,
-    // );
-
-    // Only attempt refresh on 401 if the error code indicates an expired token.
-    // This prevents refresh attempts for unauthenticated users.
-    // `simple-jwt` sends a `token_not_valid` code for expired tokens.
-    if (
-      status === 401 &&
-      data?.code === "token_not_valid" &&
-      !originalRequest._retry &&
-      !isRefreshRequest
-    ) {
-      // console.log("[Interceptor] Attempting token refresh...");
-      originalRequest._retry = true;
-      try {
-        await api.post("/auth/refresh/");
-        // console.log(
-        //   "[Interceptor] Token refresh successful, retrying original request",
-        // );
-        return api(originalRequest);
-      } catch (err) {
-        // console.error(
-        //   "[Interceptor] Token refresh failed:",
-        //   err.response?.status,
-        //   err.message,
-        // );
-        return Promise.reject(err);
-      }
-    }
-
-    // console.log(
-    //   `[Interceptor] Not retrying. Status: ${status}, Already retried: ${originalRequest._retry}, Is refresh: ${isRefreshRequest}`,
-    // );
+  (error) => {
     return Promise.reject(error);
   },
 );
 
-export const getExperiences = () => api.get("/experiences");
-export const getExperience = (id) => api.get(`/experiences/${id}`);
-export const createBooking = (data) => api.post("/bookings", data);
+export const getExperiences = () => api.get("/api/experiences/");
+export const getExperience = (id) => api.get(`/api/experience/${id}`);
+export const createBooking = (data) => api.post("/api/booking/create/", data);
 export const getBookings = (userId) => api.get(`/bookings/user/${userId}`);
 export const loginUser = (data) => api.post("/auth/login", data);
 export default api;

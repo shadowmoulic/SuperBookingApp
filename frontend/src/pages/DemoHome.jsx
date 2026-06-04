@@ -3,6 +3,7 @@ import {
   Search, MapPin, ChevronRight, Sparkles, Loader2,
   Clock, Users, Star, ArrowRight, CheckCircle
 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 /* ─────────────────────────────────────────────
    DATA
@@ -248,6 +249,7 @@ const WHY_ZEQUE = [
 ───────────────────────────────────────────── */
 
 export default function DemoHome() {
+  const navigate = useNavigate();
 
   // Hero Carousel
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -363,7 +365,7 @@ export default function DemoHome() {
                 placeholder="Where are you going?"
                 className="flex-1 bg-transparent border-none text-slate-800 focus:outline-none placeholder-slate-400 text-sm sm:text-base py-4 pr-4"
               />
-              <button className="m-2 bg-[#136b55] hover:bg-[#0c4c3b] text-white font-bold px-5 sm:px-7 py-3 rounded-xl text-sm transition-all duration-200 hover:scale-105 active:scale-95 shrink-0">
+              <button onClick={() => navigate("/states")} className="m-2 bg-[#136b55] hover:bg-[#0c4c3b] text-white font-bold px-5 sm:px-7 py-3 rounded-xl text-sm transition-all duration-200 hover:scale-105 active:scale-95 shrink-0">
                 Explore
               </button>
             </div>
@@ -428,14 +430,14 @@ export default function DemoHome() {
               Every city has a different story. Pick yours and start exploring.
             </p>
           </div>
-          <a href="#" className="hidden md:inline-flex items-center gap-1.5 text-sm font-bold text-[#136b55] hover:gap-2.5 transition-all mt-3 md:mt-0">
+          <Link to="/cities" className="hidden md:inline-flex items-center gap-1.5 text-sm font-bold text-[#136b55] hover:gap-2.5 transition-all mt-3 md:mt-0">
             View all cities <ArrowRight className="w-4 h-4" />
-          </a>
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
           {CITIES.map((city) => (
-            <div key={city.name} className="group relative h-72 sm:h-80 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer">
+            <Link to="/cities" key={city.name} className="group relative h-72 sm:h-80 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer block">
               <img src={city.image} alt={city.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/30 to-transparent" />
 
@@ -458,15 +460,15 @@ export default function DemoHome() {
                   ))}
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
         {/* CTA */}
         <div className="text-center mt-10">
-          <a href="#" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-3.5 rounded-full text-sm transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+          <Link to="/cities" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-3.5 rounded-full text-sm transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
             Start Exploring All Cities <ArrowRight className="w-4 h-4" />
-          </a>
+          </Link>
         </div>
       </section>
 
@@ -485,7 +487,7 @@ export default function DemoHome() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {CIRCUITS.map((c) => (
-              <div key={c.title} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 group cursor-pointer flex flex-col">
+              <Link to="/trails" key={c.title} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 group cursor-pointer flex flex-col">
                 <div className="h-48 relative overflow-hidden">
                   <img src={c.image} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -512,14 +514,14 @@ export default function DemoHome() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 
           <div className="text-center mt-10">
-            <a href="#" className="inline-flex items-center gap-2 border-2 border-slate-900 hover:bg-slate-900 hover:text-white text-slate-900 font-bold px-8 py-3.5 rounded-full text-sm transition-all duration-200">
+            <Link to="/trails" className="inline-flex items-center gap-2 border-2 border-slate-900 hover:bg-slate-900 hover:text-white text-slate-900 font-bold px-8 py-3.5 rounded-full text-sm transition-all duration-200">
               View All Heritage Trails <ArrowRight className="w-4 h-4" />
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -533,7 +535,7 @@ export default function DemoHome() {
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           {CATEGORIES.map((cat) => (
-            <div key={cat.name} className="group relative h-48 sm:h-56 rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <Link to="/categories" key={cat.name} className="group relative h-48 sm:h-56 rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <img src={cat.image} alt={cat.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 brightness-75" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-5">
@@ -543,7 +545,7 @@ export default function DemoHome() {
               <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
                 <ChevronRight className="w-4 h-4 text-white" />
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>

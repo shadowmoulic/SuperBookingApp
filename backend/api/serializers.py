@@ -103,6 +103,8 @@ class ExperienceShortSerializer(serializers.ModelSerializer):
             "is_open",
             "average_rating",
             "total_reviews",
+            "latitude",
+            "longitude",
         ]
 
     def get_category(self, obj):

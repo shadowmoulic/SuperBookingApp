@@ -27,19 +27,19 @@ const TopPlaces = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[1, 2, 3, 4].map(rank => (
                   <div key={rank} className="relative group cursor-pointer">
-                    <div className="absolute -left-4 -top-4 w-10 h-10 bg-indigo-600 text-white font-bold rounded-xl flex items-center justify-center shadow-lg z-20 transform -rotate-6 group-hover:rotate-0 transition-transform">
+                    <div className="absolute -left-4 -top-4 w-10 h-10 bg-[#136b55] text-white font-bold rounded-xl flex items-center justify-center shadow-lg z-20 transform -rotate-6 group-hover:rotate-0 transition-transform">
                       #{rank}
                     </div>
                     <div className="bg-gray-100 h-48 rounded-2xl mb-4 overflow-hidden relative">
                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     </div>
-                    <h3 className="font-bold text-lg text-gray-900 group-hover:text-indigo-600 transition-colors">Amazing Destination {rank}</h3>
+                    <h3 className="font-bold text-lg text-gray-900 group-hover:text-[#136b55] transition-colors">Amazing Destination {rank}</h3>
                     <p className="text-gray-500 text-sm">Region, State</p>
                   </div>
                 ))}
               </div>
               <div className="mt-8 text-center">
-                <button className="text-indigo-600 font-bold hover:bg-indigo-50 px-6 py-3 rounded-xl transition-colors">View Full List →</button>
+                <button className="text-[#136b55] font-bold hover:bg-emerald-50 px-6 py-3 rounded-xl transition-colors">View Full List →</button>
               </div>
             </div>
           ))}

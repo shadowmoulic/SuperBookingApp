@@ -1,6 +1,7 @@
-# https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /my-bookings
 
-# Sitemaps
-Sitemap: https://zeque.in/sitemap.xml
+Sitemap: https://zeque.com/sitemap.xml

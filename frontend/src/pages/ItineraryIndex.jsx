@@ -20,12 +20,12 @@ const ItineraryIndex = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
           {itineraries.map((itinerary, index) => (
             <div key={index} className="bg-white rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row gap-6 shadow-sm hover:shadow-xl transition-all cursor-pointer group border border-gray-100">
-              <div className="w-full sm:w-48 h-48 bg-indigo-50 rounded-2xl flex-shrink-0 flex flex-col items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+              <div className="w-full sm:w-48 h-48 bg-emerald-50 rounded-2xl flex-shrink-0 flex flex-col items-center justify-center text-[#136b55] group-hover:bg-[#136b55] group-hover:text-white transition-colors">
                 <Calendar className="w-10 h-10 mb-2" />
                 <span className="font-bold text-xl">{itinerary.days} Day{itinerary.days > 1 ? 's' : ''}</span>
               </div>
               <div className="flex-1 flex flex-col justify-center">
-                <h2 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-indigo-600 transition-colors">{itinerary.title}</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-[#136b55] transition-colors">{itinerary.title}</h2>
                 <p className="text-gray-600 mb-4">{itinerary.desc}</p>
                 <div className="mt-auto flex items-center gap-4 text-sm font-medium text-gray-500">
                   <span className="flex items-center gap-1 bg-gray-50 px-3 py-1 rounded-full"><MapPin className="w-4 h-4" /> Multiple Stops</span>

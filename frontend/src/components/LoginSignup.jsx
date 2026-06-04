@@ -76,7 +76,7 @@ export default function LoginSignup() {
           ×
         </button>
         <h1 className="text-xl font-extrabold mb-8 text-center bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-          {view === "signup" ? "Sign Up" : view === "forgot_password" ? "Reset Password" : "Log In"}
+          {view === "signup" ? "Create an Account" : view === "forgot_password" ? "Recover Password" : "Authenticate"}
         </h1>
 
         {message && (
@@ -132,7 +132,7 @@ export default function LoginSignup() {
             disabled={loading}
             className="w-full py-3 rounded-xl font-bold bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-400 hover:to-cyan-400 text-white transition-all shadow-lg shadow-cyan-500/25 disabled:opacity-50"
           >
-            {loading ? "Processing..." : view === "signup" ? "Sign Up" : view === "forgot_password" ? "Send Reset Link" : "Log In"}
+            {loading ? "Processing..." : view === "signup" ? "Create Account" : view === "forgot_password" ? "Send Recovery Link" : "Authenticate"}
           </button>
         </form>
 
@@ -143,7 +143,7 @@ export default function LoginSignup() {
               onClick={() => setView("forgot_password")}
               className="text-sm text-cyan-400 hover:underline focus:outline-none"
             >
-              Forgot Password?
+              Recover Password
             </button>
           </div>
         )}
@@ -159,29 +159,29 @@ export default function LoginSignup() {
               alt="Google"
               className="w-5 h-5"
             />
-            Continue with Google
+            Authenticate with Google
           </button>
         )}
 
         <div className="mt-8 text-center text-sm text-white/80">
           {view === "signup" ? (
             <p>
-              Already have an account?{" "}
+              Existing User?{" "}
               <button
                 onClick={() => setView("login")}
                 className="font-bold text-cyan-400 hover:underline focus:outline-none"
               >
-                Log In
+                Authenticate
               </button>
             </p>
           ) : (
             <p>
-              {view === "forgot_password" ? "Remember your password? " : "New user? "}
+              {view === "forgot_password" ? "Remember your password? " : "New User? "}
               <button
                 onClick={() => setView(view === "forgot_password" ? "login" : "signup")}
                 className="font-bold text-cyan-400 hover:underline focus:outline-none"
               >
-                {view === "forgot_password" ? "Log In" : "Sign Up"}
+                {view === "forgot_password" ? "Authenticate" : "Create Account"}
               </button>
             </p>
           )}
