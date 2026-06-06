@@ -107,7 +107,6 @@ class ExperienceListView(generics.ListAPIView):
             queryset = queryset.filter(
                 Q(name__icontains=search_query) | Q(description__icontains=search_query)
             )
-
         return queryset
 
     def get_serializer_context(self):

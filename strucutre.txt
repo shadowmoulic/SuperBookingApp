@@ -1,0 +1,511 @@
+You're mixing **R&D requirements** and **database design**, which is why it's becoming confusing.
+
+Think of it this way:
+
+# DEV TABLES (Supabase)
+
+These are the actual tables.
+
+## Core Content Tables
+
+### 1. states
+
+```text
+id (uuid)
+name (text)
+slug (text)
+description (text)
+hero_image (text)
+best_time_to_visit (text)
+seo_title (text)
+seo_description (text)
+created_at (timestamp)
+```
+
+---
+
+### 2. cities
+
+```text
+id (uuid)
+state_id (uuid)
+
+name (text)
+slug (text)
+
+description (text)
+
+latitude (numeric)
+longitude (numeric)
+
+hero_image (text)
+
+best_time_to_visit (text)
+
+seo_title (text)
+seo_description (text)
+
+created_at (timestamp)
+```
+
+---
+
+### 3. categories
+
+```text
+id (uuid)
+
+name (text)
+slug (text)
+
+description (text)
+
+hero_image (text)
+
+seo_title (text)
+seo_description (text)
+
+created_at (timestamp)
+```
+
+---
+
+### 4. attractions
+
+This is your biggest table.
+
+```text
+id (uuid)
+
+city_id (uuid)
+
+name (text)
+slug (text)
+
+description (text)
+short_description (text)
+
+address (text)
+
+latitude (numeric)
+longitude (numeric)
+
+opening_time (text)
+closing_time (text)
+
+best_time_to_visit (text)
+
+time_required (text)
+
+ticket_price_indian (numeric)
+ticket_price_foreigner (numeric)
+ticket_price_student (numeric)
+ticket_price_child (numeric)
+
+nearest_airport (text)
+distance_from_airport (numeric)
+
+nearest_station (text)
+distance_from_station (numeric)
+
+parking_available (boolean)
+wheelchair_accessible (boolean)
+audio_guide_available (boolean)
+
+featured_image (text)
+
+seo_title (text)
+seo_description (text)
+
+created_at (timestamp)
+```
+
+---
+
+### 5. attraction_categories
+
+Because one attraction can be:
+
+```text
+Museum
+UNESCO Site
+Colonial Architecture
+```
+
+at the same time.
+
+```text
+id
+
+attraction_id
+category_id
+```
+
+---
+
+### 6. attraction_images
+
+```text
+id
+
+attraction_id
+
+image_url
+
+display_order
+```
+
+---
+
+### 7. trails
+
+```text
+id
+
+name
+slug
+
+description
+
+days
+
+estimated_budget
+
+hero_image
+
+seo_title
+seo_description
+
+created_at
+```
+
+---
+
+### 8. trail_attractions
+
+```text
+id
+
+trail_id
+
+attraction_id
+
+day_number
+
+sequence
+```
+
+---
+
+### 9. faqs
+
+Instead of separate faq tables.
+
+```text
+id
+
+entity_type
+entity_id
+
+question
+answer
+```
+
+entity_type:
+
+```text
+state
+city
+category
+attraction
+trail
+```
+
+---
+
+### 10. people_also_ask
+
+```text
+id
+
+entity_type
+entity_id
+
+question
+answer
+```
+
+---
+
+### 11. related_entities
+
+For internal linking.
+
+```text
+id
+
+entity_type
+entity_id
+
+related_entity_type
+related_entity_id
+```
+
+Example:
+
+```text
+Amer Fort
+→ Jaigarh Fort
+
+Jaipur
+→ Udaipur
+
+Rajasthan
+→ Gujarat
+```
+
+---
+
+### 12. itineraries
+
+```text
+id
+
+city_id
+
+days
+
+title
+slug
+
+description
+
+seo_title
+seo_description
+```
+
+---
+
+### 13. itinerary_attractions
+
+```text
+id
+
+itinerary_id
+
+attraction_id
+
+day_number
+
+sequence
+```
+
+---
+
+# USER / BOOKING TABLES
+
+### 14. users
+
+```text
+id
+
+name
+email
+
+avatar
+
+role
+
+created_at
+```
+
+roles:
+
+```text
+user
+official
+admin
+```
+
+---
+
+### 15. saved_attractions
+
+```text
+id
+
+user_id
+attraction_id
+```
+
+---
+
+### 16. bookings
+
+```text
+id
+
+user_id
+attraction_id
+
+amount
+
+status
+
+booking_reference
+
+created_at
+```
+
+---
+
+# TOTAL TABLES
+
+### CONTENT
+
+```text
+states
+cities
+categories
+attractions
+attraction_categories
+attraction_images
+trails
+trail_attractions
+faqs
+people_also_ask
+related_entities
+itineraries
+itinerary_attractions
+```
+
+13 tables
+
+---
+
+### USER / BOOKING
+
+```text
+users
+saved_attractions
+bookings
+```
+
+3 tables
+
+---
+
+# TOTAL
+
+```text
+16 tables
+```
+
+That's honestly where I'd stop.
+
+---
+
+# R&D TEAM RESPONSIBILITY
+
+They NEVER touch:
+
+```text
+users
+bookings
+saved_attractions
+```
+
+---
+
+They ONLY fill data for:
+
+```text
+states
+cities
+categories
+attractions
+trails
+faqs
+people_also_ask
+itineraries
+```
+
+Specifically they provide:
+
+```text
+Descriptions
+
+SEO Titles
+
+SEO Descriptions
+
+FAQs
+
+PAA Questions
+
+Images
+
+Ticket Prices
+
+Opening Times
+
+Nearby Attractions
+
+Itineraries
+
+Trail Data
+```
+
+---
+
+# My One Change
+
+I'd actually remove:
+
+```text
+related_entities
+```
+
+for V1.
+
+Generate it automatically.
+
+So final final:
+
+```text
+15 tables
+```
+
+and that's a very clean architecture for Zeque.
+
+---
+
+### Final URL Structure I'd commit to
+
+```text
+/rajasthan
+
+/jaipur
+
+/jaipur/amer-fort
+
+/category/forts
+
+/trail/golden-triangle
+
+/jaipur/forts
+
+/jaipur/museums
+
+/jaipur/2-day-itinerary
+```
+
+I would **not** use:
+
+```text
+/ state / rajasthan
+
+/ city / jaipur
+```
+
+Google doesn't need it, users don't need it, and shorter URLs are cleaner.

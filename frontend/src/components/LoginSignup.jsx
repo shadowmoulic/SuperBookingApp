@@ -84,6 +84,7 @@ export default function LoginSignup() {
     setError("");
     if (!validateForm()) return;
     setLoading(true);
+    setMessage("");
 
     try {
       let result;
@@ -156,7 +157,6 @@ export default function LoginSignup() {
       setLoading(false);
     }
   };
-
   const handleGoogleLogin = async () => {
     setError("");
     setLoading(true);
@@ -530,7 +530,6 @@ export default function LoginSignup() {
             </button>
           </div>
         )}
-
       </div>
     </div>
   );

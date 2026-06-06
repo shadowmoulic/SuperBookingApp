@@ -1,0 +1,232 @@
+Yeah, and honestly Roamy is exactly the type of app you should be studying right now.
+
+Their core value proposition isn't:
+
+Book attractions
+
+It's:
+
+Save places → organize them → generate itinerary.
+
+They let users import places from Instagram, TikTok, screenshots, Google Maps links, etc., then automatically build optimized day-by-day itineraries and map routes.
+
+The Important Part
+
+For Zeque, don't copy Roamy.
+
+Copy the workflow.
+
+Roamy's flow:
+
+Saved Places
+     ↓
+Map
+     ↓
+AI Itinerary
+     ↓
+Trip
+
+Your flow should be:
+
+Location
+     ↓
+Discover Attractions
+     ↓
+AI Itinerary
+     ↓
+Book Tickets
+
+Notice the difference?
+
+Roamy ends at itinerary.
+
+You end at revenue.
+
+What I'd Build For Zeque
+
+Homepage CTA:
+
+Plan My Heritage Trip
+
+User enters:
+
+Jaipur
+
+3 Days
+
+History + Photography
+
+Output:
+
+Day 1
+
+Amer Fort
+Jaigarh Fort
+
+Day 2
+
+City Palace
+Hawa Mahal
+
+Day 3
+
+Albert Hall Museum
+Jantar Mantar
+
+Then:
+
+Book Tickets
+
+for each attraction.
+
+Now you're making money.
+
+The Feature I'd Steal
+
+Roamy has:
+
+See Everything On A Map
+
+This is huge.
+
+For Zeque:
+
+Imagine:
+
+Explore India Map
+
+User zooms into:
+
+Rajasthan
+Delhi
+Kolkata
+
+Pins appear.
+
+Click pin:
+
+Amer Fort
+
+Ticket ₹100
+
+3 Hours
+
+Add To Trip
+
+This is insanely sticky.
+
+The Thing Roamy Doesn't Have
+
+This is your opportunity.
+
+Roamy knows:
+
+Place
+
+You know:
+
+Place
+
++
+Ticket
+
++
+Historical Context
+
++
+Nearby Attractions
+
++
+ASI Data
+
++
+Categories
+
++
+Heritage Trails
+
+You have richer data.
+
+If I Were Designing Zeque V2
+
+I'd add a table:
+
+trips
+id
+
+user_id
+
+title
+
+city_id
+
+days
+
+created_at
+trip_attractions
+id
+
+trip_id
+
+attraction_id
+
+day_number
+
+sequence
+
+Then users can:
+
+Save Trip
+
+Share Trip
+
+Duplicate Trip
+
+Book Entire Trip
+
+Very similar to Roamy's trip model.
+
+The Bigger Insight
+
+Right now your team is thinking:
+
+State
+City
+Attraction
+
+which is good for SEO.
+
+But products like Roamy show users think:
+
+Trip
+
+not
+
+Attraction
+
+So your database should eventually support BOTH:
+
+SEO Layer
+
+State
+City
+Attraction
+Category
+Trail
+
+AND
+
+User Layer
+
+Trip
+Trip Attractions
+Saved Places
+Bookings
+
+That's when Zeque starts feeling less like a directory and more like a real travel product.
+
+If I had to choose one thing to copy from Roamy, it wouldn't be the AI itinerary.
+
+It would be the saved trip system.
+
+Because users come back to edit trips, while nobody comes back to reread a monument page. That's where retention lives.
