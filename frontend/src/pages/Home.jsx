@@ -428,16 +428,6 @@ function Home() {
             </section>
           );
         })}
-
-
-      {/* Support Chatbot FAB */}
-      <button
-        onClick={() => alert("Chatbot support coming soon!")}
-        className="fixed bottom-8 right-8 z-50 bg-primary text-white p-4 rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center hover:brightness-110 cursor-pointer"
-        aria-label="Contact Support Chatbot"
-      >
-        <span className="material-symbols-outlined text-3xl">support_agent</span>
-      </button>
     </div>
   );
 }

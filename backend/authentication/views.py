@@ -148,6 +148,11 @@ class MeView(APIView):
 
     def get(self, request):
         user = request.user
+        mobile = ""
+        try:
+            mobile = user.user_data.mobile
+        except Exception:
+            pass
         return Response(
             {
                 "id": user.id,
@@ -155,6 +160,35 @@ class MeView(APIView):
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
+                "mobile": mobile,
+            }
+        )
+
+    def patch(self, request):
+        user = request.user
+        first_name = request.data.get("first_name")
+        last_name = request.data.get("last_name")
+        mobile = request.data.get("mobile")
+
+        if first_name is not None:
+            user.first_name = first_name
+        if last_name is not None:
+            user.last_name = last_name
+        user.save()
+
+        if mobile is not None:
+            user_data, _ = User_Data.objects.get_or_create(user=user)
+            user_data.mobile = mobile
+            user_data.save()
+
+        return Response(
+            {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "mobile": user.user_data.mobile if hasattr(user, "user_data") else "",
             }
         )
 

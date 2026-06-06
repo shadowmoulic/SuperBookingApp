@@ -2,10 +2,9 @@ import React, { useState, useContext, useEffect } from 'react';
 import { BookMarked, MapPin, Calendar, Settings, Compass, ChevronRight, LogOut, Search, CreditCard, Sparkles, Loader2 } from 'lucide-react';
 import AuthContext from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../config/supabaseClient';
 
 const UserDashboard = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { user, logout, updateProfile } = useContext(AuthContext);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [editName, setEditName] = useState("");
@@ -15,12 +14,15 @@ const UserDashboard = () => {
 
   useEffect(() => {
     if (user) {
-      setEditName(user?.user_metadata?.full_name || "");
-      setEditPhone(user?.user_metadata?.phone || "");
+      const name = `${user.first_name || ""} ${user.last_name || ""}`.trim();
+      setEditName(name || user.username || "");
+      setEditPhone(user.mobile || "");
     }
   }, [user]);
 
-  const fullName = user?.user_metadata?.full_name || user?.email || "Traveler";
+  const fullName = user
+    ? `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.username || user.email
+    : "Traveler";
   const initials = fullName
     .split(" ")
     .map((n) => n[0])
@@ -43,13 +45,18 @@ const UserDashboard = () => {
     setIsUpdating(true);
     setUpdateMsg({ text: "", type: "" });
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: { full_name: editName, phone: editPhone }
+      const nameParts = editName.trim().split(" ");
+      const first_name = nameParts[0] || "";
+      const last_name = nameParts.slice(1).join(" ") || "";
+      
+      await updateProfile({
+        first_name,
+        last_name,
+        mobile: editPhone
       });
-      if (error) throw error;
       setUpdateMsg({ text: "Profile updated successfully!", type: "success" });
     } catch (err) {
-      setUpdateMsg({ text: err.message, type: "error" });
+      setUpdateMsg({ text: err.response?.data?.detail || err.message, type: "error" });
     } finally {
       setIsUpdating(false);
       setTimeout(() => setUpdateMsg({ text: "", type: "" }), 4000);

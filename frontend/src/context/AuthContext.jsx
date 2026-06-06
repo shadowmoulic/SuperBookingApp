@@ -1,5 +1,4 @@
 import { createContext, useState, useEffect, useCallback } from "react";
-import { supabase } from "../config/supabaseClient";
 import api from "../api/api";
 
 const AuthContext = createContext();
@@ -23,31 +22,26 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    checkUserStatus();
+  }, [checkUserStatus]);
 
   // For compatibility with any old references, we expose logout and login wrappers
-  // However, UI components should ideally use AuthServices directly for detailed error handling.
-  
   const loginWrapper = async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    try {
+      const response = await api.post("/auth/login/", {
+        username: email,
+        password: password,
+      });
+      if (response.status === 200 || response.status === 201) {
+        await checkUserStatus();
+      }
+    } catch (error) {
+      console.error(
+        "[Auth] Login failed:",
+        error.response?.data || error.message,
+      );
+      throw error;
+    }
   };
 
   const loginWithFirebaseToken = async (firebaseToken) => {
@@ -68,6 +62,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (profileData) => {
+    try {
+      const response = await api.patch("/auth/me/", profileData);
+      setUser(response.data);
+      return response.data;
+    } catch (error) {
+      console.error("[Auth] Profile update failed:", error);
+      throw error;
+    }
+  };
+
   const logout = async () => {
     await api.post("/auth/logout/");
     setUser(null);
@@ -80,6 +85,7 @@ export const AuthProvider = ({ children }) => {
     login: loginWrapper,
     loginWithFirebaseToken,
     logout,
+    updateProfile,
   };
 
   return (
