@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef, useContext } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ChevronRight, ChevronLeft, Sparkles, Loader2,
-  ArrowRight, CheckCircle, MapPin
+  ArrowRight, CheckCircle, MapPin, Search
 } from "lucide-react";
 import api from "../api/api";
 import BookingCard from "../components/BookingCard";
@@ -11,22 +11,13 @@ import LocationContext from "../context/LocationContext";
 import TrailCard from "../components/TrailCard";
 import LocationBentoCard from "../components/LocationBentoCard";
 
-const heroSlides = [
-  {
-    image: "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1200&q=80",
-    label: "Explore Heritage Sites",
-    description: "Uncover the stories behind the world's most iconic monuments with exclusive guided tours and seamless digital booking."
-  },
-  {
-    image: "https://images.unsplash.com/photo-1602643163983-ed0babc39797?auto=format&fit=crop&w=1200&q=80",
-    label: "Offer Closes Soon!!",
-    description: "Grab exclusive entry deals, premium guided group slots, and seasonal heritage discounts today."
-  },
-  {
-    image: "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=80",
-    label: "Discover Ancient Wonders",
-    description: "Journey through centuries of architectural excellence and cultural legacy with curated audio guides."
-  },
+const HERO_SLIDES = [
+  { image: "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1200&q=70", title: "Taj Mahal", location: "Agra, Uttar Pradesh" },
+  { image: "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1200&q=70", title: "Amer Fort", location: "Jaipur, Rajasthan" },
+  { image: "https://www.hampitrip.com/_next/image?url=https%3A%2F%2Fstorage.hampitrip.com%2Fhampitrip%2Fhampi%2Fhampi03.webp&w=1920&q=80", title: "Hampi Monuments", location: "Hampi, Karnataka" },
+  { image: "https://www.oberoihotels.com/-/media/oberoi-hotel/kolkata_8-aug-24/destination/banner1920x980.jpg", title: "Victoria Memorial", location: "Kolkata, West Bengal" },
+  { image: "https://s7ap1.scene7.com/is/image/incredibleindia/qutab-minar-delhi-attr-hero?qlt=82&ts=1742169673469", title: "Qutub Minar", location: "New Delhi, Delhi" },
+  { image: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0f/98/f7/df/charminar.jpg?w=1400&h=-1&s=1", title: "Charminar", location: "Hyderabad, Telangana" },
 ];
 
 const CIRCUITS = [
@@ -205,61 +196,7 @@ const WHY_ZEQUE = [
 
 const INTERESTS = ["History", "Architecture", "Photography", "Spiritual", "Family", "Adventure"];
 
-function HeroBanner() {
-  const [current, setCurrent] = useState(0);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % heroSlides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
-
-  return (
-    <div className="h-[500px] rounded-xl relative overflow-hidden group shadow-lg mb-16">
-      {heroSlides.map((slide, i) => (
-        <div
-          key={i}
-          className="absolute inset-0 transition-opacity duration-1000"
-          style={{ opacity: i === current ? 1 : 0 }}
-        >
-          <img
-            src={slide.image}
-            alt={slide.label}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-          <div className="absolute inset-0 flex flex-col justify-end p-6 sm:p-12">
-            <h1 className="font-['Hanken_Grotesk'] text-2xl sm:text-5xl lg:text-[48px] lg:leading-[56px] font-bold text-[#fff] mb-4 drop-shadow-md leading-tight max-w-3xl tracking-[-0.02em]">
-              {slide.label}
-            </h1>
-            <p className="font-['Inter'] text-[#fff]/80 text-xs sm:text-base lg:text-[18px] lg:leading-[28px] max-w-2xl mb-8 drop-shadow-sm">
-              {slide.description}
-            </p>
-            <div className="flex gap-4">
-              <button className="bg-primary text-on-primary font-['Hanken_Grotesk'] font-semibold text-sm sm:text-base px-8 py-3.5 rounded-full hover:bg-opacity-90 transition-all flex items-center gap-2 w-fit active:scale-95 shadow-md">
-                Book Now <span className="material-symbols-outlined text-lg sm:text-xl">arrow_forward</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      ))}
-
-      {/* Dot indicators */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-        {heroSlides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "w-8 bg-white" : "w-2 bg-white/40"
-              }`}
-            aria-label={`Go to slide ${i + 1}`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
 
 
 function SmallExperienceCard({ experience }) {
@@ -343,7 +280,26 @@ function CategoryGridCard({ category }) {
 }
 
 function Home() {
+  const navigate = useNavigate();
   const { selectedLocation } = useContext(LocationContext);
+
+  // Hero Carousel (from DemoHome Section 1)
+  const [currentSlide, setCurrentSlide] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setCurrentSlide(p => (p + 1) % HERO_SLIDES.length), 4500);
+    return () => clearInterval(t);
+  }, []);
+
+  // Search (from DemoHome Section 1)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
+  const searchRef = useRef(null);
+  const QUICK_CHIPS = ["Jaipur Forts", "Delhi Heritage Walk", "Temples in Varanasi", "Hampi Ruins", "UNESCO Sites"];
+  useEffect(() => {
+    const handler = (e) => { if (searchRef.current && !searchRef.current.contains(e.target)) setSearchFocused(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
   const [homeData, setHomeData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -532,10 +488,117 @@ function Home() {
         </div>
       )}
 
-      {/* Main constrained container for Banner, Bookings, Categories, Locations */}
+      {/* ── SECTION 1: HERO (from DemoHome) ───────────────────────────────── */}
+      <section className="relative w-full h-[88vh] min-h-[560px] flex items-center overflow-hidden">
+        {/* Background slides */}
+        {HERO_SLIDES.map((slide, i) => (
+          <div key={i} className={`absolute inset-0 transition-opacity duration-700 ${i === currentSlide ? "opacity-100" : "opacity-0"}`}>
+            <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-slate-900/20" />
+          </div>
+        ))}
+
+        {/* Slide nav dots */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+          {HERO_SLIDES.map((_, i) => (
+            <button
+              key={i} onClick={() => setCurrentSlide(i)}
+              className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? "w-7 bg-amber-400" : "w-2 bg-white/40 hover:bg-white/70"}`}
+              aria-label={`Slide ${i + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Location badge */}
+        <div className="absolute bottom-8 right-6 z-20 hidden sm:block text-right">
+          <p className="text-amber-400 font-bold text-sm">{HERO_SLIDES[currentSlide].title}</p>
+          <p className="text-slate-300 text-xs">{HERO_SLIDES[currentSlide].location}</p>
+        </div>
+
+        {/* Hero copy and search */}
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-8">
+          <p className="text-amber-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-4">India's Heritage Discovery Platform</p>
+
+          <h1 className="text-[1.65rem] leading-tight sm:text-5xl lg:text-7xl font-black text-white sm:leading-[1.05] tracking-tight mb-4">
+            Don't Just Visit India.<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400">Understand It.</span>
+          </h1>
+
+          <p className="text-slate-300 text-base sm:text-xl font-light mb-10 max-w-xl leading-relaxed">
+            Explore 1500+ monuments, heritage trails and historic cities.
+          </p>
+
+          {/* Search bar */}
+          <div ref={searchRef} className="relative max-w-2xl">
+            <div className={`flex items-center bg-surface-container rounded-2xl shadow-2xl transition-all duration-200 ${searchFocused ? "ring-4 ring-primary/40" : ""}`}>
+              <div className="pl-5 pr-2 text-on-surface-variant">
+                <Search className="w-5 h-5" />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onFocus={() => setSearchFocused(true)}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Where are you going?"
+                className="flex-1 bg-transparent border-none text-on-surface focus:outline-none placeholder-on-surface-variant/60 text-sm sm:text-base py-4 pr-4"
+              />
+              <button onClick={() => navigate("/states")} className="m-2 bg-primary hover:bg-opacity-95 text-on-primary font-bold px-5 sm:px-7 py-3 rounded-xl text-sm transition-all duration-200 hover:scale-105 active:scale-95 shrink-0">
+                Explore
+              </button>
+            </div>
+
+            {/* Suggestions */}
+            {searchFocused && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant p-4 z-30">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2 px-1">Popular searches</p>
+                <div className="space-y-0.5">
+                  {QUICK_CHIPS.map((chip) => (
+                    <button
+                      key={chip}
+                      onClick={() => { setSearchQuery(chip); setSearchFocused(false); }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-surface-container rounded-xl text-on-surface text-sm transition-colors text-left"
+                    >
+                      <Search className="w-3.5 h-3.5 text-on-surface-variant" />
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick chips */}
+          <div className="flex flex-wrap items-center gap-2 mt-5">
+            <span className="text-on-surface-variant text-xs font-semibold">Trending:</span>
+            {["Taj Mahal", "Amer Fort", "Varanasi Ghats", "Hampi"].map((chip) => (
+              <button
+                key={chip}
+                onClick={() => setSearchQuery(chip)}
+                className="bg-white/10 hover:bg-white/20 text-white text-xs px-3.5 py-1.5 rounded-full border border-white/15 backdrop-blur-sm transition-all duration-150 hover:scale-105"
+              >
+                {chip}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 2: TRUST BAR (from DemoHome) ─────────────────────────── */}
+      <section className="bg-surface-container-lowest border-b border-outline-variant/30 py-6">
+        <div className="max-w-[1280px] mx-auto px-6 md:px-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 text-center">
+            {[["1500+", "Heritage Sites"], ["500+", "Cities Mapped"], ["42", "UNESCO Landmarks"], ["5", "Curated Trails"]].map(([num, label]) => (
+              <div key={label} className="py-4 px-3 rounded-2xl bg-surface-container-low border border-outline-variant/50">
+                <p className="text-2xl sm:text-3xl font-black text-primary">{num}</p>
+                <p className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase tracking-wider mt-1">{label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Main constrained container for Bookings, Categories, Locations */}
       <div className="max-w-[1280px] mx-auto px-6 md:px-16 py-8">
-        {/* Hero Banner */}
-        <HeroBanner />
 
         {/* Continue Booking */}
         {homeData.continue_booking &&
@@ -551,14 +614,14 @@ function Home() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <button 
+                  <button
                     onClick={() => scrollContainer(continueBookingRef, 'left')}
                     className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
                     aria-label="Scroll left"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
-                  <button 
+                  <button
                     onClick={() => scrollContainer(continueBookingRef, 'right')}
                     className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
                     aria-label="Scroll right"
@@ -571,9 +634,9 @@ function Home() {
                 <div ref={continueBookingRef} className="flex overflow-x-auto pb-4 gap-6 scroll-smooth snap-x snap-mandatory no-scrollbar">
                   {Array.isArray(homeData.continue_booking) ? (
                     homeData.continue_booking.map((booking) => (
-                       <div key={booking.id} className="w-[300px] sm:w-[340px] shrink-0 snap-start">
-                         <BookingCard booking={booking} />
-                       </div>
+                      <div key={booking.id} className="w-[300px] sm:w-[340px] shrink-0 snap-start">
+                        <BookingCard booking={booking} />
+                      </div>
                     ))
                   ) : (
                     <p className="font-['Inter'] text-sm text-gray-500">No pending bookings</p>
@@ -597,14 +660,14 @@ function Home() {
                 </p>
               </div>
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={() => scrollContainer(categoriesRef, 'left')}
                   className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
                   aria-label="Scroll left"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <button 
+                <button
                   onClick={() => scrollContainer(categoriesRef, 'right')}
                   className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
                   aria-label="Scroll right"
@@ -640,14 +703,14 @@ function Home() {
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex gap-2">
-                  <button 
+                  <button
                     onClick={() => scrollContainer(locationsRef, 'left')}
                     className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
                     aria-label="Scroll left"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
-                  <button 
+                  <button
                     onClick={() => scrollContainer(locationsRef, 'right')}
                     className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
                     aria-label="Scroll right"
@@ -693,14 +756,14 @@ function Home() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="flex gap-2">
-                      <button 
+                      <button
                         onClick={() => scrollFeaturedCat(catIdx, 'left')}
                         className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
                         aria-label="Scroll left"
                       >
                         <ChevronLeft className="w-5 h-5" />
                       </button>
-                      <button 
+                      <button
                         onClick={() => scrollFeaturedCat(catIdx, 'right')}
                         className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
                         aria-label="Scroll right"
@@ -744,14 +807,14 @@ function Home() {
               </p>
             </div>
             <div className="flex gap-2 self-end mt-4 md:mt-0">
-              <button 
+              <button
                 onClick={() => scrollContainer(circuitsRef, 'left')}
                 className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
                 aria-label="Scroll left"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              <button 
+              <button
                 onClick={() => scrollContainer(circuitsRef, 'right')}
                 className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
                 aria-label="Scroll right"
@@ -763,7 +826,7 @@ function Home() {
           <div className="relative">
             <div ref={circuitsRef} className="flex overflow-x-auto pb-4 gap-6 scroll-smooth snap-x snap-mandatory no-scrollbar">
               {(homeData.featured_trails && homeData.featured_trails.length > 0 ? homeData.featured_trails : CIRCUITS).map((c) => (
-                <div key={c.title || c.name} className="w-[280px] sm:w-[360px] shrink-0 snap-start">
+                <div key={c.name} className="w-[280px] sm:w-[360px] shrink-0 snap-start">
                   <TrailCard trail={c} />
                 </div>
               ))}

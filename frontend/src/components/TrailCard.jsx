@@ -9,8 +9,8 @@ export default function TrailCard({ trail }) {
     >
       <div className="h-48 relative overflow-hidden">
         <img
-          src={trail.image || trail.image_url}
-          alt={trail.title || trail.name}
+          src={trail.image_url}
+          alt={trail.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -20,13 +20,13 @@ export default function TrailCard({ trail }) {
       </div>
       <div className="p-5 sm:p-6 flex-1 flex flex-col">
         <h3 className="font-['Hanken_Grotesk'] font-bold text-base sm:text-lg text-on-surface group-hover:text-primary transition-colors">
-          {trail.title || trail.name}
+          {trail.name}
         </h3>
         <p className="font-['Inter'] text-xs font-bold text-primary uppercase tracking-wider mt-1">
           {trail.route}
         </p>
         <p className="font-['Inter'] text-on-surface-variant text-xs sm:text-sm mt-3 leading-relaxed flex-1">
-          {trail.desc || trail.description}
+          {trail.description}
         </p>
 
         {/* Highlights */}

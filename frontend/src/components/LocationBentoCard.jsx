@@ -40,13 +40,13 @@ function LocationBentoCard({ location }) {
             {location.name}
           </h3>
           <p className="text-[#fff]/80 font-['Inter'] text-sm mt-1">India</p>
-          
+
           {stats.length > 0 && (
             <div className="grid grid-cols-3 gap-1.5 mt-3">
               {stats.map((s) => (
                 <div key={s.label} className="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-1.5 text-center">
                   <p className="text-[#fff] font-bold text-xs">{s.value}</p>
-                  <p className="text-slate-350 text-[9px] leading-tight mt-0.5">{s.label}</p>
+                  <p className="text-[#ddd] text-[9px] leading-tight mt-0.5">{s.label}</p>
                 </div>
               ))}
             </div>

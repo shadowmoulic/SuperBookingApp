@@ -23,6 +23,7 @@ function Navbar() {
 
   const lastScrollYRef = useRef(0);
   const [visible, setVisible] = useState(true);
+  const [showSearch, setShowSearch] = useState(false);
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,6 +62,13 @@ function Navbar() {
         setVisible(true);
       }
       lastScrollYRef.current = currentScrollY;
+
+      // Show search bar only after scrolling past the hero section (400px)
+      if (currentScrollY > 400) {
+        setShowSearch(true);
+      } else {
+        setShowSearch(false);
+      }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -148,7 +156,9 @@ function Navbar() {
           </div>
 
           {/* Centered Search Wrapper (Desktop) */}
-          <div className="flex-1 max-w-sm relative hidden sm:flex items-center bg-surface-container border border-outline-variant rounded-full shadow-xs px-2 py-1.5 font-['Inter']">
+          <div className={`flex-1 max-w-sm relative hidden sm:flex items-center bg-surface-container border border-outline-variant rounded-full shadow-xs px-2 py-1.5 font-['Inter'] transition-all duration-300 ${
+            showSearch ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
+          }`}>
             <div ref={navbarLocRef} className="relative flex items-center select-none border-r border-outline-variant pr-1 pl-1">
               <button
                 type="button"
@@ -202,7 +212,9 @@ function Navbar() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="sm:hidden flex w-10 h-10 rounded-full border border-outline-variant text-on-surface items-center justify-center hover:text-primary hover:border-primary transition-all shadow-xs cursor-pointer bg-surface-container-lowest"
+              className={`sm:hidden flex w-10 h-10 rounded-full border border-outline-variant text-on-surface items-center justify-center hover:text-primary hover:border-primary transition-all shadow-xs cursor-pointer bg-surface-container-lowest ${
+                showSearch ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none w-0 overflow-hidden border-none p-0 m-0"
+              }`}
               aria-label="Search"
             >
               <span className="material-symbols-outlined text-xl">search</span>
