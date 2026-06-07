@@ -45,8 +45,7 @@ function AppContent() {
       <Chatbot />
       <div className="pt-[73px]">
         <Routes>
-          <Route path="/" element={<DemoHome />} />
-          <Route path="/old-home" element={<Home />} />
+          <Route path="/" element={<Home />} />
           <Route path="/experience/:id" element={<ExperienceDetails />} />
           <Route path="/location/:id" element={<LocationDetails />} />
           <Route path="/booking/:id" element={<BookingPage />} />
