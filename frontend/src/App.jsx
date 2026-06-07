@@ -4,7 +4,7 @@ import Home from "./pages/Home";
 import DemoHome from "./pages/DemoHome";
 import { ExperienceDetails } from "./pages/ExperienceDetails";
 import MyBookings from "./pages/MyBookings";
-import Navbar from "./components/NewNavbar";
+import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import { ModalProvider } from "./context/ModalContext";
@@ -43,7 +43,7 @@ function AppContent() {
       <Navbar />
       {isLoginModalOpen && <LoginSignup />}
       <Chatbot />
-      <div className="">
+      <div className="pt-[73px]">
         <Routes>
           <Route path="/" element={<DemoHome />} />
           <Route path="/old-home" element={<Home />} />

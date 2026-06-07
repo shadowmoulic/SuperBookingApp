@@ -51,12 +51,66 @@ class ReviewSerializer(serializers.ModelSerializer):
         ]
 
 
+class ProviderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContentModel.Provider
+        fields = [
+            "public_id",
+            "name",
+            "description",
+            "contact_email",
+            "contact_phone",
+            "website_url",
+            "is_active",
+        ]
+
+
+class PricingRuleSerializer(serializers.ModelSerializer):
+    final_price = serializers.SerializerMethodField()
+    is_active = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ContentModel.PricingRule
+        fields = [
+            "id",
+            "base_price",
+            "seasonal_multiplier",
+            "valid_from",
+            "valid_to",
+            "final_price",
+            "is_active",
+        ]
+
+    def get_final_price(self, obj):
+        return obj.get_final_price()
+
+    def get_is_active(self, obj):
+        return obj.is_active()
+
+
+
+class TicketTypeSerializer(serializers.ModelSerializer):
+    pricing_rules = PricingRuleSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ContentModel.TicketType
+        fields = [
+            "public_id",
+            "name",
+            "description",
+            "is_active",
+            "pricing_rules",
+        ]
+
+
 class ExperienceSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
     total_reviews = serializers.SerializerMethodField()
     reviews = serializers.SerializerMethodField()
+    provider = ProviderSerializer(read_only=True)
+    ticket_types = TicketTypeSerializer(many=True, read_only=True)
 
     class Meta:
         model = ContentModel.Experience
@@ -66,6 +120,8 @@ class ExperienceSerializer(serializers.ModelSerializer):
             "description",
             "category",
             "location",
+            "provider",
+            "ticket_types",
             "latitude",
             "longitude",
             "image_url",
@@ -135,6 +191,7 @@ class ExperienceShortSerializer(serializers.ModelSerializer):
     location = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
     total_reviews = serializers.SerializerMethodField()
+    provider = ProviderSerializer(read_only=True)
 
     class Meta:
         model = ContentModel.Experience
@@ -143,6 +200,7 @@ class ExperienceShortSerializer(serializers.ModelSerializer):
             "name",
             "category",
             "location",
+            "provider",
             "image_url",
             "entry_fee_base",
             "is_open",
@@ -432,3 +490,55 @@ class UserDataRegisterSerializer(serializers.ModelSerializer):
             setattr(profile, attr, value)
         profile.save()
         return profile
+
+
+class InventorySerializer(serializers.ModelSerializer):
+    experience = serializers.SlugRelatedField(
+        slug_field="public_id", read_only=True
+    )
+
+    class Meta:
+        model = BookingModel.Inventory
+        fields = [
+            "public_id",
+            "experience",
+            "inventory_date",
+            "total_capacity",
+            "available_capacity",
+            "reserved_capacity",
+            "is_closed",
+        ]
+
+
+class CollectionExperienceSerializer(serializers.ModelSerializer):
+    experience = ExperienceShortSerializer(read_only=True)
+
+    class Meta:
+        model = ContentModel.CollectionExperience
+        fields = [
+            "display_order",
+            "experience",
+        ]
+
+
+class CollectionSerializer(serializers.ModelSerializer):
+    experiences = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ContentModel.Collection
+        fields = [
+            "public_id",
+            "name",
+            "description",
+            "collection_type",
+            "image_url",
+            "is_active",
+            "experiences",
+        ]
+
+    def get_experiences(self, obj):
+        relations = obj.collection_experiences.select_related(
+            "experience", "experience__category", "experience__location"
+        ).order_by("display_order")
+        active_relations = [r for r in relations if r.experience.deleted_at is None]
+        return CollectionExperienceSerializer(active_relations, many=True).data

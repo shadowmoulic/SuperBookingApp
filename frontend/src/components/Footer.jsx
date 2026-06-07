@@ -10,7 +10,7 @@ export default function Footer() {
   const locSlug = selectedLocation ? selectedLocation.toLowerCase().replace(/\s+/g, "-") : "all";
 
   return (
-    <footer className="mt-16 relative overflow-hidden">
+    <footer className="mt-16 relative overflow-hidden bg-surface-container-low border-t border-outline-variant/20">
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 py-16 relative z-10">
         {/* Branding Section */}
@@ -22,18 +22,18 @@ export default function Footer() {
                 <span className="nq">Que</span>
                 <span className="ndot">●</span>
               </div>
-              <p className="text-gray-400 text-sm">
+              <p className="text-on-surface-variant/80 text-sm mt-3">
                 Discover, explore, and book heritage monuments with ease.
               </p>
             </div>
             <div className="flex gap-4">
               <a
                 href="#"
-                className="p-2 rounded-lg bg-white/10 hover:bg-teal-500/20 transition-all duration-300 transform hover:scale-110"
+                className="p-2 rounded-lg bg-on-surface/10 hover:bg-primary/20 transition-all duration-300 transform hover:scale-110"
                 aria-label="Facebook"
               >
                 <svg
-                  className="w-5 h-5 text-gray-900"
+                  className="w-5 h-5 text-on-surface"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -42,11 +42,11 @@ export default function Footer() {
               </a>
               <a
                 href="#"
-                className="p-2 rounded-lg bg-white/10 hover:bg-teal-500/20 transition-all duration-300 transform hover:scale-110"
+                className="p-2 rounded-lg bg-on-surface/10 hover:bg-primary/20 transition-all duration-300 transform hover:scale-110"
                 aria-label="Twitter"
               >
                 <svg
-                  className="w-5 h-5 text-gray-900"
+                  className="w-5 h-5 text-on-surface"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -55,11 +55,11 @@ export default function Footer() {
               </a>
               <a
                 href="#"
-                className="p-2 rounded-lg bg-white/10 hover:bg-teal-500/20 transition-all duration-300 transform hover:scale-110"
+                className="p-2 rounded-lg bg-on-surface/10 hover:bg-primary/20 transition-all duration-300 transform hover:scale-110"
                 aria-label="Instagram"
               >
                 <svg
-                  className="w-5 h-5 text-gray-900"
+                  className="w-5 h-5 text-on-surface"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -68,11 +68,11 @@ export default function Footer() {
               </a>
               <a
                 href="#"
-                className="p-2 rounded-lg bg-white/10 hover:bg-teal-500/20 transition-all duration-300 transform hover:scale-110"
+                className="p-2 rounded-lg bg-on-surface/10 hover:bg-primary/20 transition-all duration-300 transform hover:scale-110"
                 aria-label="YouTube"
               >
                 <svg
-                  className="w-5 h-5 text-gray-900"
+                  className="w-5 h-5 text-on-surface"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
@@ -83,12 +83,12 @@ export default function Footer() {
           </div>
 
           <nav className="col-span-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Discover</h3>
+            <h3 className="text-lg font-semibold text-on-surface mb-4">Discover</h3>
             <ul className="space-y-3">
               <li>
                 <Link
                   to={`/${locSlug}/museum`}
-                  className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
+                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
                 >
                   Museums
                 </Link>
@@ -96,7 +96,7 @@ export default function Footer() {
               <li>
                 <Link
                   to={`/${locSlug}/religious-site`}
-                  className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
+                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
                 >
                   Temples & Heritage
                 </Link>
@@ -104,7 +104,7 @@ export default function Footer() {
               <li>
                 <Link
                   to={`/${locSlug}/fort`}
-                  className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
+                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
                 >
                   Forts & Palaces
                 </Link>
@@ -112,7 +112,7 @@ export default function Footer() {
               <li>
                 <Link
                   to={`/${locSlug}/all`}
-                  className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
+                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
                 >
                   All Experiences
                 </Link>
@@ -122,14 +122,14 @@ export default function Footer() {
 
           {/* Help & Support */}
           <nav className="col-span-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h3 className="text-lg font-semibold text-on-surface mb-4">
               Help & Support
             </h3>
             <ul className="space-y-3">
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
+                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
                 >
                   Help Center
                 </a>
@@ -137,7 +137,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
+                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
                 >
                   Booking FAQs
                 </a>
@@ -145,7 +145,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
+                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
                 >
                   Cancellation Policy
                 </a>
@@ -153,7 +153,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
+                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
                 >
                   Contact Us
                 </a>
@@ -163,14 +163,14 @@ export default function Footer() {
 
           {/* Legal & Privacy */}
           <nav className="col-span-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h3 className="text-lg font-semibold text-on-surface mb-4">
               Legal & Privacy
             </h3>
             <ul className="space-y-3">
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
+                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
                 >
                   Privacy Policy
                 </a>
@@ -178,7 +178,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
+                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
                 >
                   Terms of Service
                 </a>
@@ -186,7 +186,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
+                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
                 >
                   Cookie Policy
                 </a>
@@ -194,7 +194,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-gray-400 hover:text-teal-400 transition-colors duration-300"
+                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
                 >
                   Security
                 </a>
@@ -204,39 +204,38 @@ export default function Footer() {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-gray-800 my-8"></div>
+        <div className="border-t border-outline-variant/30 my-8"></div>
 
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-sm text-gray-500">
-            © {currentYear} ZeQue. All rights reserved. | Bringing history to
-            life
+          <p className="text-sm text-on-surface-variant/70">
+            © {currentYear} ZeQue. All rights reserved. | Bringing history to life
           </p>
           <div className="flex gap-4 flex-wrap justify-center items-center">
             <a
               href="#"
-              className="text-xs text-gray-500 hover:text-teal-400 transition-colors"
+              className="text-xs text-on-surface-variant/70 hover:text-primary transition-colors"
             >
               Accessibility
             </a>
-            <span className="text-gray-700">•</span>
+            <span className="text-outline-variant">•</span>
             <a
               href="#"
-              className="text-xs text-gray-500 hover:text-teal-400 transition-colors"
+              className="text-xs text-on-surface-variant/70 hover:text-primary transition-colors"
             >
               Sitemap
             </a>
-            <span className="text-gray-700">•</span>
+            <span className="text-outline-variant">•</span>
             <a
               href="#"
-              className="text-xs text-gray-500 hover:text-teal-400 transition-colors"
+              className="text-xs text-on-surface-variant/70 hover:text-primary transition-colors"
             >
               Feedback
             </a>
-            <span className="text-gray-700">•</span>
+            <span className="text-outline-variant">•</span>
             <button
               onClick={toggleTheme}
-              className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-primary transition-colors bg-transparent border-none py-0 px-1 cursor-pointer focus:outline-none"
+              className="flex items-center gap-1.5 text-xs font-semibold text-on-surface-variant/70 hover:text-primary transition-colors bg-transparent border-none py-0 px-1 cursor-pointer focus:outline-none"
               style={{ transform: 'none', boxShadow: 'none' }}
               aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
             >
@@ -250,13 +249,13 @@ export default function Footer() {
       </div>
 
       {/* Decorative Elements */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
         <div
-          className="absolute top-0 right-0 w-96 h-96 bg-teal-500 rounded-full mix-blend-multiply filter blur-3xl"
+          className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full mix-blend-multiply filter blur-3xl"
           style={{ animation: "float 6s ease-in-out infinite" }}
         ></div>
         <div
-          className="absolute bottom-0 left-0 w-96 h-96 bg-[rgb(240,165,0)] rounded-full mix-blend-multiply filter blur-3xl"
+          className="absolute bottom-0 left-0 w-96 h-96 bg-tertiary-container rounded-full mix-blend-multiply filter blur-3xl"
           style={{ animation: "float 8s ease-in-out infinite reverse" }}
         ></div>
       </div>

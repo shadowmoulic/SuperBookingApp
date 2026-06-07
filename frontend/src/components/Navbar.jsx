@@ -98,7 +98,7 @@ function Navbar() {
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-xs transition-transform duration-300 ${visible ? "translate-y-0" : "-translate-y-full"
+      <nav className={`fixed top-0 left-0 right-0 z-50 w-full bg-surface-container-low backdrop-blur-md border-b border-outline-variant/30 shadow-xs transition-transform duration-300 ${visible ? "translate-y-0" : "-translate-y-full"
         }`}>
         <div className="navbar-content max-w-[1280px] mx-auto flex items-center justify-between gap-6 px-6 py-4">
 
@@ -128,19 +128,19 @@ function Navbar() {
             <div className="hidden lg:flex items-center gap-1 font-['Hanken_Grotesk']">
               <Link
                 to="/"
-                className="px-3.5 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:text-primary hover:bg-gray-50 active:scale-98 transition-all"
+                className="px-3.5 py-2 rounded-lg text-sm font-semibold text-on-surface-variant hover:text-primary hover:bg-surface-container active:scale-98 transition-all"
               >
                 Discover
               </Link>
               <Link
                 to={`/${selectedLocation.toLowerCase().replace(/\s+/g, '-')}/museum`}
-                className="px-3.5 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:text-primary hover:bg-gray-50 active:scale-98 transition-all"
+                className="px-3.5 py-2 rounded-lg text-sm font-semibold text-on-surface-variant hover:text-primary hover:bg-surface-container active:scale-98 transition-all"
               >
                 Museums
               </Link>
               <Link
                 to={`/${selectedLocation.toLowerCase().replace(/\s+/g, '-')}/heritage`}
-                className="px-3.5 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:text-primary hover:bg-gray-50 active:scale-98 transition-all"
+                className="px-3.5 py-2 rounded-lg text-sm font-semibold text-on-surface-variant hover:text-primary hover:bg-surface-container active:scale-98 transition-all"
               >
                 Heritage
               </Link>
@@ -148,23 +148,23 @@ function Navbar() {
           </div>
 
           {/* Centered Search Wrapper (Desktop) */}
-          <div className="flex-1 max-w-sm relative hidden sm:flex items-center bg-gray-50 border border-gray-200 rounded-full shadow-xs px-2 py-1.5 font-['Inter']">
-            <div ref={navbarLocRef} className="relative flex items-center select-none border-r border-gray-200 pr-1 pl-1">
+          <div className="flex-1 max-w-sm relative hidden sm:flex items-center bg-surface-container border border-outline-variant rounded-full shadow-xs px-2 py-1.5 font-['Inter']">
+            <div ref={navbarLocRef} className="relative flex items-center select-none border-r border-outline-variant pr-1 pl-1">
               <button
                 type="button"
                 onClick={() => setIsNavbarLocOpen(!isNavbarLocOpen)}
-                className="flex items-center gap-0.5 text-xs font-bold text-gray-700 hover:text-primary transition-colors cursor-pointer bg-transparent border-none py-0.5 pr-2 focus:outline-none"
+                className="flex items-center gap-0.5 text-xs font-bold text-on-surface hover:text-primary transition-colors cursor-pointer bg-transparent border-none py-0.5 pr-2 focus:outline-none"
                 style={{ transform: 'none', boxShadow: 'none' }}
               >
                 <span className="material-symbols-outlined text-primary text-base leading-none">location_on</span>
                 <span>{selectedLocation}</span>
-                <span className="material-symbols-outlined text-[10px] text-gray-400 ml-0.5 select-none transition-transform duration-200" style={{ transform: isNavbarLocOpen ? 'rotate(180deg)' : 'none', fontSize: '10px' }}>
+                <span className="material-symbols-outlined text-[10px] text-outline-variant ml-0.5 select-none transition-transform duration-200" style={{ transform: isNavbarLocOpen ? 'rotate(180deg)' : 'none', fontSize: '10px' }}>
                   keyboard_arrow_down
                 </span>
               </button>
 
               {isNavbarLocOpen && (
-                <div className="absolute left-0 top-full mt-2 w-40 bg-white border border-gray-150 rounded-xl shadow-lg z-50 py-1 animate-scale-in">
+                <div className="absolute left-0 top-full mt-2 w-40 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg z-50 py-1 animate-scale-in">
                   {locations.map((loc) => {
                     const isSelected = loc.name === selectedLocation;
                     return (
@@ -178,7 +178,7 @@ function Navbar() {
                         className={`w-full flex items-center justify-between text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors border-none bg-transparent`}
                         style={{ transform: 'none', boxShadow: 'none' }}
                       >
-                        <span className={isSelected ? "text-primary" : "text-gray-750"}>{loc.name}</span>
+                        <span className={isSelected ? "text-primary" : "text-on-surface-variant"}>{loc.name}</span>
                         {isSelected && (
                           <span className="material-symbols-outlined text-primary text-xs leading-none">check</span>
                         )}
@@ -190,11 +190,11 @@ function Navbar() {
             </div>
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="flex-1 flex items-center justify-between text-left text-xs text-gray-400 pl-3 pr-2 py-0.5 focus:outline-none cursor-pointer"
+              className="flex-1 flex items-center justify-between text-left text-xs text-outline-variant pl-3 pr-2 py-0.5 focus:outline-none cursor-pointer"
               style={{ transform: 'none', boxShadow: 'none' }}
             >
               <span>Search experiences...</span>
-              <span className="material-symbols-outlined text-gray-400 text-lg">search</span>
+              <span className="material-symbols-outlined text-outline-variant text-lg">search</span>
             </button>
           </div>
 
@@ -202,7 +202,7 @@ function Navbar() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="sm:hidden flex w-10 h-10 rounded-full border border-gray-200 text-gray-700 items-center justify-center hover:text-primary hover:border-primary transition-all shadow-xs cursor-pointer bg-white"
+              className="sm:hidden flex w-10 h-10 rounded-full border border-outline-variant text-on-surface items-center justify-center hover:text-primary hover:border-primary transition-all shadow-xs cursor-pointer bg-surface-container-lowest"
               aria-label="Search"
             >
               <span className="material-symbols-outlined text-xl">search</span>
@@ -210,14 +210,14 @@ function Navbar() {
 
             <Link
               to="/my-bookings"
-              className="lg:flex hidden border border-gray-200 text-gray-700 hover:text-primary hover:border-primary px-4 py-2 rounded-full text-xs sm:text-sm font-bold font-['Hanken_Grotesk'] tracking-wide transition-all flex items-center gap-1.5 shadow-xs hover:shadow-sm"
+              className="lg:flex hidden border border-outline-variant text-on-surface hover:text-primary hover:border-primary px-4 py-2 rounded-full text-xs sm:text-sm font-bold font-['Hanken_Grotesk'] tracking-wide transition-all flex items-center gap-1.5 shadow-xs hover:shadow-sm"
             >
               <span className="material-symbols-outlined text-base leading-none">shopping_bag</span>
               My Bookings
             </Link>
             <Link
               to="/my-bookings"
-              className="lg:hidden flex w-10 h-10 rounded-full border border-gray-200 text-gray-700 hover:text-primary hover:border-primary items-center justify-center transition-all shadow-xs bg-white"
+              className="lg:hidden flex w-10 h-10 rounded-full border border-outline-variant text-on-surface hover:text-primary hover:border-primary items-center justify-center transition-all shadow-xs bg-surface-container-lowest"
               aria-label="My Bookings"
             >
               <span className="material-symbols-outlined text-xl">shopping_bag</span>
@@ -227,14 +227,14 @@ function Navbar() {
               <>
                 <button
                   onClick={logout}
-                  className="sm:flex hidden bg-primary text-white hover:brightness-110 px-5 py-2 rounded-full text-xs sm:text-sm font-bold font-['Hanken_Grotesk'] tracking-wide transition-all cursor-pointer flex items-center gap-1.5 shadow-sm hover:shadow active:scale-95"
+                  className="sm:flex hidden bg-primary text-on-primary hover:brightness-110 px-5 py-2 rounded-full text-xs sm:text-sm font-bold font-['Hanken_Grotesk'] tracking-wide transition-all cursor-pointer flex items-center gap-1.5 shadow-sm hover:shadow active:scale-95"
                 >
                   <span className="material-symbols-outlined text-base leading-none">logout</span>
                   Logout
                 </button>
                 <button
                   onClick={logout}
-                  className="sm:hidden flex w-10 h-10 rounded-full bg-primary text-white items-center justify-center hover:brightness-110 transition-all cursor-pointer shadow-sm active:scale-95"
+                  className="sm:hidden flex w-10 h-10 rounded-full bg-primary text-on-primary items-center justify-center hover:brightness-110 transition-all cursor-pointer shadow-sm active:scale-95"
                   aria-label="Logout"
                 >
                   <span className="material-symbols-outlined text-lg leading-none">logout</span>
@@ -244,14 +244,14 @@ function Navbar() {
               <>
                 <button
                   onClick={openLoginModal}
-                  className="lg:flex hidden bg-primary text-white hover:brightness-110 px-5 py-2 rounded-full text-xs sm:text-sm font-bold font-['Hanken_Grotesk'] tracking-wide transition-all cursor-pointer flex items-center gap-1.5 shadow-sm hover:shadow active:scale-95"
+                  className="lg:flex hidden bg-primary text-on-primary hover:brightness-110 px-5 py-2 rounded-full text-xs sm:text-sm font-bold font-['Hanken_Grotesk'] tracking-wide transition-all cursor-pointer flex items-center gap-1.5 shadow-sm hover:shadow active:scale-95"
                 >
                   <span className="material-symbols-outlined text-base leading-none">login</span>
                   Login
                 </button>
                 <button
                   onClick={openLoginModal}
-                  className="lg:hidden flex w-10 h-10 rounded-full bg-primary text-white items-center justify-center hover:brightness-110 transition-all cursor-pointer shadow-sm active:scale-95"
+                  className="lg:hidden flex w-10 h-10 rounded-full bg-primary text-on-primary items-center justify-center hover:brightness-110 transition-all cursor-pointer shadow-sm active:scale-95"
                   aria-label="Login"
                 >
                   <span className="material-symbols-outlined text-lg leading-none">login</span>
@@ -265,23 +265,23 @@ function Navbar() {
       {/* Search Overlay/Modal Dialog */}
       {isSearchOpen && (
         <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/40 backdrop-blur-xs p-4 pt-10 sm:pt-20">
-          <div className="bg-white w-full h-full sm:h-auto sm:max-w-2xl sm:rounded-2xl overflow-hidden flex flex-col sm:max-h-[80vh] animate-scale-in sm:border sm:border-gray-150 shadow-2xl">
+          <div className="bg-surface-container-lowest w-full h-full sm:h-auto sm:max-w-2xl sm:rounded-2xl overflow-hidden flex flex-col sm:max-h-[80vh] animate-scale-in sm:border sm:border-outline-variant shadow-2xl">
             {/* Modal Header */}
-            <div className="p-4 border-b border-gray-150 flex items-center gap-3">
+            <div className="p-4 border-b border-outline-variant flex items-center gap-3">
               <button
                 onClick={() => setIsSearchOpen(false)}
-                className="text-gray-500 hover:text-gray-700 cursor-pointer sm:hidden flex items-center"
+                className="text-on-surface-variant hover:text-on-surface cursor-pointer sm:hidden flex items-center"
               >
                 <span className="material-symbols-outlined text-xl">arrow_back</span>
               </button>
-              <span className="material-symbols-outlined text-gray-400 hidden sm:block">search</span>
+              <span className="material-symbols-outlined text-outline-variant hidden sm:block">search</span>
               <input
                 type="text"
                 autoFocus
                 placeholder="Search destinations or experiences..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent border-none text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-0 text-sm font-['Inter']"
+                className="flex-1 bg-transparent border-none text-on-surface placeholder-outline-variant focus:outline-none focus:ring-0 text-sm font-['Inter']"
               />
 
               {/* Custom Location Selector in Search Overlay */}
@@ -289,18 +289,18 @@ function Navbar() {
                 <button
                   type="button"
                   onClick={() => setIsSearchLocOpen(!isSearchLocOpen)}
-                  className="flex items-center gap-1 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg px-2.5 py-1.5 transition-all text-xs font-semibold text-gray-700 cursor-pointer"
+                  className="flex items-center gap-1 bg-surface-container-low hover:bg-surface-container border border-outline-variant rounded-lg px-2.5 py-1.5 transition-all text-xs font-semibold text-on-surface cursor-pointer"
                   style={{ transform: 'none', boxShadow: 'none' }}
                 >
                   <span className="material-symbols-outlined text-primary text-xs leading-none">location_on</span>
                   <span>{selectedLocation}</span>
-                  <span className="material-symbols-outlined text-[10px] text-gray-400 select-none ml-0.5 leading-none transition-transform duration-200" style={{ transform: isSearchLocOpen ? 'rotate(180deg)' : 'none' }}>
+                  <span className="material-symbols-outlined text-[10px] text-outline-variant select-none ml-0.5 leading-none transition-transform duration-200" style={{ transform: isSearchLocOpen ? 'rotate(180deg)' : 'none' }}>
                     keyboard_arrow_down
                   </span>
                 </button>
 
                 {isSearchLocOpen && (
-                  <div className="absolute right-0 mt-1.5 w-40 bg-white border border-gray-150 rounded-xl shadow-lg z-[110] py-1 animate-scale-in">
+                  <div className="absolute right-0 mt-1.5 w-40 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg z-[110] py-1 animate-scale-in">
                     {locations.map((loc) => {
                       const isSelected = loc.name === selectedLocation;
                       return (
@@ -314,7 +314,7 @@ function Navbar() {
                           className={`w-full flex items-center justify-between text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors border-none bg-transparent`}
                           style={{ transform: 'none', boxShadow: 'none' }}
                         >
-                          <span className={isSelected ? "text-primary" : "text-gray-750"}>{loc.name}</span>
+                          <span className={isSelected ? "text-primary" : "text-on-surface-variant"}>{loc.name}</span>
                           {isSelected && (
                             <span className="material-symbols-outlined text-primary text-xs leading-none">check</span>
                           )}
@@ -327,7 +327,7 @@ function Navbar() {
 
               <button
                 onClick={() => setIsSearchOpen(false)}
-                className="text-gray-400 hover:text-gray-650 cursor-pointer hidden sm:block"
+                className="text-outline-variant hover:text-on-surface-variant cursor-pointer hidden sm:block"
               >
                 <span className="material-symbols-outlined text-xl">close</span>
               </button>
@@ -336,13 +336,13 @@ function Navbar() {
             {/* Results Section */}
             <div className="flex-1 overflow-y-auto p-4 min-h-[200px] no-scrollbar">
               {searching ? (
-                <div className="flex items-center justify-center py-10 text-gray-400 font-['Inter'] gap-2 text-xs">
+                <div className="flex items-center justify-center py-10 text-outline-variant font-['Inter'] gap-2 text-xs">
                   <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
                   Searching...
                 </div>
               ) : searchResults.length === 0 ? (
-                <div className="text-center py-12 text-gray-400 text-sm font-['Inter']">
-                  <span className="material-symbols-outlined text-3xl mb-1 text-gray-300 block">search_off</span>
+                <div className="text-center py-12 text-outline-variant text-sm font-['Inter']">
+                  <span className="material-symbols-outlined text-3xl mb-1 text-outline-variant block">search_off</span>
                   No experiences found
                 </div>
               ) : (
@@ -359,10 +359,10 @@ function Navbar() {
                         <img
                           src={exp.image_url ? exp.image_url.split(",")[0] : ""}
                           alt={exp.name}
-                          className="w-12 h-12 rounded-lg object-cover bg-gray-50 flex-shrink-0"
+                          className="w-12 h-12 rounded-lg object-cover bg-surface-container-low flex-shrink-0"
                         />
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-['Hanken_Grotesk'] text-sm font-bold text-gray-800 truncate group-hover:text-primary transition-colors">
+                          <h4 className="font-['Hanken_Grotesk'] text-sm font-bold text-on-surface truncate group-hover:text-primary transition-colors">
                             {exp.name}
                           </h4>
                           <span className="text-[10px] font-bold text-primary uppercase tracking-wider block mt-0.5">
@@ -370,7 +370,7 @@ function Navbar() {
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className="font-['JetBrains_Mono'] text-xs font-bold text-gray-900 block">
+                          <span className="font-['JetBrains_Mono'] text-xs font-bold text-on-surface block">
                             ₹{Number(exp.entry_fee_base).toFixed(2)}
                           </span>
                         </div>

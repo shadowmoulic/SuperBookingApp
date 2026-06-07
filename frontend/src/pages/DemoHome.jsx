@@ -308,7 +308,7 @@ export default function DemoHome() {
   };
 
   return (
-    <div className="bg-white text-slate-800 min-h-screen overflow-x-hidden w-full">
+    <div className="bg-surface-container-lowest text-on-surface min-h-screen overflow-x-hidden w-full">
 
       {/* ── SECTION 1: HERO ───────────────────────────────── */}
       <section className="relative w-full h-[88vh] min-h-[560px] flex items-center overflow-hidden">
@@ -353,8 +353,8 @@ export default function DemoHome() {
 
           {/* Search bar */}
           <div ref={searchRef} className="relative max-w-2xl">
-            <div className={`flex items-center bg-white rounded-2xl shadow-2xl transition-all duration-200 ${searchFocused ? "ring-4 ring-amber-400/40" : ""}`}>
-              <div className="pl-5 pr-2 text-slate-400">
+            <div className={`flex items-center bg-surface-container rounded-2xl shadow-2xl transition-all duration-200 ${searchFocused ? "ring-4 ring-primary/40" : ""}`}>
+              <div className="pl-5 pr-2 text-on-surface-variant">
                 <Search className="w-5 h-5" />
               </div>
               <input
@@ -363,25 +363,25 @@ export default function DemoHome() {
                 onFocus={() => setSearchFocused(true)}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Where are you going?"
-                className="flex-1 bg-transparent border-none text-slate-800 focus:outline-none placeholder-slate-400 text-sm sm:text-base py-4 pr-4"
+                className="flex-1 bg-transparent border-none text-on-surface focus:outline-none placeholder-on-surface-variant/60 text-sm sm:text-base py-4 pr-4"
               />
-              <button onClick={() => navigate("/states")} className="m-2 bg-[#136b55] hover:bg-[#0c4c3b] text-white font-bold px-5 sm:px-7 py-3 rounded-xl text-sm transition-all duration-200 hover:scale-105 active:scale-95 shrink-0">
+              <button onClick={() => navigate("/states")} className="m-2 bg-primary hover:bg-opacity-95 text-on-primary font-bold px-5 sm:px-7 py-3 rounded-xl text-sm transition-all duration-200 hover:scale-105 active:scale-95 shrink-0">
                 Explore
               </button>
             </div>
 
             {/* Suggestions */}
             {searchFocused && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 z-30">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 px-1">Popular searches</p>
+              <div className="absolute top-full left-0 right-0 mt-2 bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant p-4 z-30">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2 px-1">Popular searches</p>
                 <div className="space-y-0.5">
                   {QUICK_CHIPS.map((chip) => (
                     <button
                       key={chip}
                       onClick={() => { setSearchQuery(chip); setSearchFocused(false); }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 rounded-xl text-slate-700 text-sm transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-surface-container rounded-xl text-on-surface text-sm transition-colors text-left"
                     >
-                      <Search className="w-3.5 h-3.5 text-slate-400" />
+                      <Search className="w-3.5 h-3.5 text-on-surface-variant" />
                       {chip}
                     </button>
                   ))}
@@ -392,7 +392,7 @@ export default function DemoHome() {
 
           {/* Quick chips */}
           <div className="flex flex-wrap items-center gap-2 mt-5">
-            <span className="text-slate-400 text-xs font-semibold">Trending:</span>
+            <span className="text-on-surface-variant text-xs font-semibold">Trending:</span>
             {["Taj Mahal", "Amer Fort", "Varanasi Ghats", "Hampi"].map((chip) => (
               <button
                 key={chip}
@@ -407,13 +407,13 @@ export default function DemoHome() {
       </section>
 
       {/* ── SECTION 2: TRUST BAR ─────────────────────────── */}
-      <section className="bg-white border-b border-slate-100 py-6">
+      <section className="bg-surface-container-lowest border-b border-outline-variant/30 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 text-center">
             {[["1500+", "Heritage Sites"], ["500+", "Cities Mapped"], ["42", "UNESCO Landmarks"], ["5", "Curated Trails"]].map(([num, label]) => (
-              <div key={label} className="py-4 px-3 rounded-2xl bg-slate-50 border border-slate-100">
-                <p className="text-2xl sm:text-3xl font-black text-[#136b55]">{num}</p>
-                <p className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">{label}</p>
+              <div key={label} className="py-4 px-3 rounded-2xl bg-surface-container-low border border-outline-variant/50">
+                <p className="text-2xl sm:text-3xl font-black text-primary">{num}</p>
+                <p className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase tracking-wider mt-1">{label}</p>
               </div>
             ))}
           </div>
@@ -424,13 +424,13 @@ export default function DemoHome() {
       <section id="cities" className="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-14">
           <div>
-            <span className="text-xs font-bold text-[#136b55] uppercase tracking-widest">Heritage Hubs</span>
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mt-1.5">Choose Your City</h2>
-            <p className="text-slate-500 text-sm sm:text-base mt-2 max-w-lg leading-relaxed">
+            <span className="text-xs font-bold text-primary uppercase tracking-widest">Heritage Hubs</span>
+            <h2 className="text-3xl sm:text-4xl font-black text-on-surface tracking-tight mt-1.5">Choose Your City</h2>
+            <p className="text-on-surface-variant text-sm sm:text-base mt-2 max-w-lg leading-relaxed">
               Every city has a different story. Pick yours and start exploring.
             </p>
           </div>
-          <Link to="/cities" className="hidden md:inline-flex items-center gap-1.5 text-sm font-bold text-[#136b55] hover:gap-2.5 transition-all mt-3 md:mt-0">
+          <Link to="/cities" className="hidden md:inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:gap-2.5 transition-all mt-3 md:mt-0">
             View all cities <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -443,7 +443,7 @@ export default function DemoHome() {
 
               {/* Season badge */}
               <div className="absolute top-3 left-3">
-                <span className="bg-white/90 backdrop-blur-sm text-[10px] font-bold px-2 py-1 rounded-lg text-slate-700">
+                <span className="bg-surface-container-lowest/90 backdrop-blur-sm text-[10px] font-bold px-2 py-1 rounded-lg text-on-surface">
                   Best: {city.season}
                 </span>
               </div>
@@ -466,20 +466,20 @@ export default function DemoHome() {
 
         {/* CTA */}
         <div className="text-center mt-10">
-          <Link to="/cities" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-3.5 rounded-full text-sm transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+          <Link to="/cities" className="inline-flex items-center gap-2 bg-on-surface hover:bg-opacity-90 text-surface-container-lowest font-bold px-8 py-3.5 rounded-full text-sm transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
             Start Exploring All Cities <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </section>
 
       {/* ── SECTION 4: HERITAGE TRAILS ───────────────────── */}
-      <section id="trails" className="py-16 sm:py-24 bg-slate-50 border-y border-slate-100">
+      <section id="trails" className="py-16 sm:py-24 bg-surface-container-low border-y border-outline-variant/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-14">
             <div>
-              <span className="text-xs font-bold text-[#136b55] uppercase tracking-widest">Curated Routes</span>
-              <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mt-1.5">Famous Heritage Circuits</h2>
-              <p className="text-slate-500 text-sm sm:text-base mt-2 max-w-lg leading-relaxed">
+              <span className="text-xs font-bold text-primary uppercase tracking-widest">Curated Routes</span>
+              <h2 className="text-3xl sm:text-4xl font-black text-on-surface tracking-tight mt-1.5">Famous Heritage Circuits</h2>
+              <p className="text-on-surface-variant text-sm sm:text-base mt-2 max-w-lg leading-relaxed">
                 Follow historic pathways etched by dynasties. Each circuit is a complete journey, not just a list.
               </p>
             </div>
@@ -487,29 +487,29 @@ export default function DemoHome() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {CIRCUITS.map((c) => (
-              <Link to="/trails" key={c.title} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-md transition-all duration-300 group cursor-pointer flex flex-col">
+              <Link to="/trails" key={c.title} className="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm border border-outline-variant/30 hover:shadow-md transition-all duration-300 group cursor-pointer flex flex-col">
                 <div className="h-48 relative overflow-hidden">
                   <img src={c.image} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <span className="absolute bottom-3 left-3 bg-amber-500 text-white font-black text-[10px] px-2.5 py-1 rounded-lg">{c.days} Journey</span>
+                  <span className="absolute bottom-3 left-3 bg-tertiary text-on-tertiary font-bold text-[10px] px-2.5 py-1 rounded-lg">{c.days} Journey</span>
                 </div>
                 <div className="p-5 sm:p-6 flex-1 flex flex-col">
-                  <h3 className="font-black text-base sm:text-lg text-slate-900 group-hover:text-[#136b55] transition-colors">{c.title}</h3>
-                  <p className="text-xs font-bold text-[#136b55] uppercase tracking-wider mt-1">{c.route}</p>
-                  <p className="text-slate-500 text-xs sm:text-sm mt-3 leading-relaxed flex-1">{c.desc}</p>
+                  <h3 className="font-black text-base sm:text-lg text-on-surface group-hover:text-primary transition-colors">{c.title}</h3>
+                  <p className="text-xs font-bold text-primary uppercase tracking-wider mt-1">{c.route}</p>
+                  <p className="text-on-surface-variant text-xs sm:text-sm mt-3 leading-relaxed flex-1">{c.desc}</p>
 
                   {/* Highlights */}
                   <div className="mt-4 space-y-1.5">
                     {c.highlights.map((h) => (
-                      <div key={h} className="flex items-center gap-2 text-xs text-slate-600">
-                        <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <div key={h} className="flex items-center gap-2 text-xs text-on-surface-variant">
+                        <CheckCircle className="w-3.5 h-3.5 text-primary shrink-0" />
                         {h}
                       </div>
                     ))}
                   </div>
 
-                  <div className="border-t border-slate-100 pt-4 mt-5">
-                    <span className="text-[#136b55] text-xs font-bold uppercase tracking-wider group-hover:translate-x-1.5 transition-transform inline-flex items-center gap-1">
+                  <div className="border-t border-outline-variant/30 pt-4 mt-5">
+                    <span className="text-primary text-xs font-bold uppercase tracking-wider group-hover:translate-x-1.5 transition-transform inline-flex items-center gap-1">
                       View Trail <ChevronRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
@@ -519,7 +519,7 @@ export default function DemoHome() {
           </div>
 
           <div className="text-center mt-10">
-            <Link to="/trails" className="inline-flex items-center gap-2 border-2 border-slate-900 hover:bg-slate-900 hover:text-white text-slate-900 font-bold px-8 py-3.5 rounded-full text-sm transition-all duration-200">
+            <Link to="/trails" className="inline-flex items-center gap-2 border-2 border-on-surface hover:bg-on-surface hover:text-surface-container-lowest text-on-surface font-bold px-8 py-3.5 rounded-full text-sm transition-all duration-200">
               View All Heritage Trails <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -529,8 +529,8 @@ export default function DemoHome() {
       {/* ── SECTION 5: CATEGORIES ────────────────────────── */}
       <section className="py-16 sm:py-24 max-w-7xl mx-auto px-4 sm:px-8">
         <div className="text-center mb-10 sm:mb-14">
-          <span className="text-xs font-bold text-[#136b55] uppercase tracking-widest">Browse by Type</span>
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mt-1.5">What Are You Looking For?</h2>
+          <span className="text-xs font-bold text-primary uppercase tracking-widest">Browse by Type</span>
+          <h2 className="text-3xl sm:text-4xl font-black text-on-surface tracking-tight mt-1.5">What Are You Looking For?</h2>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
@@ -540,7 +540,7 @@ export default function DemoHome() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-5">
                 <p className="text-white font-black text-base sm:text-lg">{cat.name}</p>
-                <p className="text-slate-300 text-xs mt-1">{cat.count}</p>
+                <p className="text-on-surface-variant/80 text-xs mt-1">{cat.count}</p>
               </div>
               <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
                 <ChevronRight className="w-4 h-4 text-white" />
@@ -551,12 +551,12 @@ export default function DemoHome() {
       </section>
 
       {/* ── SECTION 6: AI PLANNER ────────────────────────── */}
-      <section id="planner" className="py-16 sm:py-24 bg-slate-900">
+      <section id="planner" className="py-16 sm:py-24 bg-surface-container border-y border-outline-variant/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-8">
           <div className="text-center mb-10 sm:mb-14">
-            <span className="text-xs font-bold text-amber-400 uppercase tracking-widest">AI-Powered</span>
-            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-1.5">Plan Your Journey in 30 Seconds</h2>
-            <p className="text-slate-400 text-sm sm:text-base mt-2 max-w-xl mx-auto leading-relaxed">
+            <span className="text-xs font-bold text-primary uppercase tracking-widest">AI-Powered</span>
+            <h2 className="text-3xl sm:text-4xl font-black text-on-surface tracking-tight mt-1.5">Plan Your Journey in 30 Seconds</h2>
+            <p className="text-on-surface-variant text-sm sm:text-base mt-2 max-w-xl mx-auto leading-relaxed">
               Tell us your destination, how long you're staying, and what you love. We'll build the day.
             </p>
           </div>
@@ -564,25 +564,25 @@ export default function DemoHome() {
           <div className="grid lg:grid-cols-12 gap-8 lg:gap-10 items-start">
 
             {/* Left: form */}
-            <div className="lg:col-span-4 bg-slate-800 border border-slate-700 p-6 sm:p-8 rounded-3xl">
+            <div className="lg:col-span-4 bg-surface-container-lowest border border-outline-variant p-6 sm:p-8 rounded-3xl">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-amber-400" />
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">AI Travel Guide</p>
-                  <h3 className="text-white font-black text-lg">Your preferences</h3>
+                  <p className="text-xs font-bold text-primary uppercase tracking-wider">AI Travel Guide</p>
+                  <h3 className="text-on-surface font-black text-lg">Your preferences</h3>
                 </div>
               </div>
 
               <div className="space-y-5">
                 {/* City */}
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Destination</label>
+                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Destination</label>
                   <select
                     value={plannerCity}
                     onChange={(e) => { const c = e.target.value; setPlannerCity(c); setItinerary(FALLBACK_ITINERARIES[c]); }}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/40"
+                    className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 font-['Inter'] cursor-pointer"
                   >
                     <option value="jaipur">Jaipur — Pink City</option>
                     <option value="delhi">Delhi — Historic Capital</option>
@@ -596,11 +596,11 @@ export default function DemoHome() {
 
                 {/* Duration */}
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Trip Duration</label>
+                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Trip Duration</label>
                   <div className="grid grid-cols-5 gap-2">
                     {["1", "2", "3", "4", "5"].map((d) => (
                       <button key={d} onClick={() => setPlannerDuration(d)}
-                        className={`py-2.5 text-sm font-bold rounded-xl border transition-all ${plannerDuration === d ? "bg-amber-500 border-amber-500 text-white" : "bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"}`}>
+                        className={`py-2.5 text-sm font-bold rounded-xl border transition-all cursor-pointer ${plannerDuration === d ? "bg-primary border-primary text-on-primary" : "bg-surface-container-low border-outline-variant text-on-surface-variant hover:bg-surface-container"}`}>
                         {d}d
                       </button>
                     ))}
@@ -609,15 +609,15 @@ export default function DemoHome() {
 
                 {/* Interests */}
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Travel Interests</label>
+                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Travel Interests</label>
                   <div className="grid grid-cols-2 gap-2">
                     {INTERESTS.map((interest) => {
                       const sel = plannerInterests.includes(interest);
                       return (
                         <button key={interest} onClick={() => toggleInterest(interest)}
-                          className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-semibold transition-all ${sel ? "bg-amber-500/20 border-amber-500/50 text-amber-300" : "bg-slate-700 border-slate-600 text-slate-400 hover:bg-slate-600"}`}>
+                          className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${sel ? "bg-primary/10 border-primary/30 text-primary" : "bg-surface-container-low border-outline-variant text-on-surface-variant hover:bg-surface-container"}`}>
                           {interest}
-                          <span className={`w-2 h-2 rounded-full ${sel ? "bg-amber-400" : "bg-slate-500"}`} />
+                          <span className={`w-2 h-2 rounded-full ${sel ? "bg-primary" : "bg-outline-variant"}`} />
                         </button>
                       );
                     })}
@@ -626,7 +626,7 @@ export default function DemoHome() {
 
                 {/* Generate */}
                 <button onClick={handleGenerate} disabled={plannerLoading}
-                  className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 disabled:bg-slate-600 text-slate-900 font-black py-3.5 rounded-xl text-sm transition-all duration-200 shadow-lg active:scale-95">
+                  className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-opacity-95 disabled:bg-outline-variant/50 text-on-primary font-bold py-3.5 rounded-xl text-sm transition-all duration-200 shadow-md active:scale-95 cursor-pointer">
                   {plannerLoading ? (
                     <><Loader2 className="w-4 h-4 animate-spin" /> Generating plan...</>
                   ) : (
@@ -642,34 +642,34 @@ export default function DemoHome() {
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <p className="text-xs font-bold text-amber-400 uppercase tracking-widest">Your Itinerary</p>
-                      <h3 className="text-white font-black text-2xl mt-1">{itinerary.title}</h3>
+                      <p className="text-xs font-bold text-primary uppercase tracking-widest">Your Itinerary</p>
+                      <h3 className="text-on-surface font-black text-2xl mt-1">{itinerary.title}</h3>
                     </div>
-                    <span className="self-start bg-amber-500 text-slate-900 text-xs font-black px-3.5 py-1.5 rounded-full">
+                    <span className="self-start bg-primary text-on-primary text-xs font-black px-3.5 py-1.5 rounded-full">
                       {itinerary.duration}
                     </span>
                   </div>
 
                   {itinerary.days.map((dayData, di) => (
-                    <div key={di} className="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden">
-                      <div className="px-5 py-3.5 border-b border-slate-700 flex items-center gap-3">
-                        <span className="w-7 h-7 rounded-full bg-amber-500 text-slate-900 text-xs font-black flex items-center justify-center">{dayData.day}</span>
-                        <span className="text-white font-bold text-sm">{dayData.theme}</span>
+                    <div key={di} className="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden">
+                      <div className="px-5 py-3.5 border-b border-outline-variant flex items-center gap-3 bg-surface-container-low">
+                        <span className="w-7 h-7 rounded-full bg-primary text-on-primary text-xs font-black flex items-center justify-center">{dayData.day}</span>
+                        <span className="text-on-surface font-bold text-sm">{dayData.theme}</span>
                       </div>
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-0 divide-x divide-y divide-slate-700/50">
+                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-0 divide-x divide-y divide-outline-variant">
                         {dayData.activities.map((act, ai) => (
                           <div key={ai} className="group">
                             {act.image && (
                               <div className="h-28 overflow-hidden">
-                                <img src={act.image} alt={act.place} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 brightness-75" />
+                                <img src={act.image} alt={act.place} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 brightness-95" />
                               </div>
                             )}
                             <div className="p-4">
                               <div className="flex items-center justify-between gap-2 mb-1.5">
-                                <p className="text-white font-bold text-sm">{act.place}</p>
-                                <span className="text-slate-500 text-[10px] bg-slate-900 px-2 py-0.5 rounded shrink-0">{act.time}</span>
+                                <p className="text-on-surface font-bold text-sm truncate">{act.place}</p>
+                                <span className="text-primary text-[10px] font-bold bg-primary/10 px-2 py-0.5 rounded shrink-0">{act.time}</span>
                               </div>
-                              <p className="text-slate-400 text-xs leading-relaxed">{act.description}</p>
+                              <p className="text-on-surface-variant text-xs leading-relaxed">{act.description}</p>
                             </div>
                           </div>
                         ))}
@@ -678,7 +678,7 @@ export default function DemoHome() {
                   ))}
 
                   <div className="text-center">
-                    <button className="inline-flex items-center gap-2 bg-[#136b55] hover:bg-[#0c4c3b] text-white font-bold px-7 py-3 rounded-full text-sm transition-all duration-200 shadow-lg hover:-translate-y-0.5">
+                    <button className="inline-flex items-center gap-2 bg-primary hover:bg-opacity-90 text-on-primary font-bold px-7 py-3 rounded-full text-sm transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
                       Plan My Full Journey <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -691,28 +691,28 @@ export default function DemoHome() {
       </section>
 
       {/* ── SECTION 7: WHY ZEQUE ─────────────────────────── */}
-      <section className="py-16 sm:py-24 bg-white border-b border-slate-100">
+      <section className="py-16 sm:py-24 bg-surface-container-lowest border-b border-outline-variant/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-8">
           <div className="text-center mb-10 sm:mb-14">
-            <span className="text-xs font-bold text-[#136b55] uppercase tracking-widest">Our Difference</span>
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mt-1.5">Why Travelers Choose ZeQue</h2>
-            <p className="text-slate-500 text-sm sm:text-base mt-2 max-w-xl mx-auto">
+            <span className="text-xs font-bold text-primary uppercase tracking-widest">Our Difference</span>
+            <h2 className="text-3xl sm:text-4xl font-black text-on-surface tracking-tight mt-1.5">Why Travelers Choose ZeQue</h2>
+            <p className="text-on-surface-variant text-sm sm:text-base mt-2 max-w-xl mx-auto">
               Headout has tickets. TripAdvisor has reviews. Google has locations. We have all three — plus the context to make sense of it.
             </p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {WHY_ZEQUE.map((w) => (
-              <div key={w.title} className="bg-slate-50 border border-slate-100 rounded-3xl p-6 sm:p-7 hover:border-emerald-200 hover:shadow-md transition-all duration-300 group">
+              <div key={w.title} className="bg-surface-container-low border border-outline-variant/30 rounded-3xl p-6 sm:p-7 hover:border-primary/30 hover:shadow-md transition-all duration-300 group">
                 <div className="text-3xl mb-4">{w.icon}</div>
-                <h3 className="font-black text-slate-900 text-base mb-2 group-hover:text-[#136b55] transition-colors">{w.title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">{w.desc}</p>
+                <h3 className="font-black text-on-surface text-base mb-2 group-hover:text-primary transition-colors">{w.title}</h3>
+                <p className="text-on-surface-variant text-sm leading-relaxed">{w.desc}</p>
               </div>
             ))}
           </div>
 
           <div className="text-center mt-12">
-            <a href="#" className="inline-flex items-center gap-2 bg-[#136b55] hover:bg-[#0c4c3b] text-white font-bold px-8 py-3.5 rounded-full text-sm transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+            <a href="#" className="inline-flex items-center gap-2 bg-primary hover:bg-opacity-90 text-on-primary font-bold px-8 py-3.5 rounded-full text-sm transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
               Find Places Near Me <MapPin className="w-4 h-4" />
             </a>
           </div>

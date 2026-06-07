@@ -3,7 +3,9 @@ from django.utils import timezone
 from io import BytesIO
 import qrcode
 from user.models import User_Data
-from content.models import Experience
+from content.models import Experience, generate_random_id
+from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 import uuid
 
 
@@ -296,3 +298,61 @@ class Payment(models.Model):
                     self.reference = ref
                     break
         super().save(*args, **kwargs)
+
+
+class Inventory(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    public_id = models.CharField(max_length=15, unique=True, blank=True, editable=False)
+    experience = models.ForeignKey(
+        Experience,
+        on_delete=models.CASCADE,
+        db_column="experience_id",
+        related_name="inventories",
+    )
+    inventory_date = models.DateField()
+    total_capacity = models.IntegerField(validators=[MinValueValidator(0)])
+    available_capacity = models.IntegerField(validators=[MinValueValidator(0)])
+    reserved_capacity = models.IntegerField(validators=[MinValueValidator(0)])
+    is_closed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "inventory"
+        indexes = [
+            models.Index(fields=["experience"], name="idx_inventory_experience"),
+            models.Index(fields=["inventory_date"], name="idx_inventory_date"),
+            models.Index(fields=["is_closed"], name="idx_inventory_is_closed"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["experience", "inventory_date"],
+                name="uq_experience_inventory_date"
+            )
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.total_capacity < 0:
+            raise ValidationError("Total capacity cannot be negative.")
+        if self.available_capacity < 0:
+            raise ValidationError("Available capacity cannot be negative.")
+        if self.reserved_capacity < 0:
+            raise ValidationError("Reserved capacity cannot be negative.")
+        if self.available_capacity > self.total_capacity:
+            raise ValidationError("Available capacity cannot exceed total capacity.")
+        if self.reserved_capacity > self.total_capacity:
+            raise ValidationError("Reserved capacity cannot exceed total capacity.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        if not self.public_id:
+            while True:
+                random_id = generate_random_id()
+                if not Inventory.objects.filter(public_id=f"inv-{random_id}").exists():
+                    self.public_id = f"inv-{random_id}"
+                    break
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.experience.name} - {self.inventory_date} ({self.available_capacity}/{self.total_capacity})"

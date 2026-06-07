@@ -441,6 +441,14 @@ class HomeView(generics.RetrieveAPIView):
                 }
             )
 
+        # 5. Get featured trails (Collections of type trail)
+        featured_trails = ContentModel.Collection.objects.filter(
+            collection_type="trail", is_active=True, deleted_at__isnull=True
+        )
+        featured_trails_serializer = ContentSerializer.CollectionSerializer(
+            featured_trails, many=True
+        )
+
         response_data = {
             "continue_booking": continue_booking,
             "explore_locations": {
@@ -450,9 +458,11 @@ class HomeView(generics.RetrieveAPIView):
             },
             "featured_categories": featured_categories_data,
             "all_categories": categories_data,
+            "featured_trails": featured_trails_serializer.data,
         }
 
         return Response(response_data)
+
 
 
 class BookingTicketView(generics.RetrieveAPIView):

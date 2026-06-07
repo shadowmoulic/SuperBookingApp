@@ -3,6 +3,7 @@ import string
 from django.utils import timezone
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 
 
 def generate_random_id(length=10):
@@ -61,9 +62,65 @@ class Category(models.Model):
         return f"{self.name}"
 
 
+class Provider(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    public_id = models.CharField(max_length=15, unique=True, blank=True, editable=False)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    contact_email = models.EmailField(blank=True, null=True)
+    contact_phone = models.CharField(max_length=20, blank=True, null=True)
+    website_url = models.URLField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(
+        blank=True, null=True, help_text="Soft delete — NULL means active"
+    )
+
+    class Meta:
+        db_table = "provider"
+        indexes = [
+            models.Index(fields=["public_id"], name="idx_provider_public_id"),
+            models.Index(fields=["name"], name="idx_provider_name"),
+            models.Index(fields=["is_active"], name="idx_provider_is_active"),
+        ]
+
+    def __str__(self):
+        return f"{self.name} - {self.public_id}"
+
+    def soft_delete(self):
+        self.deleted_at = timezone.now()
+        self.save(update_fields=["deleted_at", "updated_at"])
+
+    def restore(self):
+        self.deleted_at = None
+        self.save(update_fields=["deleted_at", "updated_at"])
+
+    @property
+    def is_deleted(self):
+        return self.deleted_at is not None
+
+    def save(self, *args, **kwargs):
+        if not self.public_id:
+            while True:
+                random_id = generate_random_id()
+                if not Provider.objects.filter(public_id=f"prov-{random_id}").exists():
+                    self.public_id = f"prov-{random_id}"
+                    break
+        super().save(*args, **kwargs)
+
+
 class Experience(models.Model):
     id = models.BigAutoField(primary_key=True)
     public_id = models.CharField(max_length=12, unique=True, blank=True, editable=False)
+    provider = models.ForeignKey(
+        Provider,
+        on_delete=models.SET_NULL,
+        db_column="provider_id",
+        related_name="experiences",
+        null=True,
+        blank=True,
+    )
     category = models.ForeignKey(
         Category,
         on_delete=models.CASCADE,
@@ -136,25 +193,88 @@ class Experience(models.Model):
         super().save(*args, **kwargs)
 
 
-class PricingRule(models.Model):
-    TICKET_TYPE_CHOICES = [
-        ("adult", "Adult"),
-        ("child", "Child"),
-        ("senior", "Senior"),
-    ]
-
+class TicketType(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    public_id = models.CharField(max_length=15, unique=True, blank=True, editable=False)
     experience = models.ForeignKey(
         Experience,
         on_delete=models.CASCADE,
-        related_name="pricing_rules",
-        db_index=True,
-        help_text="Monument/Experience this pricing applies to",
+        db_column="experience_id",
+        related_name="ticket_types",
     )
-    ticket_type = models.CharField(
-        max_length=20,
-        choices=TICKET_TYPE_CHOICES,
-        null=False,
-        help_text="Type of ticket (adult, child, senior)",
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(
+        blank=True, null=True, help_text="Soft delete — NULL means active"
+    )
+
+    class Meta:
+        db_table = "ticket_type"
+        indexes = [
+            models.Index(fields=["public_id"], name="idx_ticket_type_public_id"),
+            models.Index(fields=["experience"], name="idx_ticket_type_experience"),
+            models.Index(fields=["name"], name="idx_ticket_type_name"),
+            models.Index(fields=["is_active"], name="idx_ticket_type_is_active"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["experience", "name"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="uq_ticket_type_experience_name_active",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.experience.name} - {self.name} ({self.public_id})"
+
+    def soft_delete(self):
+        self.deleted_at = timezone.now()
+        self.save(update_fields=["deleted_at", "updated_at"])
+
+    def restore(self):
+        self.deleted_at = None
+        self.save(update_fields=["deleted_at", "updated_at"])
+
+    @property
+    def is_deleted(self):
+        return self.deleted_at is not None
+
+    def clean(self):
+        super().clean()
+        if not self.deleted_at:
+            duplicate_qs = TicketType.objects.filter(
+                experience=self.experience,
+                name__iexact=self.name,
+                deleted_at__isnull=True
+            )
+            if self.pk:
+                duplicate_qs = duplicate_qs.exclude(pk=self.pk)
+            if duplicate_qs.exists():
+                raise ValidationError("An active ticket type with this name already exists for this experience.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        if not self.public_id:
+            while True:
+                random_id = generate_random_id()
+                if not TicketType.objects.filter(public_id=f"tt-{random_id}").exists():
+                    self.public_id = f"tt-{random_id}"
+                    break
+        super().save(*args, **kwargs)
+
+
+class PricingRule(models.Model):
+    ticket_type = models.ForeignKey(
+        TicketType,
+        on_delete=models.CASCADE,
+        related_name="pricing_rules",
+        db_column="ticket_type_id",
+        null=True,
+        blank=True,
+        help_text="Ticket type this pricing applies to",
     )
     base_price = models.DecimalField(
         max_digits=10,
@@ -198,16 +318,18 @@ class PricingRule(models.Model):
         return self.valid_to is None
 
     def __str__(self):
-        return f"{self.experience.name} - {self.ticket_type} (₹{self.base_price})"
+        ticket_type_name = self.ticket_type.name if self.ticket_type else "Unknown"
+        experience_name = self.ticket_type.experience.name if self.ticket_type and self.ticket_type.experience else "Unknown"
+        return f"{experience_name} - {ticket_type_name} (₹{self.base_price})"
 
     class Meta:
         db_table = "pricing_rules"
         ordering = ["-valid_from"]
-        unique_together = [("experience", "ticket_type", "valid_from", "valid_to")]
+        unique_together = [("ticket_type", "valid_from", "valid_to")]
         indexes = [
-            models.Index(fields=["experience"]),
+            models.Index(fields=["ticket_type"]),
             models.Index(
-                fields=["experience", "ticket_type", "valid_from", "valid_to"],
+                fields=["ticket_type", "valid_from", "valid_to"],
                 name="pricing_composite_idx",
             ),
         ]
@@ -344,4 +466,99 @@ class TripAttraction(models.Model):
 
     def __str__(self):
         return f"{self.trip.title} - Day {self.day_number}: {self.experience.name}"
+
+
+class Collection(models.Model):
+    COLLECTION_TYPE_CHOICES = [
+        ("trail", "Trail"),
+        ("itinerary", "Itinerary"),
+        ("featured", "Featured"),
+        ("recommended", "Recommended"),
+        ("seasonal", "Seasonal"),
+    ]
+
+    id = models.BigAutoField(primary_key=True)
+    public_id = models.CharField(max_length=15, unique=True, blank=True, editable=False)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    collection_type = models.CharField(
+        max_length=20,
+        choices=COLLECTION_TYPE_CHOICES,
+        default="featured",
+    )
+    image_url = models.CharField(max_length=500, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(
+        blank=True, null=True, help_text="Soft delete — NULL means active"
+    )
+
+    class Meta:
+        db_table = "collections"
+        indexes = [
+            models.Index(fields=["public_id"], name="idx_collections_public_id"),
+            models.Index(fields=["collection_type"], name="idx_collections_type"),
+            models.Index(fields=["is_active"], name="idx_collections_is_active"),
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.collection_type}) - {self.public_id}"
+
+    def soft_delete(self):
+        self.deleted_at = timezone.now()
+        self.save(update_fields=["deleted_at", "updated_at"])
+
+    def restore(self):
+        self.deleted_at = None
+        self.save(update_fields=["deleted_at", "updated_at"])
+
+    @property
+    def is_deleted(self):
+        return self.deleted_at is not None
+
+    def save(self, *args, **kwargs):
+        if not self.public_id:
+            while True:
+                random_id = generate_random_id()
+                if not Collection.objects.filter(public_id=f"col-{random_id}").exists():
+                    self.public_id = f"col-{random_id}"
+                    break
+        super().save(*args, **kwargs)
+
+
+class CollectionExperience(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    collection = models.ForeignKey(
+        Collection,
+        on_delete=models.CASCADE,
+        db_column="collection_id",
+        related_name="collection_experiences",
+    )
+    experience = models.ForeignKey(
+        Experience,
+        on_delete=models.CASCADE,
+        db_column="experience_id",
+        related_name="collection_experiences",
+    )
+    display_order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "collection_experiences"
+        ordering = ["display_order"]
+        indexes = [
+            models.Index(fields=["collection"], name="idx_coll_exp_collection"),
+            models.Index(fields=["experience"], name="idx_coll_exp_experience"),
+            models.Index(fields=["display_order"], name="idx_coll_exp_display_order"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["collection", "experience"],
+                name="uq_collection_experience",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.collection.name} -> {self.experience.name} (order: {self.display_order})"
 
