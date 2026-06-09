@@ -5,7 +5,7 @@ import DemoHome from "./pages/DemoHome";
 import { ExperienceDetails } from "./pages/ExperienceDetails";
 import { ExperienceDetails as ExperienceMock } from "./pages/ExperienceMock";
 import MyBookings from "./pages/MyBookings";
-import Navbar from "./components/NewNavbar";
+import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import { ModalProvider } from "./context/ModalContext";
@@ -46,7 +46,7 @@ function LocationRouteWrapper() {
     'bengaluru', 'mysuru', 'coorg', 'udaipur', 'jodhpur', 'jaisalmer',
     'kochi', 'munnar', 'alleppey', 'wayanad'
   ];
-  
+
   if (locationName) {
     const norm = locationName.toLowerCase();
     if (statesList.includes(norm)) {
@@ -68,7 +68,7 @@ function AppContent() {
       <Navbar />
       {isLoginModalOpen && <LoginSignup />}
       <Chatbot />
-      <div className="">
+      <div className="pt-[73px]">
         <Routes>
           <Route path="/" element={<DemoHome />} />
           <Route path="/old-home" element={<Home />} />

@@ -1,6 +1,8 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import api from '../api/api';
 import { ArrowRight, MapPin } from 'lucide-react';
+
 
 const CITIES_LIST = [
   { id: 'jaipur', name: 'Jaipur', desc: 'The Pink City', img: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=400&q=80', attractions: '34+' },
@@ -24,6 +26,59 @@ const CITIES_LIST = [
 
 const CityIndex = () => {
   const navigate = useNavigate();
+  const [cities, setCities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+
+  const fetchCities = () => {
+    setLoading(true);
+    api.get('/api/location/')
+      .then((res) => {
+        const dbLocations = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data?.results)
+            ? res.data.results
+            : [];
+        setCities(dbLocations);
+        setError(null);
+      })
+      .catch((err) => {
+        setError(err.message || 'Something went wrong');
+        console.error('Error fetching locations:', err);
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchCities();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="max-w-[1280px] mx-auto px-6 md:px-12 py-10 w-full relative min-h-[400px] flex flex-col items-center justify-center">
+        <div className="flex items-center gap-2 text-primary font-['Hanken_Grotesk'] text-sm font-bold uppercase tracking-[0.15em]">
+          <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
+          Loading Cities...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-[1280px] mx-auto px-6 md:px-12 py-10 w-full relative min-h-[400px] flex flex-col items-center justify-center text-error font-['Inter'] text-center px-6">
+        <span className="material-symbols-outlined text-4xl mb-3 select-none">error</span>
+        <p className="text-sm font-semibold">Failed to load cities: {error}</p>
+        <button
+          onClick={fetchCities}
+          className="mt-4 px-5 py-2 bg-primary text-on-primary rounded-lg text-xs font-semibold hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-sm"
+        >
+          Retry Loading
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 pt-28 pb-16 px-4 sm:px-6 lg:px-8 font-['Sora']">
@@ -32,18 +87,18 @@ const CityIndex = () => {
         <p className="text-slate-600 mb-12 max-w-2xl text-base leading-relaxed">
           From ancient spiritual ghats to majestic desert fortresses and verdant hill stations, discover incredible locales brimming with architecture and history.
         </p>
-        
+
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {CITIES_LIST.map((city) => (
-            <div 
-              key={city.id} 
+            <div
+              key={city.id}
               onClick={() => navigate(`/${city.id}`)}
               className="bg-white rounded-3xl overflow-hidden shadow-[0px_8px_16px_rgba(0,0,0,0.03)] border border-slate-100 hover:shadow-xl hover:scale-[1.01] transition-all cursor-pointer group flex flex-col justify-between"
             >
               <div className="h-44 bg-slate-100 relative overflow-hidden">
-                <img 
-                  src={city.img} 
-                  alt={city.name} 
+                <img
+                  src={city.img}
+                  alt={city.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent z-10" />

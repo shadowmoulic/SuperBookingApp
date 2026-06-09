@@ -4,7 +4,6 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { MapPin, Compass, Navigation, X, Clock, Navigation as NavigationIcon, Loader2, CalendarPlus } from 'lucide-react';
 import { getExperiences } from '../api/api';
-import { supabase } from '../config/supabaseClient';
 
 // Fix for default Leaflet markers in React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -40,7 +39,7 @@ const ExploreNearMe = () => {
         const res = await getExperiences();
         // Handle paginated response structure from Django
         const experiencesData = res.data.results || res.data;
-        
+
         if (Array.isArray(experiencesData)) {
           // Filter out experiences without coordinates
           const validExperiences = experiencesData.filter(exp => exp.latitude && exp.longitude);
@@ -54,9 +53,9 @@ const ExploreNearMe = () => {
         setLoading(false);
       }
     };
-    
+
     fetchExperiences();
-    
+
     // Automatically attempt geolocation
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -99,7 +98,7 @@ const ExploreNearMe = () => {
         })
         .select()
         .single();
-        
+
       if (tripError) throw tripError;
 
       // 2. Create the Trip Attraction
@@ -137,7 +136,7 @@ const ExploreNearMe = () => {
 
   return (
     <div className="h-screen pt-16 flex flex-col relative">
-      
+
       {/* Floating Header */}
       <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[400] bg-white/90 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-slate-200/60 flex items-center gap-3">
         <Compass className="w-5 h-5 text-[#136b55]" />
@@ -145,7 +144,7 @@ const ExploreNearMe = () => {
       </div>
 
       {/* Recenter Button */}
-      <button 
+      <button
         onClick={() => {
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -160,9 +159,9 @@ const ExploreNearMe = () => {
 
       {/* The Map */}
       <div className="flex-1 z-0">
-        <MapContainer 
-          center={userLocation} 
-          zoom={13} 
+        <MapContainer
+          center={userLocation}
+          zoom={13}
           style={{ height: '100%', width: '100%' }}
           zoomControl={false}
         >
@@ -173,22 +172,22 @@ const ExploreNearMe = () => {
           <MapCenterer location={userLocation} />
 
           {/* User Location Marker */}
-          <Marker 
-            position={userLocation} 
+          <Marker
+            position={userLocation}
             icon={L.divIcon({
               html: `<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg animate-pulse"></div>`,
               className: 'custom-user-marker',
               iconSize: [16, 16],
               iconAnchor: [8, 8]
-            })} 
+            })}
           >
             <Popup>You are here</Popup>
           </Marker>
 
           {/* Experience Markers */}
           {experiences.map((exp) => (
-            <Marker 
-              key={exp.id} 
+            <Marker
+              key={exp.id}
               position={[exp.latitude, exp.longitude]}
               eventHandlers={{
                 click: () => setSelectedExperience(exp)
@@ -211,7 +210,7 @@ const ExploreNearMe = () => {
                 <MapPin className="w-12 h-12 text-slate-400" />
               </div>
             )}
-            <button 
+            <button
               onClick={() => setSelectedExperience(null)}
               className="absolute top-4 right-4 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full text-white flex items-center justify-center hover:bg-black/60 transition-colors"
             >
@@ -223,7 +222,7 @@ const ExploreNearMe = () => {
               </span>
             </div>
           </div>
-          
+
           <div className="p-6 flex-1 flex flex-col">
             <h2 className="text-2xl font-black text-slate-900 mb-2 leading-tight">
               {selectedExperience.name}
@@ -231,7 +230,7 @@ const ExploreNearMe = () => {
             <p className="text-sm text-slate-500 mb-6 line-clamp-3">
               {selectedExperience.description || "A magnificent historical site rich with cultural heritage and architectural brilliance."}
             </p>
-            
+
             <div className="flex items-center gap-6 mb-8 bg-slate-50 p-4 rounded-2xl border border-slate-100">
               <div className="flex flex-col">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Ticket</span>
@@ -249,7 +248,7 @@ const ExploreNearMe = () => {
             </div>
 
             <div className="mt-auto pt-4 border-t border-slate-100 space-y-3">
-              <button 
+              <button
                 onClick={handleAddToTrip}
                 className="w-full flex items-center justify-center gap-2 bg-[#136b55] hover:bg-[#0c4c3b] text-white px-6 py-4 rounded-2xl text-sm font-bold transition-all shadow-lg hover:-translate-y-1"
               >
@@ -273,38 +272,38 @@ const ExploreNearMe = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="space-y-5">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Trip Title</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="e.g. Jaipur Weekend Getaway"
                   value={tripModalData.title}
-                  onChange={e => setTripModalData({...tripModalData, title: e.target.value})}
+                  onChange={e => setTripModalData({ ...tripModalData, title: e.target.value })}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#136b55]/30"
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Total Days</label>
-                  <select 
+                  <select
                     value={tripModalData.days}
-                    onChange={e => setTripModalData({...tripModalData, days: parseInt(e.target.value)})}
+                    onChange={e => setTripModalData({ ...tripModalData, days: parseInt(e.target.value) })}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#136b55]/30"
                   >
-                    {[1,2,3,4,5,6,7].map(d => <option key={d} value={d}>{d} Days</option>)}
+                    {[1, 2, 3, 4, 5, 6, 7].map(d => <option key={d} value={d}>{d} Days</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Add to Day</label>
-                  <select 
+                  <select
                     value={tripModalData.currentDay}
-                    onChange={e => setTripModalData({...tripModalData, currentDay: parseInt(e.target.value)})}
+                    onChange={e => setTripModalData({ ...tripModalData, currentDay: parseInt(e.target.value) })}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#136b55]/30"
                   >
-                    {Array.from({length: tripModalData.days}, (_, i) => i + 1).map(d => (
+                    {Array.from({ length: tripModalData.days }, (_, i) => i + 1).map(d => (
                       <option key={d} value={d}>Day {d}</option>
                     ))}
                   </select>
@@ -312,7 +311,7 @@ const ExploreNearMe = () => {
               </div>
 
               <div className="pt-4 border-t border-slate-100">
-                <button 
+                <button
                   onClick={handleSaveTrip}
                   disabled={isSavingTrip || !tripModalData.title.trim()}
                   className="w-full flex items-center justify-center gap-2 bg-[#136b55] hover:bg-[#0c4c3b] disabled:bg-slate-300 text-white px-6 py-4 rounded-xl text-sm font-bold transition-all shadow-md"
