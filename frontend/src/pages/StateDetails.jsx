@@ -77,7 +77,7 @@ export default function StateDetails() {
   const { locationName } = useParams();
   const navigate = useNavigate();
   const normalizedStateId = locationName ? locationName.toLowerCase() : 'karnataka';
-  
+
   const stateInfo = STATES_DATA[normalizedStateId] || STATES_DATA.karnataka;
 
   const [activeCategory, setActiveCategory] = useState('All');
@@ -95,16 +95,16 @@ export default function StateDetails() {
       setLoading(true);
       try {
         const citiesList = stateInfo.cities.map(c => c.name);
-        const fetchPromises = citiesList.map(city => 
+        const fetchPromises = citiesList.map(city =>
           api.get(`/api/experiences/?location=${city}`).catch(err => {
             console.error(`Error fetching experiences for ${city}:`, err);
             return { data: [] }; // Fallback for failed requests to avoid failing all
           })
         );
-        
+
         const responses = await Promise.all(fetchPromises);
         const allFetched = [];
-        
+
         responses.forEach(res => {
           const data = Array.isArray(res.data)
             ? res.data
@@ -137,7 +137,7 @@ export default function StateDetails() {
       isDb: true
     }));
 
-    const uniqueMocks = stateInfo.attractions.filter(mock => 
+    const uniqueMocks = stateInfo.attractions.filter(mock =>
       !dbFormatted.some(db => db.name.toLowerCase() === mock.name.toLowerCase())
     );
 
@@ -188,7 +188,7 @@ export default function StateDetails() {
 
   return (
     <div className="min-h-screen bg-[#fcf8f9] text-[#1b1b1c] font-['Sora'] antialiased pb-24 md:pb-0">
-      
+
       {/* Desktop Hero Section */}
       <section className="hidden md:block relative bg-[#F7F9F9] pt-28 pb-24 overflow-hidden border-b border-[#E8ECEB]">
         <div className="max-w-[1280px] mx-auto px-6 relative z-10">
@@ -221,9 +221,9 @@ export default function StateDetails() {
               </div>
             </div>
             <div className="hidden lg:block relative h-[400px] rounded-[32px] overflow-hidden shadow-2xl transition-transform duration-500 hover:scale-[1.01]">
-              <img 
-                alt={stateInfo.name} 
-                className="w-full h-full object-cover" 
+              <img
+                alt={stateInfo.name}
+                className="w-full h-full object-cover"
                 src={stateInfo.img}
               />
             </div>
@@ -232,7 +232,7 @@ export default function StateDetails() {
         <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#fcf8f9] to-transparent"></div>
       </section>
 
-      {/* Mobile Header / TopAppBar */}
+      {/* Mobile Header / TopAppBar
       <header className="sticky top-0 z-50 flex justify-between items-center w-full px-4 py-3 bg-[#fcf8f9]/85 backdrop-blur-md border-b border-[#E8ECEB] md:hidden">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-[#006955] text-2xl">menu</span>
@@ -241,7 +241,7 @@ export default function StateDetails() {
         <div className="flex items-center gap-3">
           <span className="material-symbols-outlined text-[#006955] text-2xl">search</span>
         </div>
-      </header>
+      </header> */}
 
       {/* Mobile Hero Section */}
       <section className="px-4 py-4 md:hidden">
@@ -256,7 +256,7 @@ export default function StateDetails() {
         </nav>
         <h1 className="text-3xl font-extrabold text-[#1b1b1c] mb-1.5">Explore {stateInfo.name}</h1>
         <p className="text-sm text-[#3e4945] mb-4 leading-relaxed">{stateInfo.description}</p>
-        
+
         <div className="flex items-center gap-4 mb-4">
           <div className="flex items-center gap-1 text-[#006955] font-bold text-xs">
             <MapPin className="w-3.5 h-3.5" />
@@ -287,11 +287,10 @@ export default function StateDetails() {
               <button
                 key={state.id}
                 onClick={() => navigate(state.path)}
-                className={`whitespace-nowrap px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-                  isActive 
-                    ? 'bg-[#006955] text-white shadow-sm font-bold scale-[1.02]' 
-                    : 'bg-white border border-[#bdc9c3] text-[#3e4945] hover:border-[#006955] hover:text-[#006955]'
-                }`}
+                className={`whitespace-nowrap px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-all cursor-pointer ${isActive
+                  ? 'bg-[#006955] text-white shadow-sm font-bold scale-[1.02]'
+                  : 'bg-white border border-[#bdc9c3] text-[#3e4945] hover:border-[#006955] hover:text-[#006955]'
+                  }`}
               >
                 {state.name}
               </button>
@@ -310,22 +309,21 @@ export default function StateDetails() {
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className={`px-4 py-1.5 rounded-full md:rounded-xl text-xs font-semibold transition-colors border cursor-pointer whitespace-nowrap ${
-                    isActive 
-                      ? 'bg-[#006955]/10 border-[#006955] text-[#006955]' 
-                      : 'bg-[#f0edee] border-transparent text-[#3e4945] hover:bg-[#e5e2e3]'
-                  }`}
+                  className={`px-4 py-1.5 rounded-full md:rounded-xl text-xs font-semibold transition-colors border cursor-pointer whitespace-nowrap ${isActive
+                    ? 'bg-[#006955]/10 border-[#006955] text-[#006955]'
+                    : 'bg-[#f0edee] border-transparent text-[#3e4945] hover:bg-[#e5e2e3]'
+                    }`}
                 >
                   {cat}
                 </button>
               );
             })}
           </div>
-          
+
           <div className="hidden md:flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
             <div className="relative">
-              <select 
-                value={selectedCity} 
+              <select
+                value={selectedCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
                 className="appearance-none bg-[#f0edee] border border-[#bdc9c3] rounded-xl pl-4 pr-10 py-1.5 text-xs font-semibold text-[#1b1b1c] outline-none cursor-pointer focus:ring-2 focus:ring-[#006955]/20 focus:border-[#006955]"
               >
@@ -338,8 +336,8 @@ export default function StateDetails() {
             </div>
 
             <div className="relative">
-              <select 
-                value={selectedRating} 
+              <select
+                value={selectedRating}
                 onChange={(e) => setSelectedRating(e.target.value)}
                 className="appearance-none bg-[#f0edee] border border-[#bdc9c3] rounded-xl pl-4 pr-10 py-1.5 text-xs font-semibold text-[#1b1b1c] outline-none cursor-pointer focus:ring-2 focus:ring-[#006955]/20 focus:border-[#006955]"
               >
@@ -374,12 +372,12 @@ export default function StateDetails() {
               const cardContent = (
                 <div className="group bg-white rounded-2xl overflow-hidden shadow-[0px_12px_24px_rgba(0,0,0,0.04)] border border-[#E8ECEB] transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex flex-col h-full cursor-pointer active:scale-95">
                   <div className="relative h-32 sm:h-48 md:h-64 overflow-hidden">
-                    <img 
-                      alt={item.name} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                      src={item.img} 
+                    <img
+                      alt={item.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      src={item.img}
                     />
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -425,19 +423,19 @@ export default function StateDetails() {
       {/* Explore Cities */}
       <section className="max-w-[1280px] mx-auto px-4 sm:px-6 py-8 md:py-12">
         <h2 className="text-xl md:text-2xl font-bold text-[#1b1b1c] mb-6 md:mb-8">Explore Cities</h2>
-        
+
         {/* Mobile vertical listing */}
         <div className="flex flex-col gap-4 md:hidden">
           {stateInfo.cities.map((city, idx) => (
-            <div 
-              key={idx} 
+            <div
+              key={idx}
               onClick={() => navigate(`/${city.name.toLowerCase()}`)}
               className="relative h-24 rounded-2xl overflow-hidden group active:opacity-90 transition-opacity cursor-pointer"
             >
-              <img 
-                alt={city.name} 
-                className="absolute inset-0 w-full h-full object-cover brightness-75 group-hover:scale-105 transition-transform duration-500" 
-                src={city.img} 
+              <img
+                alt={city.name}
+                className="absolute inset-0 w-full h-full object-cover brightness-75 group-hover:scale-105 transition-transform duration-500"
+                src={city.img}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
               <div className="absolute inset-0 flex items-center justify-between px-6 text-white z-10">
@@ -454,15 +452,15 @@ export default function StateDetails() {
         {/* Desktop grid */}
         <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-6">
           {stateInfo.cities.map((city, idx) => (
-            <div 
-              key={idx} 
+            <div
+              key={idx}
               onClick={() => navigate(`/${city.name.toLowerCase()}`)}
               className="relative group rounded-[24px] overflow-hidden cursor-pointer shadow-sm min-h-[250px] flex items-end p-6 transition-all duration-300 hover:shadow-md hover:scale-[1.01]"
             >
-              <img 
-                alt={city.name} 
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-                src={city.img} 
+              <img
+                alt={city.name}
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                src={city.img}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
               <div className="relative z-10">
@@ -519,15 +517,15 @@ export default function StateDetails() {
               </div>
             ) : (
               <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 w-full max-w-md mx-auto">
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address"
                   className="flex-grow px-5 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur-sm text-sm"
                   required
                 />
-                <button 
+                <button
                   type="submit"
                   className="bg-white text-[#00846c] px-6 py-3 rounded-xl font-bold hover:bg-[#F7F9F9] transition-all cursor-pointer text-sm whitespace-nowrap active:scale-95"
                 >
@@ -542,7 +540,7 @@ export default function StateDetails() {
       </section>
 
       {/* Mobile Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-white shadow-lg rounded-t-xl border-t border-[#E8ECEB] md:hidden">
+      {/* <nav className="fixed bottom-0 left-0 right-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-white shadow-lg rounded-t-xl border-t border-[#E8ECEB] md:hidden">
         <a className="flex flex-col items-center justify-center bg-[#006955]/10 text-[#006955] rounded-xl px-3 py-1 scale-95 transition-all cursor-pointer">
           <Compass className="w-5 h-5 fill-current" />
           <span className="text-[10px] font-bold">Discover</span>
@@ -559,7 +557,7 @@ export default function StateDetails() {
           <span className="material-symbols-outlined text-lg leading-none">person</span>
           <span className="text-[10px] font-bold">Profile</span>
         </a>
-      </nav>
+      </nav> */}
     </div>
   );
 }
