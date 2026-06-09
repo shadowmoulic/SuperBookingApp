@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./styles/light.css";
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap');
 
 @theme {
   --color-primary: var(--md-sys-color-primary);
@@ -81,11 +82,15 @@ a:hover {
   /* color: #535bf2; */
 }
 
-html,
+
+html {
+  overflow-x: clip;
+}
+
 body {
   width: 100%;
   min-height: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 #root {
@@ -98,6 +103,7 @@ body {
   min-width: 320px;
   background-color: var(--md-sys-color-background);
   color: var(--md-sys-color-on-background);
+  font-family: 'Sora', system-ui, -apple-system, sans-serif;
 }
 
 

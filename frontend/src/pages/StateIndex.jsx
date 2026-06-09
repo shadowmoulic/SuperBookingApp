@@ -4,6 +4,14 @@ import { useNavigate } from 'react-router-dom';
 
 const INDIAN_STATES = [
   {
+    id: 'karnataka',
+    name: 'Karnataka',
+    tagline: 'Heritage & Discovery',
+    bestMonth: 'Oct - Mar',
+    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCGMiZYYBKKncNnPXHKiGVIEYqAvLNnfFH8kCTUlVeiS_-DCZ-ME5caatacmFnLLgcT6Q4O7u95xXZZuoXkGrQkeGgx9SnC4ulWpAE2h40oZXCcQSmzAPXVUurjJQr2kfCM8-IAuLwj6lvmaqa1zv6bgRbhjFHsry9twwfjGyPlDsY7QJWJef-eq-lHy2qjW8I2YB2Q3ghNi9Gt4eH2lFd0TQBRrRd4fmByvrYv1SWAwtXzrLYem9cCslN87N5eC-A4H7Ne3fopjBhn',
+    attractionsCount: 120
+  },
+  {
     id: 'rajasthan',
     name: 'Rajasthan',
     tagline: 'Land of Kings',
@@ -124,7 +132,7 @@ const StateIndex = () => {
           {filteredStates.map((state) => (
             <div 
               key={state.id} 
-              onClick={() => navigate(`/states/${state.id}`)}
+              onClick={() => navigate(`/${state.id}`)}
               className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-200/60 hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group cursor-pointer flex flex-col"
             >
               <div className="relative h-64 overflow-hidden">
