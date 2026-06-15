@@ -60,7 +60,7 @@ export default function BookingCard({ booking }) {
       <div>
         {/* Cover Image */}
         <Link
-          to={`/experience/${experienceId}`}
+          to={`/attraction/${slug}`}
           className="block w-full h-32 rounded-lg overflow-hidden mb-3 relative group"
         >
           <img
@@ -80,7 +80,7 @@ export default function BookingCard({ booking }) {
         <div className="mb-4">
           <div className="flex justify-between items-start gap-2 mb-1.5">
             <Link
-              to={`/experience/${experienceId}`}
+              to={`/attraction/${slug}`}
               className="font-['Hanken_Grotesk'] font-bold text-sm text-gray-900 line-clamp-1 hover:text-primary transition-colors"
             >
               {booking?.experience_name || "Experience"}

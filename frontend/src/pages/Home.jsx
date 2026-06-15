@@ -201,7 +201,7 @@ const INTERESTS = ["History", "Architecture", "Photography", "Spiritual", "Famil
 
 
 function SmallExperienceCard({ experience }) {
-  const experienceId = experience.public_id;
+  const slug = experience.name ? experience.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : experience.public_id;
   const images = String(experience.image_url || "")
     .split(",")
     .map((url) => url.trim())
@@ -209,7 +209,7 @@ function SmallExperienceCard({ experience }) {
   const coverImage = images[0] || experience.image_url;
 
   return (
-    <Link to={`/experience/${experienceId}`} className="block h-full group">
+    <Link to={`/attraction/${slug}`} className="block h-full group">
       <div className="bg-surface-container-lowest rounded-xl shadow-md hover:shadow-xl border border-outline-variant/30 flex flex-col h-full overflow-hidden transition-all duration-300 relative">
 
         {/* Image Container */}

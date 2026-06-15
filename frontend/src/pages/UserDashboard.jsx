@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { BookMarked, MapPin, Calendar, Settings, Compass, ChevronRight, LogOut, Search, CreditCard, Sparkles, Loader2 } from 'lucide-react';
+import { BookMarked, MapPin, Calendar, Settings, Compass, ChevronRight, LogOut, Search, CreditCard, Award, Loader2 } from 'lucide-react';
 import AuthContext from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -31,9 +31,9 @@ const UserDashboard = () => {
     .toUpperCase();
 
   const savedAttractions = [
-    { id: 1, name: 'Amer Fort', city: 'Jaipur', img: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&q=80&w=800' },
-    { id: 2, name: 'Taj Mahal', city: 'Agra', img: 'https://images.unsplash.com/photo-1564507592208-028fdb71ec1e?auto=format&fit=crop&q=80&w=800' },
-    { id: 3, name: 'Hawa Mahal', city: 'Jaipur', img: 'https://images.unsplash.com/photo-1599661559882-628d01b1b016?auto=format&fit=crop&q=80&w=800' }
+    { id: 1, name: 'Amer Fort', city: 'Jaipur', img: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=800&w=800' },
+    { id: 2, name: 'Taj Mahal', city: 'Agra', img: 'https://images.unsplash.com/photo-1564507592208-028fdb71ec1e?auto=format&fit=crop&w=800&w=800' },
+    { id: 3, name: 'Hawa Mahal', city: 'Jaipur', img: 'https://images.unsplash.com/photo-1599661559882-628d01b1b016?auto=format&fit=crop&w=800&w=800' }
   ];
 
   const handleLogout = async () => {
@@ -78,7 +78,7 @@ const UserDashboard = () => {
               <h3 className="font-black text-slate-900 text-lg tracking-tight">{fullName}</h3>
               <p className="text-xs font-bold text-slate-400 mt-1">{user?.email}</p>
               <div className="mt-4 bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1.5">
-                <Sparkles className="w-3 h-3" /> Explorer Tier
+                <Award className="w-3 h-3" /> Explorer Tier
               </div>
             </div>
             

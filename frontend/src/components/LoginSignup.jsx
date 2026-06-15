@@ -84,7 +84,6 @@ export default function LoginSignup() {
     setError("");
     if (!validateForm()) return;
     setLoading(true);
-    setMessage("");
 
     try {
       let result;

@@ -11,13 +11,37 @@ import AuthContext from "../context/AuthContext";
 import ModalContext from "../context/ModalContext";
 import Loading from "../components/Loading";
 
-export function ExperienceDetails() {
+const MOCK_TAJ_MAHAL = {
+  public_id: "taj-mahal",
+  id: "taj-mahal",
+  name: "Taj Mahal Official Entry Ticket",
+  category: "UNESCO World Heritage Site",
+  description: "Witness the jewel of Mughal art in India and one of the universally admired masterpieces of the world's heritage. The Taj Mahal is an ivory-white marble mausoleum on the south bank of the Yamuna river in Agra. Commissioned in 1632 by the Mughal emperor Shah Jahan to house the tomb of his favorite wife, Mumtaz Mahal, it stands as the ultimate monument of love. Built over 20 years using materials from all over India and Asia, it displays Persian, Islamic, and Indian architectural styles in perfect harmony.",
+  image_url: "https://lh3.googleusercontent.com/aida-public/AB6AXuDsUABCQfhFFId33IdV_POy3XDyV9ZCj5cfcX6qK2E0Cdfx9PES_4cQus_8dGf0sS9VAL0zUmAzouDTo6vLZ_gHPhsvnFnH_bmSl7eDLonjEC9b2AwyZKLavA8ZtQpIaQqPx3F62dD7OjWf_WpMbWae-2sXHqY0yKOcON0lw15yjfxZhva_lgEwG04QTWlayjeu4MVt-TijzCpI07TBeMY3qz578Djhj0QNhpGAf_utomKMkhv9ISM4V4zL4YNKO00OfGsapPhQEkg",
+  image_detail: "https://lh3.googleusercontent.com/aida-public/AB6AXuB94Xi-6LNCtFtqKRlHt5lmH-2jLooKE6lH_Z4Uj-ZvGSfRK_l197PkRDmPUyN_UqTjadnavJTUBk1F5pqKI6mziy0PO6YVAvRZz1wm68RE0WMxxZj49WB2QL0uQkzmw8ucm1PQAmNKly86w9ORKZiMq3vjo6CcGXt0zWvHu8D0MQv-Vk15wIvm3uPDzkuuQ8TzoTwrMUnqcOQ3UA0mqZ3y8LQEJKXsD9Boa-0XbZ85mk7yEriyMwIQbVgbAwRjZnmra_qu7g14_ko",
+  image_gardens: "https://lh3.googleusercontent.com/aida-public/AB6AXuCjRkn60X4gHSvZ-oKjklhjsIu3rTdAuRBsrl7xi86uz-EEuycVNDPMVU9FSXcQ-6KMZ2vO35baz05e8TiU_LCm7K3nRt40nEzp1aqIloU9ymYBbWOisq0pl8EuEwT-U-O9cCKMUWeWGid_x0Ff9gsGCpoyLsENZXVRgCHRc9NNKz-Mf2-osxrzLAQXV64FSSqbUB8eLPAow15n0C6UaLDMpQ4u5g3iExTOLNfADo-hy8lUVoyD0rvfIt2Lrcr1zo1WjuLDXtBRnto",
+  image_sunrise: "https://lh3.googleusercontent.com/aida-public/AB6AXuAGMRs2EcEwYa9DEM_p6TQaDXzNBxubvlXhNbWRNXgQmH8NbcEnBfpJW76KSiVquOsCheYd4hUleMia4pFDrJzQUFR4JMk5Ki3VM2ntqsoiiyrMpqBD_AY1VLW7SPcBlq3FPtRAncdj6ANcJZ-KWEhiITO_k3RM-XFGZtrk1vSXUln88zOnGlw01dDon0UKmkSAVK8m3t1oGSdf2VT0VBh1yQf9mI21c5gLjvJwbuDGhd4mlbTBdAY0pmLhZbqfoXlbUsScyfMi5pQ",
+  opening_time: "06:00",
+  closing_time: "18:30",
+  location: "Agra, Uttar Pradesh",
+  entry_fee_base: 45,
+  foreigner_fee_base: 1050,
+  average_rating: 4.9,
+  reviews: {
+    results: [
+      { id: 1, user_name: "Sarah Jenkins", created_at: "2026-06-03T12:00:00Z", rating: 5, review_text: "Booking through this app was seamless. The QR code worked instantly at the West Gate. Sunrise was magical!" }
+    ]
+  },
+  is_open: true
+};
+
+export function ExperienceDemo() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useContext(AuthContext);
   const { openLoginModal } = useContext(ModalContext);
 
-  const [experience, setExperience] = useState(null);
+  const [experience, setExperience] = useState(MOCK_TAJ_MAHAL);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -66,25 +90,18 @@ export function ExperienceDetails() {
   const normalizedId = id ? id.toLowerCase() : "";
 
   useEffect(() => {
-    if (id) {
-      getItem();
+    if (!id || normalizedId === "taj-mahal" || normalizedId === "taj_mahal" || window.location.pathname.toLowerCase().includes("taj")) {
+      setExperience(MOCK_TAJ_MAHAL);
+      setLoading(false);
+    } else {
+      
     }
   }, [id]);
 
   const getItem = () => {
     setLoading(true);
     setError("");
-    api
-      .get(`/api/experience/${id}`)
-      .then((res) => {
-        setExperience(res.data);
-      })
-            .catch((err) => {
-        setError("Unable to load experience details.");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    
   };
 
   // Mobile Sticky Scroll Listener
@@ -145,25 +162,6 @@ export function ExperienceDetails() {
   const togglePicker = () => {
     setShowDatePicker(prev => !prev);
   };
-
-  if (loading || !experience) {
-    return (
-      <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center">
-        <Loading />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center font-['Sora']">
-        <div className="bg-white p-8 rounded-2xl shadow text-center">
-          <h2 className="text-xl font-bold text-[#191c1d] mb-2">Error</h2>
-          <p className="text-[#3b4a44]">{error}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-[#191c1d] font-['Sora'] antialiased pt-0 pb-24 lg:pb-12">
@@ -288,9 +286,7 @@ export function ExperienceDetails() {
             </ul>
           </section>
 
-          {experience.image_sunrise && ( 
-<>
-{/* Why Sunrise Editorial */}
+          {/* Why Sunrise Editorial */}
           <section className="bg-[#F7F9F9] -mx-4 sm:-mx-8 px-4 sm:px-8 py-8 rounded-3xl">
             <h3 className="text-lg font-black text-[#191c1d] mb-3">Why visit at Sunrise?</h3>
             <p className="text-xs sm:text-sm text-[#3b4a44] leading-relaxed font-semibold mb-6">
@@ -304,9 +300,8 @@ export function ExperienceDetails() {
               />
             </div>
           </section>
-</>
-)}
-{/* Bento Pro Tips */}
+
+          {/* Bento Pro Tips */}
           <section className="space-y-4">
             <h3 className="text-lg font-black text-[#191c1d]">Pro Tips</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -583,9 +578,7 @@ export function ExperienceDetails() {
               </ul>
             </section>
 
-            {experience.image_sunrise && ( 
-<>
-{/* Why Visit at Sunrise */}
+            {/* Why Visit at Sunrise */}
             <section className="py-4">
               <div className="flex flex-col md:flex-row gap-8 items-center">
                 <div className="md:w-1/2 space-y-4">
@@ -613,9 +606,8 @@ export function ExperienceDetails() {
                 </div>
               </div>
             </section>
-</>
-)}
-{/* Pro Tips Section */}
+
+            {/* Pro Tips Section */}
             <section className="space-y-6">
               <h2 className="text-lg font-black text-[#191c1d]">Pro Tips for Your Visit</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

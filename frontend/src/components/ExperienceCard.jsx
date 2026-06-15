@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 function ExperienceCard({ experience }) {
-  const experienceId = experience.public_id;
+  const slug = experience.name ? experience.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : experience.public_id;
   const images = String(experience.image_url || "")
     .split(",")
     .map((url) => url.trim())
@@ -23,7 +23,7 @@ function ExperienceCard({ experience }) {
   };
 
   return (
-    <Link to={`/experience/${experienceId}`} className="block h-full">
+    <Link to={`/attraction/${slug}`} className="block h-full">
       <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] overflow-hidden border border-gray-100 flex flex-col h-full">
         {/* Image Carousel Container */}
         <div className="relative w-full h-56 flex-shrink-0 overflow-hidden">

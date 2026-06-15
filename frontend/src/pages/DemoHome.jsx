@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  Search, MapPin, ChevronRight, Sparkles, Loader2,
+  Search, MapPin, ChevronRight, Compass, Loader2,
   Clock, Users, Star, ArrowRight, CheckCircle
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -261,6 +261,10 @@ export default function DemoHome() {
   // Search
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [travelers, setTravelers] = useState(2);
+  const [dates, setDates] = useState("Add dates");
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [travelersPickerOpen, setTravelersPickerOpen] = useState(false);
   const searchRef = useRef(null);
   const QUICK_CHIPS = ["Jaipur Forts", "Delhi Heritage Walk", "Temples in Varanasi", "Hampi Ruins", "UNESCO Sites"];
   useEffect(() => {
@@ -322,7 +326,7 @@ export default function DemoHome() {
         ))}
 
         {/* Slide nav dots */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
           {HERO_SLIDES.map((_, i) => (
             <button
               key={i} onClick={() => setCurrentSlide(i)}
@@ -339,7 +343,7 @@ export default function DemoHome() {
         </div>
 
         {/* Hero copy and search */}
-        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-8">
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-8 pt-9 sm:pt-0 pb-12 sm:pb-0">
           <p className="text-amber-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-4">India's Heritage Discovery Platform</p>
 
           <h1 className="text-[1.65rem] leading-tight sm:text-5xl lg:text-7xl font-black text-white sm:leading-[1.05] tracking-tight mb-4">
@@ -352,42 +356,106 @@ export default function DemoHome() {
           </p>
 
           {/* Search bar */}
-          <div ref={searchRef} className="relative max-w-2xl">
-            <div className={`flex items-center bg-surface-container rounded-2xl shadow-2xl transition-all duration-200 ${searchFocused ? "ring-4 ring-primary/40" : ""}`}>
-              <div className="pl-5 pr-2 text-on-surface-variant">
-                <Search className="w-5 h-5" />
-              </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onFocus={() => setSearchFocused(true)}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Where are you going?"
-                className="flex-1 bg-transparent border-none text-on-surface focus:outline-none placeholder-on-surface-variant/60 text-sm sm:text-base py-4 pr-4"
-              />
-              <button onClick={() => navigate("/states")} className="m-2 bg-primary hover:bg-opacity-95 text-on-primary font-bold px-5 sm:px-7 py-3 rounded-xl text-sm transition-all duration-200 hover:scale-105 active:scale-95 shrink-0">
-                Explore
-              </button>
-            </div>
-
-            {/* Suggestions */}
-            {searchFocused && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-surface-container-lowest rounded-2xl shadow-2xl border border-outline-variant p-4 z-30">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2 px-1">Popular searches</p>
-                <div className="space-y-0.5">
-                  {QUICK_CHIPS.map((chip) => (
-                    <button
-                      key={chip}
-                      onClick={() => { setSearchQuery(chip); setSearchFocused(false); }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-surface-container rounded-xl text-on-surface text-sm transition-colors text-left"
-                    >
-                      <Search className="w-3.5 h-3.5 text-on-surface-variant" />
-                      {chip}
-                    </button>
-                  ))}
+          <div ref={searchRef} className="relative max-w-4xl z-30">
+            <div className="bg-white p-2 rounded-2xl shadow-2xl flex flex-col md:flex-row items-stretch gap-2">
+              <div className="flex-1 flex items-center px-4 py-3 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer group">
+                <MapPin className="w-5 h-5 text-slate-400 mr-3 group-hover:text-[#136b55] transition-colors" />
+                <div className="text-left w-full">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Where to?</p>
+                  <select
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="bg-transparent border-none p-0 focus:ring-0 font-semibold text-slate-800 w-full cursor-pointer text-sm outline-none"
+                  >
+                    <option value="">Select State</option>
+                    <option value="Karnataka">Karnataka</option>
+                    <option value="Rajasthan">Rajasthan</option>
+                    <option value="Kerala">Kerala</option>
+                    <option value="Goa">Goa</option>
+                    <option value="Tamil Nadu">Tamil Nadu</option>
+                    <option value="Maharashtra">Maharashtra</option>
+                  </select>
                 </div>
               </div>
-            )}
+
+              <div className="w-px bg-slate-100 hidden md:block my-2"></div>
+
+              <div
+                className="flex-1 flex items-center px-4 py-3 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer group relative"
+                onClick={() => { setDatePickerOpen(!datePickerOpen); setTravelersPickerOpen(false); }}
+              >
+                <Clock className="w-5 h-5 text-slate-400 mr-3 group-hover:text-[#136b55] transition-colors" />
+                <div className="text-left">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Dates</p>
+                  <p className="font-semibold text-slate-800 text-sm">{dates}</p>
+                </div>
+                {datePickerOpen && (
+                  <div className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 z-40 w-64" onClick={(e) => e.stopPropagation()}>
+                    <p className="text-xs font-bold text-slate-400 uppercase mb-3">Select Date</p>
+                    <input
+                      type="date"
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          const d = new Date(e.target.value);
+                          const formatted = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+                          setDates(formatted);
+                          setDatePickerOpen(false);
+                        }
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#136b55]/20 focus:border-[#136b55]"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="w-px bg-slate-100 hidden md:block my-2"></div>
+
+              <div
+                className="flex-1 flex items-center px-4 py-3 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer group relative"
+                onClick={() => { setTravelersPickerOpen(!travelersPickerOpen); setDatePickerOpen(false); }}
+              >
+                <Users className="w-5 h-5 text-slate-400 mr-3 group-hover:text-[#136b55] transition-colors" />
+                <div className="text-left">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Travelers</p>
+                  <p className="font-semibold text-slate-800 text-sm">{travelers} Guests</p>
+                </div>
+                {travelersPickerOpen && (
+                  <div className="absolute top-full right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 z-40 w-48 text-slate-855" onClick={(e) => e.stopPropagation()}>
+                    <p className="text-xs font-bold text-slate-400 uppercase mb-3">Guests</p>
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => setTravelers(Math.max(1, travelers - 1))}
+                        className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-slate-800 flex items-center justify-center transition-colors"
+                      >
+                        -
+                      </button>
+                      <span className="font-bold text-sm text-slate-800">{travelers}</span>
+                      <button
+                        onClick={() => setTravelers(travelers + 1)}
+                        className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-slate-800 flex items-center justify-center transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => {
+                  if (searchQuery) {
+                    navigate(`/${searchQuery.toLowerCase().replace(/\s+/g, '-')}`);
+                  } else {
+                    navigate('/states');
+                  }
+                }}
+                className="bg-slate-900 text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#136b55] transition-all duration-200 active:scale-95 shrink-0"
+              >
+                <Search className="w-4 h-4" />
+                Search
+              </button>
+            </div>
           </div>
 
           {/* Quick chips */}
@@ -466,7 +534,7 @@ export default function DemoHome() {
 
         {/* CTA */}
         <div className="text-center mt-10">
-          <Link to="/cities" className="inline-flex items-center gap-2 bg-on-surface hover:bg-opacity-90 text-surface-container-lowest font-bold px-8 py-3.5 rounded-full text-sm transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+          <Link to="/cities" className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-3.5 rounded-full text-sm transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
             Start Exploring All Cities <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -566,8 +634,8 @@ export default function DemoHome() {
             {/* Left: form */}
             <div className="lg:col-span-4 bg-surface-container-lowest border border-outline-variant p-6 sm:p-8 rounded-3xl">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-primary" />
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                  <Compass className="w-5 h-5 text-amber-400" />
                 </div>
                 <div>
                   <p className="text-xs font-bold text-primary uppercase tracking-wider">AI Travel Guide</p>
@@ -628,9 +696,9 @@ export default function DemoHome() {
                 <button onClick={handleGenerate} disabled={plannerLoading}
                   className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-opacity-95 disabled:bg-outline-variant/50 text-on-primary font-bold py-3.5 rounded-xl text-sm transition-all duration-200 shadow-md active:scale-95 cursor-pointer">
                   {plannerLoading ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> Generating plan...</>
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Loading itinerary...</>
                   ) : (
-                    <><Sparkles className="w-4 h-4" /> Generate My Itinerary</>
+                    <><Compass className="w-4 h-4" /> Plan My Route</>
                   )}
                 </button>
               </div>

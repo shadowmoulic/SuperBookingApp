@@ -370,7 +370,7 @@ function Navbar() {
                     return (
                       <Link
                         key={expId}
-                        to={`/experience/${expId}`}
+                        to={`/attraction/${slug}`}
                         onClick={() => setIsSearchOpen(false)}
                         className="flex items-center gap-4 p-3 rounded-xl hover:bg-primary/5 border border-transparent hover:border-primary/10 transition-all group"
                       >

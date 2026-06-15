@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { MessageCircle, X, Send, Sparkles } from "lucide-react";
+import { MessageCircle, X, Send } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
 export default function Chatbot() {
@@ -55,19 +55,21 @@ export default function Chatbot() {
     }
   };
 
+  const isDetailsPage = location.pathname.startsWith("/attraction") || location.pathname.startsWith("/experience");
+
   if (location.pathname === "/explore-near-me") {
     return null;
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className={`fixed right-6 z-50 ${isDetailsPage ? "bottom-24 lg:bottom-6" : "bottom-6"}`}>
       {isOpen ? (
         <div className="bg-surface-container-lowest rounded-3xl shadow-2xl border border-gray-150 w-80 h-[400px] flex flex-col overflow-hidden transition-all duration-300">
           {/* Header */}
           <div className="bg-primary text-on-primary p-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-on-primary/20 rounded-full flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-tertiaryContainer" />
+              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                <MessageCircle className="w-4 h-4 text-white" />
               </div>
               <span className="font-bold text-sm">ZeQue Assistant</span>
             </div>

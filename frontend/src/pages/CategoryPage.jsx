@@ -326,7 +326,7 @@ export default function CategoryPage({ type }) {
 
             return (
               <Link
-                to={`/experience/${expId}`}
+                to={`/attraction/${slug}`}
                 key={expId}
                 className="group bg-white border-gray-150 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col h-full relative cursor-pointer"
               >

@@ -282,7 +282,7 @@ function MyBookings() {
                     >
                       {/* Upper Media aspect ratio container */}
                       <Link
-                        to={`/experience/${experienceId}`}
+                        to={`/attraction/${slug}`}
                         className="relative h-44 overflow-hidden flex-shrink-0 block"
                       >
                         <img
@@ -301,7 +301,7 @@ function MyBookings() {
                         <div>
                           {/* Title */}
                           <h3 className="font-['Hanken_Grotesk'] font-bold text-base text-gray-900 line-clamp-1 mb-1">
-                            <Link to={`/experience/${experienceId}`} className="hover:text-primary transition-colors">
+                            <Link to={`/attraction/${slug}`} className="hover:text-primary transition-colors">
                               {name}
                             </Link>
                           </h3>

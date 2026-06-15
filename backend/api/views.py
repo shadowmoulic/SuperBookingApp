@@ -1,3 +1,4 @@
+from django.http import Http404
 import uuid
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -45,11 +46,41 @@ class CategoryView(generics.RetrieveAPIView):
 class ExperienceView(generics.RetrieveAPIView):
     serializer_class = ContentSerializer.ExperienceSerializer
     permission_classes = [AllowAny]
-    lookup_field = "public_id"
+    lookup_field = "slug" # we will lookup by slug from kwargs
+
+    def get_object(self):
+        slug = self.kwargs.get("slug", "")
+        # Replace hyphens with spaces for name lookup
+        name_search = slug.replace("-", " ")
+        queryset = self.get_queryset()
+        
+        # Try finding by exact name match (case insensitive)
+        experiences = queryset.filter(name__iexact=name_search)
+        
+        if experiences.count() == 1:
+            return experiences.first()
+        elif experiences.count() > 1:
+            # Duplicate names found, assume city was appended: name-city
+            # Let's try splitting from the right
+            parts = slug.split('-')
+            for i in range(1, len(parts)):
+                name_part = " ".join(parts[:-i])
+                city_part = " ".join(parts[-i:])
+                matches = queryset.filter(name__iexact=name_part, location__city__iexact=city_part)
+                if matches.exists():
+                    return matches.first()
+            return experiences.first() # fallback to first
+            
+        # If not found, try falling back to public_id in case old links are hit
+        fallback = queryset.filter(public_id=slug)
+        if fallback.exists():
+            return fallback.first()
+            
+        raise Http404("Experience not found")
 
     def get_queryset(self):
         return (
-            ContentModel.Experience.objects.filter(public_id=self.kwargs["public_id"])
+            ContentModel.Experience.objects.filter(deleted_at__isnull=True)
             .annotate(
                 average_rating=Avg(
                     "reviews__rating", filter=Q(reviews__deleted_at__isnull=True)
@@ -60,6 +91,7 @@ class ExperienceView(generics.RetrieveAPIView):
             )
             .select_related("category", "location")
         )
+
 
 
 class ExperienceListView(generics.ListAPIView):

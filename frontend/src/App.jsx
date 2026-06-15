@@ -1,10 +1,11 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
 import { useContext } from "react";
 import Home from "./pages/Home";
 import DemoHome from "./pages/DemoHome";
 import { ExperienceDetails } from "./pages/ExperienceDetails";
+import { ExperienceDemo } from "./pages/ExperienceDemo";
 import MyBookings from "./pages/MyBookings";
-import Navbar from "./components/Navbar";
+import Navbar from "./components/NewNavbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import { ModalProvider } from "./context/ModalContext";
@@ -23,6 +24,9 @@ import SingleCategoryPage from "./pages/SingleCategoryPage";
 import UserDashboard from "./pages/UserDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import StateIndex from "./pages/StateIndex";
+import StateDetails from "./pages/StateDetails";
+import CityDetails from "./pages/CityDetails";
+import TrailDetails from "./pages/TrailDetails";
 import CityIndex from "./pages/CityIndex";
 import CategoryIndex from "./pages/CategoryIndex";
 import TrailIndex from "./pages/TrailIndex";
@@ -35,6 +39,28 @@ import { LocationDetails } from "./pages/LocationDetails";
 import BookingPage from "./pages/BookingPage";
 import StatePage from "./pages/StatePage";
 import CityPage from "./pages/CityPage";
+
+function LocationRouteWrapper() {
+  const { locationName } = useParams();
+  const statesList = ['karnataka', 'rajasthan', 'kerala', 'maharashtra', 'himachal', 'goa', 'tamilnadu'];
+  const citiesList = [
+    'jaipur', 'delhi', 'agra', 'kolkata', 'hyderabad', 'hampi', 'varanasi',
+    'bengaluru', 'mysuru', 'coorg', 'udaipur', 'jodhpur', 'jaisalmer',
+    'kochi', 'munnar', 'alleppey', 'wayanad'
+  ];
+
+  if (locationName) {
+    const norm = locationName.toLowerCase();
+    if (statesList.includes(norm)) {
+      return <StateDetails />;
+    }
+    if (citiesList.includes(norm)) {
+      return <CityDetails />;
+    }
+  }
+  return <CategoryPage type="location" />;
+}
+
 function AppContent() {
   const { isLoginModalOpen } = useContext(ModalContext);
 
@@ -44,10 +70,13 @@ function AppContent() {
       <Navbar />
       {isLoginModalOpen && <LoginSignup />}
       <Chatbot />
-      <div className="pt-[73px]">
+      <div>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/experience/:id" element={<ExperienceDetails />} />
+          <Route path="/" element={<DemoHome />} />
+          <Route path="/old-home" element={<Home />} />
+          <Route path="/demo-home" element={<Home />} />
+          <Route path="/attraction/:id" element={<ExperienceDetails />} />
+          <Route path="/attraction-demo" element={<ExperienceDemo />} />
           <Route path="/location/:id" element={<LocationDetails />} />
           <Route path="/booking/:id" element={<BookingPage />} />
           <Route path="/payment/:id" element={<CheckoutPage />} />
@@ -68,15 +97,16 @@ function AppContent() {
           <Route path="/cities" element={<CityIndex />} />
           <Route path="/categories" element={<CategoryIndex />} />
           <Route path="/trails" element={<TrailIndex />} />
+          <Route path="/trails/:trailId" element={<TrailDetails />} />
           <Route path="/attractions" element={<AttractionIndex />} />
           <Route path="/itineraries" element={<ItineraryIndex />} />
           <Route path="/unesco-sites" element={<UnescoSites />} />
           <Route path="/top-places" element={<TopPlaces />} />
           <Route path="/explore-near-me" element={<ExploreNearMe />} />
-          <Route path="/:locationName" element={<CategoryPage type="location" />} />
+          <Route path="/:locationName" element={<LocationRouteWrapper />} />
           <Route path="/:locationName/:categoryName" element={<CategoryPage type="combined" />} />
-          <Route path="/state/:public_id" element={<StatePage/>} />
-          <Route path ="/city/:public_id" element={<CityPage/>} />
+          <Route path="/state/:public_id" element={<StatePage />} />
+          <Route path="/city/:public_id" element={<CityPage />} />
         </Routes>
       </div>
       <Footer />

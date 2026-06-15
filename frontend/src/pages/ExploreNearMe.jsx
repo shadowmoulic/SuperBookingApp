@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { MapPin, Sparkles, Navigation, X, Clock, Navigation as NavigationIcon, Loader2, CalendarPlus } from 'lucide-react';
+import { MapPin, Compass, Navigation, X, Clock, Navigation as NavigationIcon, Loader2, CalendarPlus } from 'lucide-react';
 import { getExperiences } from '../api/api';
 
 // Fix for default Leaflet markers in React
@@ -139,7 +139,7 @@ const ExploreNearMe = () => {
 
       {/* Floating Header */}
       <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[400] bg-white/90 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-slate-200/60 flex items-center gap-3">
-        <Sparkles className="w-5 h-5 text-amber-500" />
+        <Compass className="w-5 h-5 text-[#136b55]" />
         <h1 className="font-black text-slate-900 tracking-tight text-lg">Explore India Map</h1>
       </div>
 
