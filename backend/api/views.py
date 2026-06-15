@@ -46,37 +46,7 @@ class CategoryView(generics.RetrieveAPIView):
 class ExperienceView(generics.RetrieveAPIView):
     serializer_class = ContentSerializer.ExperienceSerializer
     permission_classes = [AllowAny]
-    lookup_field = "slug" # we will lookup by slug from kwargs
-
-    def get_object(self):
-        slug = self.kwargs.get("slug", "")
-        # Replace hyphens with spaces for name lookup
-        name_search = slug.replace("-", " ")
-        queryset = self.get_queryset()
-        
-        # Try finding by exact name match (case insensitive)
-        experiences = queryset.filter(name__iexact=name_search)
-        
-        if experiences.count() == 1:
-            return experiences.first()
-        elif experiences.count() > 1:
-            # Duplicate names found, assume city was appended: name-city
-            # Let's try splitting from the right
-            parts = slug.split('-')
-            for i in range(1, len(parts)):
-                name_part = " ".join(parts[:-i])
-                city_part = " ".join(parts[-i:])
-                matches = queryset.filter(name__iexact=name_part, location__city__iexact=city_part)
-                if matches.exists():
-                    return matches.first()
-            return experiences.first() # fallback to first
-            
-        # If not found, try falling back to public_id in case old links are hit
-        fallback = queryset.filter(public_id=slug)
-        if fallback.exists():
-            return fallback.first()
-            
-        raise Http404("Experience not found")
+    lookup_field = "public_id"
 
     def get_queryset(self):
         return (
@@ -89,9 +59,33 @@ class ExperienceView(generics.RetrieveAPIView):
                     "reviews", filter=Q(reviews__deleted_at__isnull=True)
                 ),
             )
-            .select_related("category", "location")
+            .select_related("category", "city")
         )
 
+    def get_object(self):
+        queryset = self.get_queryset()
+        lookup_value = self.kwargs["public_id"]
+        
+        # Try to find by public_id first
+        obj = queryset.filter(public_id=lookup_value).first()
+        if obj:
+            return obj
+            
+        lookup_value_lower = lookup_value.lower()
+        # Try to find by matching slug
+        candidate_name = lookup_value_lower.replace("-", " ")
+        candidates = queryset.filter(name__icontains=candidate_name)
+        from django.utils.text import slugify
+        for cand in candidates:
+            if slugify(cand.name) == lookup_value_lower:
+                return cand
+                
+        # Fallback to search all
+        for cand in queryset.all():
+            if slugify(cand.name) == lookup_value_lower:
+                return cand
+                
+        raise Http404("No Experience matches the given query.")
 
 
 class ExperienceListView(generics.ListAPIView):
@@ -109,7 +103,7 @@ class ExperienceListView(generics.ListAPIView):
                     "reviews", filter=Q(reviews__deleted_at__isnull=True)
                 ),
             )
-            .select_related("category", "location")
+            .select_related("category", "city")
         )
 
         location_param = self.request.query_params.get("location")
@@ -118,7 +112,7 @@ class ExperienceListView(generics.ListAPIView):
 
         if location_param:
             queryset = queryset.filter(
-                Q(location__name__iexact=location_param) | Q(location__public_id__iexact=location_param)
+                Q(city__name__iexact=location_param) | Q(city__public_id__iexact=location_param)
             )
 
         if category_param:
@@ -148,11 +142,14 @@ class ExperienceListView(generics.ListAPIView):
 
 
 class StateListView(generics.ListAPIView):
-    serializer_class = ContentSerializer.StateSerializer
+    serializer_class = ContentSerializer.StateShortSerializer
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return ContentModel.State.objects.all()
+        return ContentModel.State.objects.annotate(
+            city_count=Count('cities', distinct=True),
+            experience_count=Count('cities__experiences', filter=Q(cities__experiences__deleted_at__isnull=True), distinct=True)
+        )
 
 
 class StateView(generics.RetrieveAPIView):
@@ -161,15 +158,45 @@ class StateView(generics.RetrieveAPIView):
     lookup_field = "public_id"
 
     def get_queryset(self):
-        return ContentModel.State.objects.filter(public_id=self.kwargs["public_id"])
+        return ContentModel.State.objects.annotate(
+            city_count=Count('cities', distinct=True),
+            experience_count=Count('cities__experiences', filter=Q(cities__experiences__deleted_at__isnull=True), distinct=True)
+        )
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        lookup_value = self.kwargs["public_id"]
+        
+        # Try to find by public_id first
+        obj = queryset.filter(public_id=lookup_value).first()
+        if obj:
+            return obj
+            
+        lookup_value_lower = lookup_value.lower()
+        # Try to find by matching slug
+        candidate_name = lookup_value_lower.replace("-", " ")
+        candidates = queryset.filter(name__icontains=candidate_name)
+        from django.utils.text import slugify
+        for cand in candidates:
+            if slugify(cand.name) == lookup_value_lower:
+                return cand
+                
+        # Fallback to search all
+        for cand in queryset.all():
+            if slugify(cand.name) == lookup_value_lower:
+                return cand
+                
+        raise Http404("No State matches the given query.")
 
 
 class CityListView(generics.ListAPIView):
-    serializer_class = ContentSerializer.CitySerializer
+    serializer_class = ContentSerializer.CityShortSerializer
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return ContentModel.City.objects.select_related("state").all()
+        return ContentModel.City.objects.select_related("state").annotate(
+            experience_count=Count('experiences', filter=Q(experiences__deleted_at__isnull=True), distinct=True)
+        )
 
 
 class CityView(generics.RetrieveAPIView):
@@ -178,15 +205,34 @@ class CityView(generics.RetrieveAPIView):
     lookup_field = "public_id"
 
     def get_queryset(self):
-        return ContentModel.City.objects.select_related("state").filter(
-            public_id=self.kwargs["public_id"]
+        return ContentModel.City.objects.select_related("state").annotate(
+            experience_count=Count('experiences', filter=Q(experiences__deleted_at__isnull=True), distinct=True)
         )
 
-
-# kept for backward compatibility
-LocationListView = CityListView
-LocationView = CityView
-
+    def get_object(self):
+        queryset = self.get_queryset()
+        lookup_value = self.kwargs["public_id"]
+        
+        # Try to find by public_id first
+        obj = queryset.filter(public_id=lookup_value).first()
+        if obj:
+            return obj
+            
+        lookup_value_lower = lookup_value.lower()
+        # Try to find by matching slug
+        candidate_name = lookup_value_lower.replace("-", " ")
+        candidates = queryset.filter(name__icontains=candidate_name)
+        from django.utils.text import slugify
+        for cand in candidates:
+            if slugify(cand.name) == lookup_value_lower:
+                return cand
+                
+        # Fallback to search all
+        for cand in queryset.all():
+            if slugify(cand.name) == lookup_value_lower:
+                return cand
+                
+        raise Http404("No City matches the given query.")
 
 class BookingView(generics.RetrieveAPIView):
     serializer_class = ContentSerializer.BookingDetailSerializer
@@ -464,10 +510,12 @@ class HomeView(generics.RetrieveAPIView):
         else:
             continue_booking = {}
 
-        # 2. Get all cities
-        locations = ContentModel.City.objects.select_related("state").all()
-        locations_serializer = ContentSerializer.CitySerializer(
-            locations, many=True
+        # 2. Get all cities (optimized with CityShortSerializer and annotated counts)
+        locations = ContentModel.City.objects.select_related("state").annotate(
+            experience_count=Count('experiences', filter=Q(experiences__deleted_at__isnull=True), distinct=True)
+        ).all()
+        locations_serializer = ContentSerializer.CityShortSerializer(
+            locations, many=True, context={"request": request}
         )
 
         # 3. Get featured categories experiences with pagination
@@ -510,7 +558,7 @@ class HomeView(generics.RetrieveAPIView):
             "explore_locations": {
                 "label": "Explore Locations",
                 "data": locations_serializer.data,
-                "link": reverse("location_list", request=request),
+                "link": reverse("city_list", request=request),
             },
             "featured_categories": featured_categories_data,
             "all_categories": categories_data,

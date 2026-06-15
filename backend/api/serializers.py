@@ -105,7 +105,8 @@ class TicketTypeSerializer(serializers.ModelSerializer):
 
 class ExperienceSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
-    location = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    slug = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
     total_reviews = serializers.SerializerMethodField()
     reviews = serializers.SerializerMethodField()
@@ -117,9 +118,12 @@ class ExperienceSerializer(serializers.ModelSerializer):
         fields = [
             "public_id",
             "name",
+            "slug",
+            "subtitle",
             "description",
+            "address",
             "category",
-            "location",
+            "city",
             "provider",
             "ticket_types",
             "latitude",
@@ -130,6 +134,7 @@ class ExperienceSerializer(serializers.ModelSerializer):
             "is_open",
             "opening_time",
             "closing_time",
+            "time_required",
             "last_entry_time",
             "average_rating",
             "total_reviews",
@@ -142,8 +147,12 @@ class ExperienceSerializer(serializers.ModelSerializer):
     def get_category(self, obj):
         return obj.category.name
 
-    def get_location(self, obj):
-        return obj.location.name
+    def get_city(self, obj):
+        return obj.city.name if obj.city else None
+
+    def get_slug(self, obj):
+        from django.utils.text import slugify
+        return slugify(obj.name)
 
     def get_average_rating(self, obj):
         # Use annotated average_rating if available (from queryset annotation)
@@ -175,32 +184,10 @@ class ExperienceSerializer(serializers.ModelSerializer):
 
         return ReviewSerializer(reviews[:10], many=True).data
 
-
-class StateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ContentModel.State
-        fields = [
-            "public_id",
-            "name",
-        ]
-
-
-class CitySerializer(serializers.ModelSerializer):
-    state = serializers.CharField(source="state.name", default=None, read_only=True)
-
-    class Meta:
-        model = ContentModel.City
-        fields = [
-            "public_id",
-            "name",
-            "state",
-            "icon_url",
-        ]
-
-
 class ExperienceShortSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
-    location = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    slug = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
     total_reviews = serializers.SerializerMethodField()
     provider = ProviderSerializer(read_only=True)
@@ -210,23 +197,28 @@ class ExperienceShortSerializer(serializers.ModelSerializer):
         fields = [
             "public_id",
             "name",
+            "slug",
+            "address",
             "category",
-            "location",
+            "city",
             "provider",
             "image_url",
             "entry_fee_base",
             "is_open",
             "average_rating",
             "total_reviews",
-            "latitude",
-            "longitude",
+            "time_required",
         ]
 
     def get_category(self, obj):
         return obj.category.name
 
-    def get_location(self, obj):
-        return obj.location.name
+    def get_city(self, obj):
+        return obj.city.name if obj.city else None
+
+    def get_slug(self, obj):
+        from django.utils.text import slugify
+        return slugify(obj.name)
 
     def get_average_rating(self, obj):
         # Use annotated average_rating if available (from queryset annotation)
@@ -240,16 +232,68 @@ class ExperienceShortSerializer(serializers.ModelSerializer):
             return obj.total_reviews
         return 0
 
-
-class CategorySerializer(serializers.ModelSerializer):
+class StateSerializer(serializers.ModelSerializer):
+    slug = serializers.SerializerMethodField()
+    city_count = serializers.SerializerMethodField()
+    experience_count = serializers.SerializerMethodField()
+    cities = serializers.SerializerMethodField()
     experiences = serializers.SerializerMethodField()
 
     class Meta:
-        model = ContentModel.Category
-        fields = ["id", "name", "description", "icon_url", "experiences"]
+        model = ContentModel.State
+        fields = [
+            "public_id",
+            "name",
+            "slug",
+            "description",
+            "image_url",
+            "best_time",
+            "seo_title",
+            "seo_description",
+            "website",
+            "city_count",
+            "experience_count",
+            "cities",
+            "experiences",
+        ]
+
+    def get_slug(self, obj):
+        from django.utils.text import slugify
+        return slugify(obj.name)
+
+    def get_city_count(self, obj):
+        if hasattr(obj, "city_count"):
+            return obj.city_count
+        return obj.cities.count()
+
+    def get_experience_count(self, obj):
+        if hasattr(obj, "experience_count"):
+            return obj.experience_count
+        return ContentModel.Experience.objects.filter(city__state=obj, deleted_at__isnull=True).count()
+
+    def get_cities(self, obj):
+        cities = obj.cities.select_related("state").all().order_by("id")
+
+        # Get the request from the context
+        request = self.context.get("request")
+
+        # If there is a request, paginate the cities
+        if request:
+            paginator = StandardResultsSetPagination()
+            paginator.page_size = 10
+            paginator.page_query_param = "cities_page"
+            paginated_cities = paginator.paginate_queryset(cities, request)
+            serializer = CityShortSerializer(paginated_cities, many=True, context=self.context)
+            return paginator.get_paginated_response(serializer.data).data
+
+        # If there is no request, return the first 10 cities
+        cities = cities[:10]
+        return CityShortSerializer(cities, many=True, context=self.context).data
 
     def get_experiences(self, obj):
-        experiences = obj.experiences.filter(deleted_at__isnull=True).order_by("id")
+        experiences = ContentModel.Experience.objects.filter(
+            city__state=obj, deleted_at__isnull=True
+        ).select_related("category", "city", "provider").order_by("id")
 
         # Get the request from the context
         request = self.context.get("request")
@@ -257,13 +301,204 @@ class CategorySerializer(serializers.ModelSerializer):
         # If there is a request, paginate the experiences
         if request:
             paginator = StandardResultsSetPagination()
+            paginator.page_size = 10
+            paginator.page_query_param = "experiences_page"
             paginated_experiences = paginator.paginate_queryset(experiences, request)
-            serializer = ExperienceShortSerializer(paginated_experiences, many=True)
+            serializer = ExperienceShortSerializer(paginated_experiences, many=True, context=self.context)
             return paginator.get_paginated_response(serializer.data).data
 
         # If there is no request, return the first 10 experiences
         experiences = experiences[:10]
-        return ExperienceShortSerializer(experiences, many=True).data
+        return ExperienceShortSerializer(experiences, many=True, context=self.context).data
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if "best_time" in data:
+            data["best-time"] = data.pop("best_time")
+        if "seo_title" in data:
+            data["SEO-title"] = data.pop("seo_title")
+        if "seo_description" in data:
+            data["SEO-description"] = data.pop("seo_description")
+        return data
+
+
+class StateShortSerializer(serializers.ModelSerializer):
+    slug = serializers.SerializerMethodField()
+    city_count = serializers.SerializerMethodField()
+    experience_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ContentModel.State
+        fields = [
+            "public_id",
+            "name",
+            "slug",
+            "image_url",
+            "best_time",
+            "city_count",
+            "experience_count",
+        ]
+
+    def get_slug(self, obj):
+        from django.utils.text import slugify
+        return slugify(obj.name)
+
+    def get_city_count(self, obj):
+        if hasattr(obj, "city_count"):
+            return obj.city_count
+        return obj.cities.count()
+
+    def get_experience_count(self, obj):
+        if hasattr(obj, "experience_count"):
+            return obj.experience_count
+        return ContentModel.Experience.objects.filter(city__state=obj, deleted_at__isnull=True).count()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if "best_time" in data:
+            data["best-time"] = data.pop("best_time")
+        return data
+
+
+class CitySerializer(serializers.ModelSerializer):
+    state = serializers.CharField(source="state.name", default=None, read_only=True)
+    slug = serializers.SerializerMethodField()
+    experience_count = serializers.SerializerMethodField()
+    experiences = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ContentModel.City
+        fields = [
+            "public_id",
+            "name",
+            "slug",
+            "description",
+            "state",
+            "icon_url",
+            "image_url",
+            "best_time",
+            "seo_title",
+            "seo_description",
+            "latitude",
+            "longitude",
+            "experience_count",
+            "experiences",
+        ]
+
+    def get_slug(self, obj):
+        from django.utils.text import slugify
+        return slugify(obj.name)
+
+    def get_experience_count(self, obj):
+        if hasattr(obj, "experience_count"):
+            return obj.experience_count
+        return obj.experiences.filter(deleted_at__isnull=True).count()
+    
+    def get_experiences(self, obj):
+        experiences = obj.experiences.select_related("category", "city", "provider").filter(deleted_at__isnull=True).order_by("id")
+
+        # Get the request from the context
+        request = self.context.get("request")
+
+        # If there is a request, paginate the experiences
+        if request:
+            paginator = StandardResultsSetPagination()
+            paginator.page_size = 10
+            paginator.page_query_param = "experiences_page"
+            paginated_experiences = paginator.paginate_queryset(experiences, request)
+            serializer = ExperienceShortSerializer(paginated_experiences, many=True, context=self.context)
+            return paginator.get_paginated_response(serializer.data).data
+
+        # If there is no request, return the first 10 experiences
+        experiences = experiences[:10]
+        return ExperienceShortSerializer(experiences, many=True, context=self.context).data
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if "best_time" in data:
+            data["best-time"] = data.pop("best_time")
+        if "seo_title" in data:
+            data["SEO-title"] = data.pop("seo_title")
+        if "seo_description" in data:
+            data["SEO-description"] = data.pop("seo_description")
+        return data
+
+
+class CityShortSerializer(serializers.ModelSerializer):
+    state = serializers.CharField(source="state.name", default=None, read_only=True)
+    slug = serializers.SerializerMethodField()
+    experience_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ContentModel.City
+        fields = [
+            "public_id",
+            "name",
+            "slug",
+            "state",
+            "icon_url",
+            "image_url",
+            "best_time",
+            "experience_count",
+        ]
+
+    def get_slug(self, obj):
+        from django.utils.text import slugify
+        return slugify(obj.name)
+
+    def get_experience_count(self, obj):
+        if hasattr(obj, "experience_count"):
+            return obj.experience_count
+        return obj.experiences.filter(deleted_at__isnull=True).count()
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if "best_time" in data:
+            data["best-time"] = data.pop("best_time")
+        return data
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    experiences = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ContentModel.Category
+        fields = [
+            "id",
+            "name",
+            "description",
+            "icon_url",
+            "image_url",
+            "seo_title",
+            "seo_description",
+            "experiences",
+        ]
+
+    def get_experiences(self, obj):
+        experiences = obj.experiences.select_related("category", "city", "provider").filter(deleted_at__isnull=True).order_by("id")
+
+        # Get the request from the context
+        request = self.context.get("request")
+
+        # If there is a request, paginate the experiences
+        if request:
+            paginator = StandardResultsSetPagination()
+            paginator.page_size = 10
+            paginated_experiences = paginator.paginate_queryset(experiences, request)
+            serializer = ExperienceShortSerializer(paginated_experiences, many=True, context=self.context)
+            return paginator.get_paginated_response(serializer.data).data
+
+        # If there is no request, return the first 10 experiences
+        experiences = experiences[:10]
+        return ExperienceShortSerializer(experiences, many=True, context=self.context).data
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if "seo_title" in data:
+            data["SEO-title"] = data.pop("seo_title")
+        if "seo_description" in data:
+            data["SEO-description"] = data.pop("seo_description")
+        return data
 
 
 class BookingSerializer(serializers.ModelSerializer):
@@ -550,7 +785,7 @@ class CollectionSerializer(serializers.ModelSerializer):
 
     def get_experiences(self, obj):
         relations = obj.collection_experiences.select_related(
-            "experience", "experience__category", "experience__location"
+            "experience", "experience__category", "experience__city"
         ).order_by("display_order")
         active_relations = [r for r in relations if r.experience.deleted_at is None]
         return CollectionExperienceSerializer(active_relations, many=True).data

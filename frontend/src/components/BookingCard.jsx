@@ -60,13 +60,13 @@ export default function BookingCard({ booking }) {
       <div>
         {/* Cover Image */}
         <Link
-          to={`/attraction/${slug}`}
+          to={`/attraction/${experienceId}`}
           className="block w-full h-32 rounded-lg overflow-hidden mb-3 relative group"
         >
           <img
             src={coverImage}
             alt={booking?.experience_name || "Experience"}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2.5">
             <span className="text-[10px] text-white font-medium flex items-center gap-1 font-['Inter']">
@@ -80,7 +80,7 @@ export default function BookingCard({ booking }) {
         <div className="mb-4">
           <div className="flex justify-between items-start gap-2 mb-1.5">
             <Link
-              to={`/attraction/${slug}`}
+              to={`/attraction/${experienceId}`}
               className="font-['Hanken_Grotesk'] font-bold text-sm text-gray-900 line-clamp-1 hover:text-primary transition-colors"
             >
               {booking?.experience_name || "Experience"}

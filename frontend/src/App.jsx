@@ -5,7 +5,7 @@ import DemoHome from "./pages/DemoHome";
 import { ExperienceDetails } from "./pages/ExperienceDetails";
 import { ExperienceDemo } from "./pages/ExperienceDemo";
 import MyBookings from "./pages/MyBookings";
-import Navbar from "./components/NewNavbar";
+import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import { ModalProvider } from "./context/ModalContext";
@@ -35,10 +35,9 @@ import ItineraryIndex from "./pages/ItineraryIndex";
 import UnescoSites from "./pages/UnescoSites";
 import TopPlaces from "./pages/TopPlaces";
 import ExploreNearMe from "./pages/ExploreNearMe";
-import { LocationDetails } from "./pages/LocationDetails";
 import BookingPage from "./pages/BookingPage";
-import StatePage from "./pages/StatePage";
-import CityPage from "./pages/CityPage";
+import StatePage from "./pages/Statepage";
+import CityPage from "./pages/Citypage";
 
 function LocationRouteWrapper() {
   const { locationName } = useParams();
@@ -72,12 +71,14 @@ function AppContent() {
       <Chatbot />
       <div>
         <Routes>
-          <Route path="/" element={<DemoHome />} />
-          <Route path="/old-home" element={<Home />} />
-          <Route path="/demo-home" element={<Home />} />
+          <Route path="/" element={<Home />} />
+          {/* <Route path="/old-home" element={<Home />} /> */}
+          {/* <Route path="/demo-home" element={<Home />} /> */}
           <Route path="/attraction/:id" element={<ExperienceDetails />} />
-          <Route path="/attraction-demo" element={<ExperienceDemo />} />
-          <Route path="/location/:id" element={<LocationDetails />} />
+          <Route path="/state/:id" element={<StatePage />} />
+          <Route path="/city/:id" element={<CityPage />} />
+          {/* <Route path="/attraction-demo" element={<ExperienceDemo />} /> */}
+          {/* <Route path="/location/:id" element={<LocationDetails />} /> */}
           <Route path="/booking/:id" element={<BookingPage />} />
           <Route path="/payment/:id" element={<CheckoutPage />} />
           <Route
@@ -92,21 +93,18 @@ function AppContent() {
           <Route path="/payments/failed" element={<FailedPage />} />
           <Route path="/category/:id" element={<SingleCategoryPage />} />
           <Route path="/dashboard" element={<UserDashboard />} />
-          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/states" element={<StateIndex />} />
           <Route path="/cities" element={<CityIndex />} />
           <Route path="/categories" element={<CategoryIndex />} />
-          <Route path="/trails" element={<TrailIndex />} />
-          <Route path="/trails/:trailId" element={<TrailDetails />} />
+          {/* <Route path="/trails" element={<TrailIndex />} /> */}
+          {/* <Route path="/trails/:trailId" element={<TrailDetails />} /> */}
           <Route path="/attractions" element={<AttractionIndex />} />
-          <Route path="/itineraries" element={<ItineraryIndex />} />
-          <Route path="/unesco-sites" element={<UnescoSites />} />
-          <Route path="/top-places" element={<TopPlaces />} />
-          <Route path="/explore-near-me" element={<ExploreNearMe />} />
-          <Route path="/:locationName" element={<LocationRouteWrapper />} />
-          <Route path="/:locationName/:categoryName" element={<CategoryPage type="combined" />} />
-          <Route path="/state/:public_id" element={<StatePage />} />
-          <Route path="/city/:public_id" element={<CityPage />} />
+          {/* <Route path="/itineraries" element={<ItineraryIndex />} /> */}
+          {/* <Route path="/unesco-sites" element={<UnescoSites />} /> */}
+          {/* <Route path="/top-places" element={<TopPlaces />} /> */}
+          {/* <Route path="/explore-near-me" element={<ExploreNearMe />} /> */}
+          {/* <Route path="/:locationName" element={<LocationRouteWrapper />} /> */}
+          {/* <Route path="/:locationName/:categoryName" element={<CategoryPage type="combined" />} /> */}
         </Routes>
       </div>
       <Footer />

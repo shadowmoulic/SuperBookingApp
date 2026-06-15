@@ -75,7 +75,7 @@ function ExperienceCard({ experience }) {
         {/* Card Body */}
         <div className="p-5 flex-1 flex flex-col">
           <div className="flex flex-row justify-between">
-            <p className="text-sm text-gray-500 mb-1">{experience.location}</p>
+            <p className="text-sm text-gray-500 mb-1">{experience.city}</p>
             {experience.average_rating && (
               <p className="text-sm font-semibold flex items-center gap-1">
                 <span className="text-amber-500">★</span>

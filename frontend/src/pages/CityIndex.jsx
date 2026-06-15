@@ -31,23 +31,31 @@ const CityIndex = () => {
   const [error, setError] = useState(null);
 
 
-  const fetchCities = () => {
+  const fetchCities = async () => {
     setLoading(true);
-    api.get('/api/location/')
-      .then((res) => {
-        const dbLocations = Array.isArray(res.data)
-          ? res.data
-          : Array.isArray(res.data?.results)
-            ? res.data.results
-            : [];
-        setCities(dbLocations);
-        setError(null);
-      })
-      .catch((err) => {
-        setError(err.message || 'Something went wrong');
-        console.error('Error fetching locations:', err);
-      })
-      .finally(() => setLoading(false));
+    try {
+      let allCities = [];
+      let url = "/api/cities/";
+      while (url) {
+        const res = await api.get(url);
+        if (Array.isArray(res.data)) {
+          allCities = [...allCities, ...res.data];
+          url = null;
+        } else if (Array.isArray(res.data?.results)) {
+          allCities = [...allCities, ...res.data.results];
+          url = res.data.next;
+        } else {
+          url = null;
+        }
+      }
+      setCities(allCities);
+      setError(null);
+    } catch (err) {
+      setError(err.message || 'Something went wrong');
+      console.error('Error fetching locations:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -89,29 +97,29 @@ const CityIndex = () => {
         </p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {CITIES_LIST.map((city) => (
+          {cities.map((city) => (
             <div
-              key={city.id}
-              onClick={() => navigate(`/${city.id}`)}
+              key={city.public_id}
+              onClick={() => navigate(`/${city.slug || city.name.toLowerCase()}`)}
               className="bg-white rounded-3xl overflow-hidden shadow-[0px_8px_16px_rgba(0,0,0,0.03)] border border-slate-100 hover:shadow-xl hover:scale-[1.01] transition-all cursor-pointer group flex flex-col justify-between"
             >
               <div className="h-44 bg-slate-100 relative overflow-hidden">
                 <img
-                  src={city.img}
+                  src={city.image_url || city.icon_url || "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=400&q=80"}
                   alt={city.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent z-10" />
                 <span className="absolute top-3 left-3 bg-white/95 text-slate-900 text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full shadow-sm flex items-center gap-1">
                   <MapPin className="w-2.5 h-2.5 text-[#006955]" />
-                  {city.attractions} Sites
+                  {city.experience_count} Sites
                 </span>
                 <div className="absolute bottom-3 left-4 z-20">
                   <h3 className="text-white text-lg font-bold">{city.name}</h3>
                 </div>
               </div>
               <div className="p-4 flex items-center justify-between">
-                <p className="text-slate-500 text-xs truncate max-w-[150px] font-semibold">{city.desc}</p>
+                <p className="text-slate-500 text-xs truncate max-w-[150px] font-semibold">{city.state || "India"}</p>
                 <div className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-[#006955] transition-colors">
                   <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-all" />
                 </div>

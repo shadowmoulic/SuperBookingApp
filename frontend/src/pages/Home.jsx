@@ -232,7 +232,7 @@ function SmallExperienceCard({ experience }) {
           <div>
             {/* City Tag */}
             <span className="text-xs font-semibold tracking-wider uppercase text-outline-variant font-['Inter'] block mb-1">
-              {experience.location}
+              {experience.city}
             </span>
             {/* Name Title */}
             <h3 className="font-['Hanken_Grotesk'] font-bold text-lg text-on-surface leading-snug mb-4 group-hover:text-primary transition-colors line-clamp-2 h-12">
@@ -443,159 +443,206 @@ function Home() {
 
   return (
     <div className="bg-surface-container-lowest min-h-screen w-full relative">
-      {/* Sticky Categories Sub-Header */}
-      {homeData && homeData.all_categories && (
-        <div
-          className={`fixed top-0 left-0 right-0 z-40 bg-surface-container-lowest/95 backdrop-blur-md border-b border-outline-variant/30 shadow-xs transition-all duration-300 ease-in-out ${isStickyActive
-            ? `opacity-100 pointer-events-auto ${isNavbarVisible ? "translate-y-[73px]" : "translate-y-0"}`
-            : "-translate-y-full opacity-0 pointer-events-none"
-            }`}
-        >
-          <div className="max-w-[1280px] mx-auto px-6 md:px-16 py-3 flex items-center gap-3 overflow-x-auto no-scrollbar">
-            {homeData.all_categories.map((category) => {
-              const catSlug = category.name.toLowerCase().replace(/s$/, '').replace(/\s+/g, '-');
-              return (
-                <Link
-                  key={category.id}
-                  to={`/${selectedLocation.toLowerCase().replace(/\s+/g, '-')}/${catSlug}`}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full border border-outline-variant bg-surface-container-lowest hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all text-sm font-semibold text-on-surface-variant whitespace-nowrap flex-shrink-0 group shadow-2xs"
-                >
-                  {category.icon_url ? (
-                    <img
-                      src={category.icon_url}
-                      alt={category.name}
-                      className="w-5 h-5 object-contain group-hover:scale-105 transition-transform"
-                    />
-                  ) : (
-                    <span className="material-symbols-outlined text-lg text-primary">
-                      category
-                    </span>
-                  )}
-                  <span className="font-['Hanken_Grotesk']">{category.name}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ── SECTION 1: HERO (from DemoHome) ───────────────────────────────── */}
-      <section className="relative w-full h-[88vh] min-h-[560px] flex items-center overflow-hidden">
-        {/* Background slides */}
-        {HERO_SLIDES.map((slide, i) => (
-          <div key={i} className={`absolute inset-0 transition-opacity duration-700 ${i === currentSlide ? "opacity-100" : "opacity-0"}`}>
-            <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-slate-900/20" />
-          </div>
-        ))}
-
-        {/* Slide nav dots */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-          {HERO_SLIDES.map((_, i) => (
-            <button
-              key={i} onClick={() => setCurrentSlide(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? "w-7 bg-amber-400" : "w-2 bg-white/40 hover:bg-white/70"}`}
-              aria-label={`Slide ${i + 1}`}
-            />
-          ))}
-        </div>
-
-        {/* Location badge */}
-        <div className="absolute bottom-8 right-6 z-20 hidden sm:block text-right">
-          <p className="text-amber-400 font-bold text-sm">{HERO_SLIDES[currentSlide].title}</p>
-          <p className="text-slate-300 text-xs">{HERO_SLIDES[currentSlide].location}</p>
-        </div>
-
-        {/* Hero copy and search */}
-        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-8">
-          <p className="text-amber-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-4">India's Heritage Discovery Platform</p>
-
-          <h1 className="text-[1.65rem] leading-tight sm:text-5xl lg:text-7xl font-black text-white sm:leading-[1.05] tracking-tight mb-4">
-            Don't Just Visit India.<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400">Understand It.</span>
-          </h1>
-
-          <p className="text-slate-300 text-base sm:text-xl font-light mb-10 max-w-xl leading-relaxed">
-            Explore 1500+ monuments, heritage trails and historic cities.
-          </p>
-
-          {/* Search bar */}
-          <div className="relative max-w-2xl" onClick={() => openSearch()}>
-            <div className="flex items-center bg-surface-container rounded-2xl shadow-2xl transition-all duration-200 hover:ring-2 hover:ring-primary/20 cursor-pointer">
-              <div className="pl-5 pr-2 text-on-surface-variant">
-                <Search className="w-5 h-5" />
-              </div>
-              <input
-                type="text"
-                readOnly
-                placeholder="Where are you going?"
-                className="flex-1 bg-transparent border-none text-on-surface focus:outline-none placeholder-on-surface-variant/60 text-sm sm:text-base py-4 pr-4 cursor-pointer"
-              />
-              <button className="m-2 bg-primary hover:bg-opacity-95 text-on-primary font-bold px-5 sm:px-7 py-3 rounded-xl text-sm shrink-0 cursor-pointer">
-                Explore
-              </button>
+      <div className="mx-auto py-16 w-full relative">
+        {/* Sticky Categories Sub-Header */}
+        {homeData && homeData.all_categories && (
+          <div
+            className={`fixed top-0 left-0 right-0 z-40 bg-surface-container-lowest/95 backdrop-blur-md border-b border-outline-variant/30 shadow-xs transition-all duration-300 ease-in-out ${isStickyActive
+              ? `opacity-100 pointer-events-auto ${isNavbarVisible ? "translate-y-[73px]" : "translate-y-0"}`
+              : "-translate-y-full opacity-0 pointer-events-none"
+              }`}
+          >
+            <div className="max-w-[1280px] mx-auto px-6 md:px-16 py-3 flex items-center gap-3 overflow-x-auto no-scrollbar">
+              {homeData.all_categories.map((category) => {
+                const catSlug = category.name.toLowerCase().replace(/s$/, '').replace(/\s+/g, '-');
+                return (
+                  <Link
+                    key={category.id}
+                    to={`/${selectedLocation.toLowerCase().replace(/\s+/g, '-')}/${catSlug}`}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full border border-outline-variant bg-surface-container-lowest hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all text-sm font-semibold text-on-surface-variant whitespace-nowrap flex-shrink-0 group shadow-2xs"
+                  >
+                    {category.icon_url ? (
+                      <img
+                        src={category.icon_url}
+                        alt={category.name}
+                        className="w-5 h-5 object-contain group-hover:scale-105 transition-transform"
+                      />
+                    ) : (
+                      <span className="material-symbols-outlined text-lg text-primary">
+                        category
+                      </span>
+                    )}
+                    <span className="font-['Hanken_Grotesk']">{category.name}</span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
+        )}
 
-          {/* Quick chips */}
-          <div className="flex flex-wrap items-center gap-2 mt-5">
-            <span className="text-on-surface-variant text-xs font-semibold">Trending:</span>
-            {["Taj Mahal", "Amer Fort", "Varanasi Ghats", "Hampi"].map((chip) => (
+        {/* ── SECTION 1: HERO ───────────────────────────────── */}
+        <section className="relative w-full h-[88vh] min-h-[560px] flex items-center overflow-hidden">
+          {/* Background slides */}
+          {HERO_SLIDES.map((slide, i) => (
+            <div key={i} className={`absolute inset-0 transition-opacity duration-700 ${i === currentSlide ? "opacity-100" : "opacity-0"}`}>
+              <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-slate-900/20" />
+            </div>
+          ))}
+
+          {/* Slide nav dots */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+            {HERO_SLIDES.map((_, i) => (
               <button
-                key={chip}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openSearch(chip);
-                }}
-                className="bg-white/10 hover:bg-white/20 text-white text-xs px-3.5 py-1.5 rounded-full border border-white/15 backdrop-blur-sm transition-all duration-150 hover:scale-105 cursor-pointer"
-              >
-                {chip}
-              </button>
+                key={i} onClick={() => setCurrentSlide(i)}
+                className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? "w-7 bg-amber-400" : "w-2 bg-white/40 hover:bg-white/70"}`}
+                aria-label={`Slide ${i + 1}`}
+              />
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* ── SECTION 2: TRUST BAR (from DemoHome) ─────────────────────────── */}
-      <section className="bg-surface-container-lowest border-b border-outline-variant/30 py-6">
-        <div className="max-w-[1280px] mx-auto px-6 md:px-16">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 text-center">
-            {[["1500+", "Heritage Sites"], ["500+", "Cities Mapped"], ["42", "UNESCO Landmarks"], ["5", "Curated Trails"]].map(([num, label]) => (
-              <div key={label} className="py-4 px-3 rounded-2xl bg-surface-container-low border border-outline-variant/50">
-                <p className="text-2xl sm:text-3xl font-black text-primary">{num}</p>
-                <p className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase tracking-wider mt-1">{label}</p>
+          {/* Location badge */}
+          <div className="absolute bottom-8 right-6 z-20 hidden sm:block text-right">
+            <p className="text-amber-400 font-bold text-sm">{HERO_SLIDES[currentSlide].title}</p>
+            <p className="text-slate-300 text-xs">{HERO_SLIDES[currentSlide].location}</p>
+          </div>
+
+          {/* Hero copy and search */}
+          <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-8">
+            <p className="text-amber-400 text-xs sm:text-sm font-bold uppercase tracking-widest mb-4">India's Heritage Discovery Platform</p>
+
+            <h1 className="text-[1.65rem] leading-tight sm:text-5xl lg:text-7xl font-black text-white sm:leading-[1.05] tracking-tight mb-4">
+              Don't Just Visit India.<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400">Understand It.</span>
+            </h1>
+
+            <p className="text-slate-300 text-base sm:text-xl font-light mb-10 max-w-xl leading-relaxed">
+              Explore 1500+ monuments, heritage trails and historic cities.
+            </p>
+
+            {/* Search bar */}
+            <div className="relative max-w-2xl" onClick={() => openSearch()}>
+              <div className="flex items-center bg-surface-container rounded-2xl shadow-2xl transition-all duration-200 hover:ring-2 hover:ring-primary/20 cursor-pointer">
+                <div className="pl-5 pr-2 text-on-surface-variant">
+                  <Search className="w-5 h-5" />
+                </div>
+                <input
+                  type="text"
+                  readOnly
+                  placeholder="Where are you going?"
+                  className="flex-1 bg-transparent border-none text-on-surface focus:outline-none placeholder-on-surface-variant/60 text-sm sm:text-base py-4 pr-4 cursor-pointer"
+                />
+                <button className="m-2 bg-primary hover:bg-opacity-95 text-on-primary font-bold px-5 sm:px-7 py-3 rounded-xl text-sm shrink-0 cursor-pointer">
+                  Explore
+                </button>
               </div>
-            ))}
+            </div>
+
+            {/* Quick chips */}
+            <div className="flex flex-wrap items-center gap-2 mt-5">
+              <span className="text-on-surface-variant text-xs font-semibold">Trending:</span>
+              {["Taj Mahal", "Amer Fort", "Varanasi Ghats", "Hampi"].map((chip) => (
+                <button
+                  key={chip}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openSearch(chip);
+                  }}
+                  className="bg-white/10 hover:bg-white/20 text-white text-xs px-3.5 py-1.5 rounded-full border border-white/15 backdrop-blur-sm transition-all duration-150 hover:scale-105 cursor-pointer"
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Main constrained container for Bookings, Categories, Locations */}
-      <div className="max-w-[1280px] mx-auto px-6 md:px-16 py-8">
+        {/* ── SECTION 2: TRUST BAR ─────────────────────────── */}
+        <section className="bg-surface-container-lowest border-b border-outline-variant/30 py-6">
+          <div className="max-w-[1280px] mx-auto px-6 md:px-16">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 text-center">
+              {[["1500+", "Heritage Sites"], ["500+", "Cities Mapped"], ["42", "UNESCO Landmarks"], ["5", "Curated Trails"]].map(([num, label]) => (
+                <div key={label} className="py-4 px-3 rounded-2xl bg-surface-container-low border border-outline-variant/50">
+                  <p className="text-2xl sm:text-3xl font-black text-primary">{num}</p>
+                  <p className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase tracking-wider mt-1">{label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-        {/* Continue Booking */}
-        {homeData.continue_booking &&
-          Object.keys(homeData.continue_booking).length > 0 && (
-            <section className="continue-booking-section mb-16 animate-fade-in">
+        {/* Main constrained container for Bookings, Categories, Locations */}
+        <div className="max-w-[1280px] mx-auto px-6 md:px-16 py-8">
+
+          {/* Continue Booking */}
+          {homeData.continue_booking &&
+            Object.keys(homeData.continue_booking).length > 0 && (
+              <section className="continue-booking-section mb-16 animate-fade-in">
+                <div className="flex justify-between items-end mb-8">
+                  <div>
+                    <h2 className="font-['Hanken_Grotesk'] text-2xl sm:text-3xl font-bold text-primary mb-2">
+                      Continue Booking
+                    </h2>
+                    <p className="text-on-surface-variant font-['Inter'] text-sm sm:text-base">
+                      Pick up where you left your booking journey
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => scrollContainer(continueBookingRef, 'left')}
+                      className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
+                      aria-label="Scroll left"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => scrollContainer(continueBookingRef, 'right')}
+                      className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
+                      aria-label="Scroll right"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+                <div className="relative">
+                  <div ref={continueBookingRef} className="flex overflow-x-auto pb-4 gap-6 scroll-smooth snap-x snap-mandatory no-scrollbar">
+                    {Array.isArray(homeData.continue_booking) ? (
+                      homeData.continue_booking.map((booking) => (
+                        <div key={booking.id} className="w-[300px] sm:w-[340px] shrink-0 snap-start">
+                          <BookingCard booking={booking} />
+                        </div>
+                      ))
+                    ) : (
+                      <p className="font-['Inter'] text-sm text-gray-500">No pending bookings</p>
+                    )}
+                  </div>
+                </div>
+              </section>
+
+            )}
+
+          {/* Browse by Categories */}
+          {homeData.all_categories && (
+            <section ref={browseSectionRef} className="all-categories-section mb-16">
               <div className="flex justify-between items-end mb-8">
                 <div>
-                  <h2 className="font-['Hanken_Grotesk'] text-2xl sm:text-3xl font-bold text-primary mb-2">
-                    Continue Booking
+                  <h2 className="font-['Hanken_Grotesk'] text-[32px] font-semibold leading-[40px] text-primary mb-2">
+                    Browse by Categories
                   </h2>
                   <p className="text-on-surface-variant font-['Inter'] text-sm sm:text-base">
-                    Pick up where you left your booking journey
+                    Select a category to filter experiences
                   </p>
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => scrollContainer(continueBookingRef, 'left')}
+                    onClick={() => scrollContainer(categoriesRef, 'left')}
                     className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
                     aria-label="Scroll left"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                   <button
-                    onClick={() => scrollContainer(continueBookingRef, 'right')}
+                    onClick={() => scrollContainer(categoriesRef, 'right')}
                     className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
                     aria-label="Scroll right"
                   >
@@ -604,44 +651,145 @@ function Home() {
                 </div>
               </div>
               <div className="relative">
-                <div ref={continueBookingRef} className="flex overflow-x-auto pb-4 gap-6 scroll-smooth snap-x snap-mandatory no-scrollbar">
-                  {Array.isArray(homeData.continue_booking) ? (
-                    homeData.continue_booking.map((booking) => (
-                      <div key={booking.id} className="w-[300px] sm:w-[340px] shrink-0 snap-start">
-                        <BookingCard booking={booking} />
-                      </div>
-                    ))
-                  ) : (
-                    <p className="font-['Inter'] text-sm text-gray-500">No pending bookings</p>
-                  )}
+                <div ref={categoriesRef} className="flex overflow-x-auto pb-4 gap-4 scroll-smooth snap-x snap-mandatory no-scrollbar">
+                  {homeData.all_categories.map((category) => (
+                    <div key={category.id} className="w-[120px] sm:w-[150px] shrink-0 snap-start">
+                      <CategoryGridCard category={category} />
+                    </div>
+                  ))}
                 </div>
               </div>
             </section>
 
           )}
 
-        {/* Browse by Categories */}
-        {homeData.all_categories && (
-          <section ref={browseSectionRef} className="all-categories-section mb-16">
-            <div className="flex justify-between items-end mb-8">
+          {/* Explore Locations */}
+          {homeData.explore_locations && (
+            <section className="explore-locations-section mb-16">
+              <div className="flex justify-between items-end mb-8">
+                <div>
+                  <h2 className="font-['Hanken_Grotesk'] text-[32px] font-semibold leading-[40px] text-primary mb-2">
+                    {homeData.explore_locations.label}
+                  </h2>
+                  <p className="text-on-surface-variant font-['Inter'] text-sm sm:text-base">
+                    Discover cultural hubs across the subcontinent
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => scrollContainer(locationsRef, 'left')}
+                      className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
+                      aria-label="Scroll left"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => scrollContainer(locationsRef, 'right')}
+                      className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
+                      aria-label="Scroll right"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <Link to="/cities" className="text-primary font-['Hanken_Grotesk'] font-semibold flex items-center gap-1.5 hover:underline text-sm active:scale-95 transition-all">
+                    View All <span className="material-symbols-outlined text-base">arrow_forward</span>
+                  </Link>
+                </div>
+              </div>
+              <div className="relative">
+                <div ref={locationsRef} className="flex overflow-x-auto pb-4 gap-6 scroll-smooth snap-x snap-mandatory no-scrollbar">
+                  {homeData.explore_locations.data.map((location) => (
+                    <div key={location.id} className="w-[280px] sm:w-[450px] shrink-0 snap-start">
+                      <LocationBentoCard location={location} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+          )}
+
+          {/* Featured Categories */}
+          {homeData.featured_categories &&
+            homeData.featured_categories.map((category, catIdx) => {
+              const categorySlug = category.category.toLowerCase().replace(/s$/, '').replace(/\s+/g, '-');
+              return (
+                <section
+                  className="museum-section mb-16"
+                  key={category.category + category.pagination.current_page}
+                >
+                  <div className="flex justify-between items-end mb-8">
+                    <div>
+                      <h2 className="font-['Hanken_Grotesk'] text-[32px] font-semibold leading-[40px] text-primary mb-2">
+                        {category.category}
+                      </h2>
+                      <p className="text-on-surface-variant font-['Inter'] text-sm sm:text-base">
+                        Discover unique experiences and guided tours in this category
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => scrollFeaturedCat(catIdx, 'left')}
+                          className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
+                          aria-label="Scroll left"
+                        >
+                          <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => scrollFeaturedCat(catIdx, 'right')}
+                          className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
+                          aria-label="Scroll right"
+                        >
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
+                      </div>
+                      <Link
+                        to={`/${selectedLocation.toLowerCase().replace(/\s+/g, '-')}/${categorySlug}`}
+                        className="text-primary font-['Hanken_Grotesk'] font-semibold flex items-center gap-1.5 hover:underline text-sm active:scale-95 transition-all"
+                      >
+                        View All <span className="material-symbols-outlined text-base">arrow_forward</span>
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <div ref={el => featuredCatsRefs.current[catIdx] = el} className="flex overflow-x-auto pb-4 gap-6 scroll-smooth snap-x snap-mandatory no-scrollbar">
+                      {category.experiences.map((exp) => (
+                        <div key={exp.id} className="w-[240px] sm:w-[280px] shrink-0 snap-start">
+                          <SmallExperienceCard experience={exp} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              );
+            })}
+
+        </div>
+
+        {/* Famous Heritage Circuits */}
+        <section id="trails" className="py-16 border-t border-outline-variant/30">
+          <div className="max-w-[1280px] mx-auto px-6 md:px-16">
+            <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-14">
               <div>
-                <h2 className="font-['Hanken_Grotesk'] text-[32px] font-semibold leading-[40px] text-primary mb-2">
-                  Browse by Categories
-                </h2>
-                <p className="text-on-surface-variant font-['Inter'] text-sm sm:text-base">
-                  Select a category to filter experiences
+                <span className="font-['Hanken_Grotesk'] text-xs font-bold text-on-surface uppercase tracking-widest">Curated Routes</span>
+                <h2 className="font-['Hanken_Grotesk'] text-3xl sm:text-4xl font-bold text-primary tracking-tight mt-1.5">Famous Heritage Circuits</h2>
+                <p className="font-['Inter'] text-on-surface-variant text-sm sm:text-base mt-2 max-w-lg leading-relaxed">
+                  Follow historic pathways etched by dynasties. Each circuit is a complete journey, not just a list.
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 self-end mt-4 md:mt-0">
                 <button
-                  onClick={() => scrollContainer(categoriesRef, 'left')}
+                  onClick={() => scrollContainer(circuitsRef, 'left')}
                   className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
                   aria-label="Scroll left"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <button
-                  onClick={() => scrollContainer(categoriesRef, 'right')}
+                  onClick={() => scrollContainer(circuitsRef, 'right')}
                   className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
                   aria-label="Scroll right"
                 >
@@ -650,338 +798,192 @@ function Home() {
               </div>
             </div>
             <div className="relative">
-              <div ref={categoriesRef} className="flex overflow-x-auto pb-4 gap-4 scroll-smooth snap-x snap-mandatory no-scrollbar">
-                {homeData.all_categories.map((category) => (
-                  <div key={category.id} className="w-[120px] sm:w-[150px] shrink-0 snap-start">
-                    <CategoryGridCard category={category} />
+              <div ref={circuitsRef} className="flex overflow-x-auto pb-4 gap-6 scroll-smooth snap-x snap-mandatory no-scrollbar">
+                {(homeData.featured_trails && homeData.featured_trails.length > 0 ? homeData.featured_trails : CIRCUITS).map((c) => (
+                  <div key={c.name} className="w-[280px] sm:w-[360px] shrink-0 snap-start">
+                    <TrailCard trail={c} />
                   </div>
                 ))}
               </div>
             </div>
-          </section>
 
-        )}
 
-        {/* Explore Locations */}
-        {homeData.explore_locations && (
-          <section className="explore-locations-section mb-16">
-            <div className="flex justify-between items-end mb-8">
-              <div>
-                <h2 className="font-['Hanken_Grotesk'] text-[32px] font-semibold leading-[40px] text-primary mb-2">
-                  {homeData.explore_locations.label}
-                </h2>
-                <p className="text-on-surface-variant font-['Inter'] text-sm sm:text-base">
-                  Discover cultural hubs across the subcontinent
-                </p>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => scrollContainer(locationsRef, 'left')}
-                    className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
-                    aria-label="Scroll left"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => scrollContainer(locationsRef, 'right')}
-                    className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
-                    aria-label="Scroll right"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-                <Link to="/cities" className="text-primary font-['Hanken_Grotesk'] font-semibold flex items-center gap-1.5 hover:underline text-sm active:scale-95 transition-all">
-                  View All <span className="material-symbols-outlined text-base">arrow_forward</span>
-                </Link>
-              </div>
-            </div>
-            <div className="relative">
-              <div ref={locationsRef} className="flex overflow-x-auto pb-4 gap-6 scroll-smooth snap-x snap-mandatory no-scrollbar">
-                {homeData.explore_locations.data.map((location) => (
-                  <div key={location.id} className="w-[280px] sm:w-[450px] shrink-0 snap-start">
-                    <LocationBentoCard location={location} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-        )}
-
-        {/* Featured Categories */}
-        {homeData.featured_categories &&
-          homeData.featured_categories.map((category, catIdx) => {
-            const categorySlug = category.category.toLowerCase().replace(/s$/, '').replace(/\s+/g, '-');
-            return (
-              <section
-                className="museum-section mb-16"
-                key={category.category + category.pagination.current_page}
-              >
-                <div className="flex justify-between items-end mb-8">
-                  <div>
-                    <h2 className="font-['Hanken_Grotesk'] text-[32px] font-semibold leading-[40px] text-primary mb-2">
-                      {category.category}
-                    </h2>
-                    <p className="text-on-surface-variant font-['Inter'] text-sm sm:text-base">
-                      Discover unique experiences and guided tours in this category
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => scrollFeaturedCat(catIdx, 'left')}
-                        className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
-                        aria-label="Scroll left"
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => scrollFeaturedCat(catIdx, 'right')}
-                        className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
-                        aria-label="Scroll right"
-                      >
-                        <ChevronRight className="w-5 h-5" />
-                      </button>
-                    </div>
-                    <Link
-                      to={`/${selectedLocation.toLowerCase().replace(/\s+/g, '-')}/${categorySlug}`}
-                      className="text-primary font-['Hanken_Grotesk'] font-semibold flex items-center gap-1.5 hover:underline text-sm active:scale-95 transition-all"
-                    >
-                      View All <span className="material-symbols-outlined text-base">arrow_forward</span>
-                    </Link>
-                  </div>
-                </div>
-
-                <div className="relative">
-                  <div ref={el => featuredCatsRefs.current[catIdx] = el} className="flex overflow-x-auto pb-4 gap-6 scroll-smooth snap-x snap-mandatory no-scrollbar">
-                    {category.experiences.map((exp) => (
-                      <div key={exp.id} className="w-[240px] sm:w-[280px] shrink-0 snap-start">
-                        <SmallExperienceCard experience={exp} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </section>
-            );
-          })}
-
-      </div>
-
-      {/* Famous Heritage Circuits */}
-      <section id="trails" className="py-16 border-t border-outline-variant/30">
-        <div className="max-w-[1280px] mx-auto px-6 md:px-16">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-14">
-            <div>
-              <span className="font-['Hanken_Grotesk'] text-xs font-bold text-on-surface uppercase tracking-widest">Curated Routes</span>
-              <h2 className="font-['Hanken_Grotesk'] text-3xl sm:text-4xl font-bold text-primary tracking-tight mt-1.5">Famous Heritage Circuits</h2>
-              <p className="font-['Inter'] text-on-surface-variant text-sm sm:text-base mt-2 max-w-lg leading-relaxed">
-                Follow historic pathways etched by dynasties. Each circuit is a complete journey, not just a list.
-              </p>
-            </div>
-            <div className="flex gap-2 self-end mt-4 md:mt-0">
-              <button
-                onClick={() => scrollContainer(circuitsRef, 'left')}
-                className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
-                aria-label="Scroll left"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => scrollContainer(circuitsRef, 'right')}
-                className="w-10 h-10 rounded-full border border-outline-variant hover:border-primary hover:text-primary transition-all flex items-center justify-center text-on-surface bg-surface-container-lowest"
-                aria-label="Scroll right"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
+            <div className="text-center mt-10">
+              <Link to="/trails" className="inline-flex items-center gap-2 border-2 border-on-surface hover:bg-on-surface hover:text-surface-container-lowest text-on-surface font-['Hanken_Grotesk'] font-bold px-8 py-3.5 rounded-full text-sm transition-all duration-200">
+                View All Heritage Trails <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
           </div>
-          <div className="relative">
-            <div ref={circuitsRef} className="flex overflow-x-auto pb-4 gap-6 scroll-smooth snap-x snap-mandatory no-scrollbar">
-              {(homeData.featured_trails && homeData.featured_trails.length > 0 ? homeData.featured_trails : CIRCUITS).map((c) => (
-                <div key={c.name} className="w-[280px] sm:w-[360px] shrink-0 snap-start">
-                  <TrailCard trail={c} />
+        </section>
+
+
+        {/* AI Planner */}
+        <section id="planner" className="py-16 bg-surface-container-low border-y border-outline-variant/30">
+          <div className="max-w-[1280px] mx-auto px-6 md:px-16">
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="font-['Hanken_Grotesk'] text-xs font-bold text-on-surface uppercase tracking-widest">AI-Powered</span>
+              <h2 className="font-['Hanken_Grotesk'] text-3xl sm:text-4xl font-bold text-primary tracking-tight mt-1.5">Plan Your Journey in 30 Seconds</h2>
+              <p className="font-['Inter'] text-on-surface-variant text-sm sm:text-base mt-2 max-w-xl mx-auto leading-relaxed">
+                Tell us your destination, how long you're staying, and what you love. We'll build the day.
+              </p>
+            </div>
+
+            <div className="grid lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+              {/* Left: form */}
+              <div className="lg:col-span-4 bg-surface-container-lowest border border-outline-variant p-6 sm:p-8 rounded-3xl">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-['Hanken_Grotesk'] text-xs font-bold text-primary uppercase tracking-wider">AI Travel Guide</p>
+                    <h3 className="font-['Hanken_Grotesk'] text-on-surface font-bold text-lg">Your preferences</h3>
+                  </div>
+                </div>
+
+                <div className="space-y-5">
+                  {/* City */}
+                  <div>
+                    <label className="block font-['Inter'] text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Destination</label>
+                    <select
+                      value={plannerCity}
+                      onChange={(e) => { const c = e.target.value; setPlannerCity(c); setItinerary(FALLBACK_ITINERARIES[c]); }}
+                      className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary font-['Inter'] cursor-pointer"
+                    >
+                      <option value="jaipur">Jaipur — Pink City</option>
+                      <option value="delhi">Delhi — Historic Capital</option>
+                      <option value="agra">Agra — Mughal Capital</option>
+                      <option value="kolkata">Kolkata — Cultural Center</option>
+                      <option value="hyderabad">Hyderabad — Nizam City</option>
+                      <option value="hampi">Hampi — Vijayanagara Empire</option>
+                      <option value="varanasi">Varanasi — Spiritual Capital</option>
+                    </select>
+                  </div>
+
+                  {/* Duration */}
+                  <div>
+                    <label className="block font-['Inter'] text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Trip Duration</label>
+                    <div className="grid grid-cols-5 gap-2 font-['Inter']">
+                      {["1", "2", "3", "4", "5"].map((d) => (
+                        <button key={d} onClick={() => setPlannerDuration(d)}
+                          className={`py-2.5 text-sm font-bold rounded-xl border transition-all cursor-pointer ${plannerDuration === d ? "bg-primary border-primary text-on-primary" : "bg-surface-container-low border-outline-variant text-on-surface-variant hover:bg-surface-container"}`}>
+                          {d}d
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Interests */}
+                  <div>
+                    <label className="block font-['Inter'] text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Travel Interests</label>
+                    <div className="grid grid-cols-2 gap-2 font-['Inter']">
+                      {INTERESTS.map((interest) => {
+                        const sel = plannerInterests.includes(interest);
+                        return (
+                          <button key={interest} onClick={() => toggleInterest(interest)}
+                            className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${sel ? "bg-primary/10 border-primary/30 text-primary" : "bg-surface-container-low border-outline-variant text-on-surface-variant hover:bg-surface-container"}`}>
+                            {interest}
+                            <span className={`w-2 h-2 rounded-full ${sel ? "bg-primary" : "bg-outline-variant"}`} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Generate */}
+                  <button onClick={handleGenerate} disabled={plannerLoading}
+                    className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-opacity-95 disabled:bg-outline-variant/50 text-on-primary font-['Hanken_Grotesk'] font-bold py-3.5 rounded-xl text-sm transition-all duration-200 shadow-md active:scale-95 cursor-pointer">
+                    {plannerLoading ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Generating plan...</>
+                    ) : (
+                      <><Sparkles className="w-4 h-4" /> Generate My Itinerary</>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Right: itinerary with photos */}
+              <div className="lg:col-span-8">
+                {itinerary && (
+                  <div className="space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <p className="font-['Hanken_Grotesk'] text-xs font-bold text-primary uppercase tracking-widest">Your Itinerary</p>
+                        <h3 className="font-['Hanken_Grotesk'] text-on-surface font-bold text-2xl mt-1">{itinerary.title}</h3>
+                      </div>
+                      <span className="self-start bg-primary text-on-primary text-xs font-['Hanken_Grotesk'] font-bold px-3.5 py-1.5 rounded-full shadow-xs">
+                        {itinerary.duration}
+                      </span>
+                    </div>
+
+                    {itinerary.days.map((dayData, di) => (
+                      <div key={di} className="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-xs">
+                        <div className="px-5 py-3.5 border-b border-outline-variant flex items-center gap-3 bg-surface-container-low">
+                          <span className="w-7 h-7 rounded-full bg-primary text-on-primary text-xs font-['JetBrains_Mono'] font-bold flex items-center justify-center">{dayData.day}</span>
+                          <span className="font-['Hanken_Grotesk'] text-on-surface font-semibold text-sm">{dayData.theme}</span>
+                        </div>
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-0 divide-x divide-y divide-outline-variant">
+                          {dayData.activities.map((act, ai) => (
+                            <div key={ai} className="group">
+                              {act.image && (
+                                <div className="h-28 overflow-hidden">
+                                  <img src={act.image} alt={act.place} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 brightness-95" />
+                                </div>
+                              )}
+                              <div className="p-4">
+                                <div className="flex items-center justify-between gap-2 mb-1.5">
+                                  <p className="font-['Hanken_Grotesk'] text-on-surface font-bold text-sm truncate">{act.place}</p>
+                                  <span className="font-['JetBrains_Mono'] text-primary text-[10px] font-bold bg-primary/10 px-2 py-0.5 rounded shrink-0">{act.time}</span>
+                                </div>
+                                <p className="font-['Inter'] text-on-surface-variant text-xs leading-relaxed">{act.description}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+
+                    <div className="text-center">
+                      <button className="inline-flex items-center gap-2 bg-primary hover:bg-opacity-90 text-on-primary font-['Hanken_Grotesk'] font-bold px-7 py-3 rounded-full text-sm transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
+                        Plan My Full Journey <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Why Travelers Choose ZeQue */}
+        <section className="py-16">
+          <div className="max-w-[1280px] mx-auto px-6 md:px-16">
+            <div className="text-center mb-10 sm:mb-14">
+              <span className="font-['Hanken_Grotesk'] text-xs font-bold text-primary uppercase tracking-widest">Our Difference</span>
+              <h2 className="font-['Hanken_Grotesk'] text-3xl sm:text-4xl font-bold text-on-surface tracking-tight mt-1.5">Why Travelers Choose ZeQue</h2>
+              <p className="font-['Inter'] text-on-surface-variant text-sm sm:text-base mt-2 max-w-xl mx-auto">
+                Headout has tickets. TripAdvisor has reviews. Google has locations. We have all three — plus the context to make sense of it.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+              {WHY_ZEQUE.map((w) => (
+                <div key={w.title} className="bg-surface-container-low border border-outline-variant rounded-3xl p-6 sm:p-7 hover:border-primary/30 hover:shadow-md transition-all duration-300 group">
+                  <div className="text-3xl mb-4">{w.icon}</div>
+                  <h3 className="font-['Hanken_Grotesk'] font-bold text-on-surface text-base mb-2 group-hover:text-primary transition-colors">{w.title}</h3>
+                  <p className="font-['Inter'] text-on-surface-variant text-sm leading-relaxed">{w.desc}</p>
                 </div>
               ))}
             </div>
-          </div>
 
-
-          <div className="text-center mt-10">
-            <Link to="/trails" className="inline-flex items-center gap-2 border-2 border-on-surface hover:bg-on-surface hover:text-surface-container-lowest text-on-surface font-['Hanken_Grotesk'] font-bold px-8 py-3.5 rounded-full text-sm transition-all duration-200">
-              View All Heritage Trails <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-
-      {/* AI Planner */}
-      <section id="planner" className="py-16 bg-surface-container-low border-y border-outline-variant/30">
-        <div className="max-w-[1280px] mx-auto px-6 md:px-16">
-          <div className="text-center mb-10 sm:mb-14">
-            <span className="font-['Hanken_Grotesk'] text-xs font-bold text-on-surface uppercase tracking-widest">AI-Powered</span>
-            <h2 className="font-['Hanken_Grotesk'] text-3xl sm:text-4xl font-bold text-primary tracking-tight mt-1.5">Plan Your Journey in 30 Seconds</h2>
-            <p className="font-['Inter'] text-on-surface-variant text-sm sm:text-base mt-2 max-w-xl mx-auto leading-relaxed">
-              Tell us your destination, how long you're staying, and what you love. We'll build the day.
-            </p>
-          </div>
-
-          <div className="grid lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-            {/* Left: form */}
-            <div className="lg:col-span-4 bg-surface-container-lowest border border-outline-variant p-6 sm:p-8 rounded-3xl">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <p className="font-['Hanken_Grotesk'] text-xs font-bold text-primary uppercase tracking-wider">AI Travel Guide</p>
-                  <h3 className="font-['Hanken_Grotesk'] text-on-surface font-bold text-lg">Your preferences</h3>
-                </div>
-              </div>
-
-              <div className="space-y-5">
-                {/* City */}
-                <div>
-                  <label className="block font-['Inter'] text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Destination</label>
-                  <select
-                    value={plannerCity}
-                    onChange={(e) => { const c = e.target.value; setPlannerCity(c); setItinerary(FALLBACK_ITINERARIES[c]); }}
-                    className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary font-['Inter'] cursor-pointer"
-                  >
-                    <option value="jaipur">Jaipur — Pink City</option>
-                    <option value="delhi">Delhi — Historic Capital</option>
-                    <option value="agra">Agra — Mughal Capital</option>
-                    <option value="kolkata">Kolkata — Cultural Center</option>
-                    <option value="hyderabad">Hyderabad — Nizam City</option>
-                    <option value="hampi">Hampi — Vijayanagara Empire</option>
-                    <option value="varanasi">Varanasi — Spiritual Capital</option>
-                  </select>
-                </div>
-
-                {/* Duration */}
-                <div>
-                  <label className="block font-['Inter'] text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Trip Duration</label>
-                  <div className="grid grid-cols-5 gap-2 font-['Inter']">
-                    {["1", "2", "3", "4", "5"].map((d) => (
-                      <button key={d} onClick={() => setPlannerDuration(d)}
-                        className={`py-2.5 text-sm font-bold rounded-xl border transition-all cursor-pointer ${plannerDuration === d ? "bg-primary border-primary text-on-primary" : "bg-surface-container-low border-outline-variant text-on-surface-variant hover:bg-surface-container"}`}>
-                        {d}d
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Interests */}
-                <div>
-                  <label className="block font-['Inter'] text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Travel Interests</label>
-                  <div className="grid grid-cols-2 gap-2 font-['Inter']">
-                    {INTERESTS.map((interest) => {
-                      const sel = plannerInterests.includes(interest);
-                      return (
-                        <button key={interest} onClick={() => toggleInterest(interest)}
-                          className={`flex items-center justify-between px-3 py-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${sel ? "bg-primary/10 border-primary/30 text-primary" : "bg-surface-container-low border-outline-variant text-on-surface-variant hover:bg-surface-container"}`}>
-                          {interest}
-                          <span className={`w-2 h-2 rounded-full ${sel ? "bg-primary" : "bg-outline-variant"}`} />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Generate */}
-                <button onClick={handleGenerate} disabled={plannerLoading}
-                  className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-opacity-95 disabled:bg-outline-variant/50 text-on-primary font-['Hanken_Grotesk'] font-bold py-3.5 rounded-xl text-sm transition-all duration-200 shadow-md active:scale-95 cursor-pointer">
-                  {plannerLoading ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> Generating plan...</>
-                  ) : (
-                    <><Sparkles className="w-4 h-4" /> Generate My Itinerary</>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Right: itinerary with photos */}
-            <div className="lg:col-span-8">
-              {itinerary && (
-                <div className="space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <p className="font-['Hanken_Grotesk'] text-xs font-bold text-primary uppercase tracking-widest">Your Itinerary</p>
-                      <h3 className="font-['Hanken_Grotesk'] text-on-surface font-bold text-2xl mt-1">{itinerary.title}</h3>
-                    </div>
-                    <span className="self-start bg-primary text-on-primary text-xs font-['Hanken_Grotesk'] font-bold px-3.5 py-1.5 rounded-full shadow-xs">
-                      {itinerary.duration}
-                    </span>
-                  </div>
-
-                  {itinerary.days.map((dayData, di) => (
-                    <div key={di} className="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-xs">
-                      <div className="px-5 py-3.5 border-b border-outline-variant flex items-center gap-3 bg-surface-container-low">
-                        <span className="w-7 h-7 rounded-full bg-primary text-on-primary text-xs font-['JetBrains_Mono'] font-bold flex items-center justify-center">{dayData.day}</span>
-                        <span className="font-['Hanken_Grotesk'] text-on-surface font-semibold text-sm">{dayData.theme}</span>
-                      </div>
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-0 divide-x divide-y divide-outline-variant">
-                        {dayData.activities.map((act, ai) => (
-                          <div key={ai} className="group">
-                            {act.image && (
-                              <div className="h-28 overflow-hidden">
-                                <img src={act.image} alt={act.place} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 brightness-95" />
-                              </div>
-                            )}
-                            <div className="p-4">
-                              <div className="flex items-center justify-between gap-2 mb-1.5">
-                                <p className="font-['Hanken_Grotesk'] text-on-surface font-bold text-sm truncate">{act.place}</p>
-                                <span className="font-['JetBrains_Mono'] text-primary text-[10px] font-bold bg-primary/10 px-2 py-0.5 rounded shrink-0">{act.time}</span>
-                              </div>
-                              <p className="font-['Inter'] text-on-surface-variant text-xs leading-relaxed">{act.description}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="text-center">
-                    <button className="inline-flex items-center gap-2 bg-primary hover:bg-opacity-90 text-on-primary font-['Hanken_Grotesk'] font-bold px-7 py-3 rounded-full text-sm transition-all duration-200 shadow-lg hover:-translate-y-0.5 cursor-pointer">
-                      Plan My Full Journey <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
+            <div className="text-center mt-12">
+              <a href="#" className="inline-flex items-center gap-2 bg-primary hover:bg-opacity-90 text-on-primary font-['Hanken_Grotesk'] font-semibold px-8 py-3.5 rounded-full text-sm transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                Find Places Near Me <MapPin className="w-4 h-4" />
+              </a>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Why Travelers Choose ZeQue */}
-      <section className="py-16">
-        <div className="max-w-[1280px] mx-auto px-6 md:px-16">
-          <div className="text-center mb-10 sm:mb-14">
-            <span className="font-['Hanken_Grotesk'] text-xs font-bold text-primary uppercase tracking-widest">Our Difference</span>
-            <h2 className="font-['Hanken_Grotesk'] text-3xl sm:text-4xl font-bold text-on-surface tracking-tight mt-1.5">Why Travelers Choose ZeQue</h2>
-            <p className="font-['Inter'] text-on-surface-variant text-sm sm:text-base mt-2 max-w-xl mx-auto">
-              Headout has tickets. TripAdvisor has reviews. Google has locations. We have all three — plus the context to make sense of it.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {WHY_ZEQUE.map((w) => (
-              <div key={w.title} className="bg-surface-container-low border border-outline-variant rounded-3xl p-6 sm:p-7 hover:border-primary/30 hover:shadow-md transition-all duration-300 group">
-                <div className="text-3xl mb-4">{w.icon}</div>
-                <h3 className="font-['Hanken_Grotesk'] font-bold text-on-surface text-base mb-2 group-hover:text-primary transition-colors">{w.title}</h3>
-                <p className="font-['Inter'] text-on-surface-variant text-sm leading-relaxed">{w.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center mt-12">
-            <a href="#" className="inline-flex items-center gap-2 bg-primary hover:bg-opacity-90 text-on-primary font-['Hanken_Grotesk'] font-semibold px-8 py-3.5 rounded-full text-sm transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
-              Find Places Near Me <MapPin className="w-4 h-4" />
-            </a>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

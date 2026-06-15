@@ -15,23 +15,31 @@ export const LocationProvider = ({ children }) => {
   useEffect(() => {
     const fetchLocationsAndIP = async () => {
       try {
-        // Fetch locations from DB
-        const res = await api.get("/api/location/");
-        const dbLocations = Array.isArray(res.data)
-          ? res.data
-          : Array.isArray(res.data?.results)
-            ? res.data.results
-            : [];
-        setLocations(dbLocations);
+        // Fetch locations from DB handling pagination
+        let allCities = [];
+        let url = "/api/cities/";
+        while (url) {
+          const res = await api.get(url);
+          if (Array.isArray(res.data)) {
+            allCities = [...allCities, ...res.data];
+            url = null;
+          } else if (Array.isArray(res.data?.results)) {
+            allCities = [...allCities, ...res.data.results];
+            url = res.data.next;
+          } else {
+            url = null;
+          }
+        }
+        setLocations(allCities);
 
         // Fetch user location via IP
         const ipRes = await fetch("https://ipapi.co/json/");
         const ipData = await ipRes.json();
         const userCity = ipData.city;
 
-        if (userCity && dbLocations.length > 0) {
+        if (userCity && allCities.length > 0) {
           // Check if userCity is present in DB
-          const matched = dbLocations.find(
+          const matched = allCities.find(
             (loc) => loc.name.toLowerCase() === userCity.toLowerCase()
           );
           if (matched) {
@@ -57,9 +65,14 @@ export const LocationProvider = ({ children }) => {
     localStorage.setItem("selectedLocation", locName);
   };
 
+  const selectedLocationObject = locations.find(
+    (loc) => loc.name.toLowerCase() === selectedLocation.toLowerCase()
+  ) || null;
+
   const contextData = {
     locations,
     selectedLocation,
+    selectedLocationObject,
     loadingLocation,
     changeLocation,
   };

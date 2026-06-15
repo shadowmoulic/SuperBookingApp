@@ -17,13 +17,15 @@ const CITY_STATS = {
 function LocationBentoCard({ location }) {
   const stats = location.stats || CITY_STATS[location.name.toLowerCase()] || [];
 
+  const coverImage = location.image_url || location.icon_url;
+
   return (
-    <Link to={`/${location.name.toLowerCase().replace(/\s+/g, '-')}`} className="block h-full">
+    <Link to={`/city/${location.name.toLowerCase().replace(/\s+/g, '-')}`} className="block h-full">
       <div className="relative group cursor-pointer rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 h-72 md:h-80 w-full">
         {/* Background Image */}
-        {location.icon_url ? (
+        {coverImage ? (
           <img
-            src={location.icon_url}
+            src={coverImage}
             alt={location.name}
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />

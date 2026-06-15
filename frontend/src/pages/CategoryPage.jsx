@@ -213,7 +213,8 @@ export default function CategoryPage({ type }) {
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 md:px-12 py-10 w-full relative">
+    <div className="bg-surface-container-lowest min-h-screen w-full relative">
+      <div className="max-w-[1280px] mx-auto px-6 md:px-12 py-10 w-full relative">
 
       {/* Breadcrumbs & Title */}
       <div className="flex flex-col mb-8">
@@ -326,7 +327,7 @@ export default function CategoryPage({ type }) {
 
             return (
               <Link
-                to={`/attraction/${slug}`}
+                to={`/attraction/${experience.slug}`}
                 key={expId}
                 className="group bg-white border-gray-150 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col h-full relative cursor-pointer"
               >
@@ -471,6 +472,7 @@ export default function CategoryPage({ type }) {
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 }

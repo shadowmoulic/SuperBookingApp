@@ -25,10 +25,10 @@ export function LocationDetails() {
   useEffect(() => {
     setLoading(true);
     setError("");
-    
-    // Fetch location details
+
+    // Fetch city/location details
     api
-      .get(`/api/location/${id}`)
+      .get(`/api/city/${id}`)
       .then((res) => {
         setLocation(res.data);
         // Fetch experiences for this location
@@ -86,7 +86,7 @@ export function LocationDetails() {
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-black/30" />
-        
+
         {/* Navigation & breadcrumb overlay */}
         <div className="absolute inset-x-0 bottom-0 p-6 sm:p-12 max-w-7xl mx-auto w-full text-white">
           <div className="flex items-center gap-2 text-slate-300 text-xs sm:text-sm mb-3">
@@ -96,7 +96,7 @@ export function LocationDetails() {
             <ChevronRight className="w-3.5 h-3.5" />
             <span className="text-amber-400 font-semibold">{location.name}</span>
           </div>
-          
+
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight drop-shadow-md">
             Explore {location.name}
           </h1>

@@ -15,6 +15,12 @@ class State(models.Model):
     id = models.BigAutoField(primary_key=True)
     public_id = models.CharField(max_length=10, unique=True, blank=True, editable=False)
     name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
+    image_url = models.CharField(max_length=500, blank=True, null=True)
+    best_time = models.CharField(max_length=100, blank=True, null=True)
+    seo_title = models.CharField(max_length=255, blank=True, null=True)
+    seo_description = models.TextField(blank=True, null=True)
+    website = models.URLField(max_length=500, blank=True, null=True)
 
     class Meta:
         db_table = "states"
@@ -40,10 +46,21 @@ class City(models.Model):
     id = models.BigAutoField(primary_key=True)
     public_id = models.CharField(max_length=10, unique=True, blank=True, editable=False)
     name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
     state = models.ForeignKey(
         State, on_delete=models.SET_NULL, null=True, blank=True, related_name="cities"
     )
     icon_url = models.CharField(max_length=500, blank=True, null=True)
+    image_url = models.CharField(max_length=500, blank=True, null=True)
+    best_time = models.CharField(max_length=100, blank=True, null=True)
+    seo_title = models.CharField(max_length=255, blank=True, null=True)
+    seo_description = models.TextField(blank=True, null=True)
+    latitude = models.DecimalField(
+        max_digits=10, decimal_places=8, blank=True, null=True
+    )
+    longitude = models.DecimalField(
+        max_digits=11, decimal_places=8, blank=True, null=True
+    )
 
     class Meta:
         db_table = "cities"
@@ -72,6 +89,9 @@ class Category(models.Model):
     )
     description = models.TextField(blank=True, null=True)
     icon_url = models.CharField(max_length=500, blank=True, null=True)
+    image_url = models.CharField(max_length=500, blank=True, null=True)
+    seo_title = models.CharField(max_length=255, blank=True, null=True)
+    seo_description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -154,12 +174,16 @@ class Experience(models.Model):
         related_name="experiences",
     )
     name = models.CharField(max_length=255)
+    subtitle = models.CharField(max_length=500, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    location = models.ForeignKey(
+    address = models.CharField(max_length=500, blank=True, null=True)
+    city = models.ForeignKey(
         City,
         on_delete=models.CASCADE,
-        db_column="location_id",
+        db_column="city_id",
         related_name="experiences",
+        null=True,
+        blank=True,
     )
     latitude = models.DecimalField(
         max_digits=10, decimal_places=8, blank=True, null=True
@@ -173,6 +197,7 @@ class Experience(models.Model):
     is_open = models.BooleanField(default=True)
     opening_time = models.TimeField(blank=True, null=True)
     closing_time = models.TimeField(blank=True, null=True)
+    time_required = models.DurationField(blank=True, null=True)
     last_entry_time = models.TimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

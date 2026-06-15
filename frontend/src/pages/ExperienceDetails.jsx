@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState, useContext } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
-import { 
-  ArrowLeft, Share2, MapPin, Star, Clock, Zap, Award, Gauge, Ticket, 
+import {
+  ArrowLeft, Share2, MapPin, Star, Clock, Zap, Award, Gauge, Ticket,
   CheckCircle2, CreditCard, Shirt, CameraOff, Plus, Minus, ArrowRight, ShieldAlert,
   Calendar, Flame, HelpCircle
 } from "lucide-react";
@@ -51,11 +51,11 @@ export function ExperienceDetails() {
       setSelectedDate(dates[selectedDateIndex].iso);
     }
   }, [selectedDateIndex, dates]);
-  
+
   // Separate traveler counts (also supports desktop selected base ticket price switcher)
   const [indianCount, setIndianCount] = useState(1);
   const [foreignerCount, setForeignerCount] = useState(0);
-  
+
   // Nationality toggle for desktop (so you can click to select standard/foreigner)
   const [selectedNationality, setSelectedNationality] = useState("indian");
 
@@ -79,7 +79,7 @@ export function ExperienceDetails() {
       .then((res) => {
         setExperience(res.data);
       })
-            .catch((err) => {
+      .catch((err) => {
         setError("Unable to load experience details.");
       })
       .finally(() => {
@@ -104,8 +104,63 @@ export function ExperienceDetails() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const images = useMemo(() => {
+    return String(experience?.image_url || "")
+      .split(",")
+      .map((url) => url.trim())
+      .filter(Boolean);
+  }, [experience]);
+
+  const ticketPrices = useMemo(() => {
+    let indianPrice = 45;
+    let foreignerPrice = 1050;
+
+    if (experience && Array.isArray(experience.ticket_types)) {
+      const indianType = experience.ticket_types.find(tt =>
+        tt.name.toLowerCase().includes("india") || tt.name.toLowerCase().includes("local")
+      );
+      const foreignerType = experience.ticket_types.find(tt =>
+        tt.name.toLowerCase().includes("foreign") || tt.name.toLowerCase().includes("intl") || tt.name.toLowerCase().includes("international")
+      );
+
+      if (indianType) {
+        const activeRule = indianType.pricing_rules?.find(pr => pr.is_active || pr.final_price);
+        if (activeRule) {
+          indianPrice = Number(activeRule.final_price);
+        }
+      } else if (experience.entry_fee_base) {
+        indianPrice = Number(experience.entry_fee_base);
+      }
+
+      if (foreignerType) {
+        const activeRule = foreignerType.pricing_rules?.find(pr => pr.is_active || pr.final_price);
+        if (activeRule) {
+          foreignerPrice = Number(activeRule.final_price);
+        }
+      } else {
+        foreignerPrice = indianPrice * 23.33;
+      }
+    } else if (experience && experience.entry_fee_base) {
+      indianPrice = Number(experience.entry_fee_base);
+      foreignerPrice = indianPrice * 23.33;
+    }
+
+    return { indian: Math.round(indianPrice), foreigner: Math.round(foreignerPrice) };
+  }, [experience]);
+
+  const reviewsList = useMemo(() => {
+    if (!experience) return [];
+    if (Array.isArray(experience.reviews)) {
+      return experience.reviews;
+    }
+    if (Array.isArray(experience.reviews?.results)) {
+      return experience.reviews.results;
+    }
+    return [];
+  }, [experience]);
+
   const totalTickets = indianCount + foreignerCount;
-  const totalPrice = (indianCount * 45) + (foreignerCount * 1050);
+  const totalPrice = (indianCount * ticketPrices.indian) + (foreignerCount * ticketPrices.foreigner);
 
   const handleIndianCountChange = (delta) => {
     setIndianCount((current) => Math.max(0, current + delta));
@@ -127,7 +182,7 @@ export function ExperienceDetails() {
     }
 
     const bookingData = {
-      experience: "taj-mahal",
+      experience: experience.public_id,
       booking_date: selectedDate,
       total_tickets: parseInt(totalTickets, 10),
       slot_time: timeSlot.includes("Sunrise") ? "06:00" : "10:00",
@@ -166,22 +221,21 @@ export function ExperienceDetails() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-[#191c1d] font-['Sora'] antialiased pt-0 pb-24 lg:pb-12">
-      
-      {/* -------------------- MOBILE LAYOUT (attraction.txt) -------------------- */}
+    <div className="bg-surface-container-lowest min-h-screen w-full relative">
+      <div className="mx-auto py-16 w-full relative"></div>
       <div className="lg:hidden">
         {/* Hero Section */}
         <section className="relative w-full h-[50vh] sm:h-[60vh] min-h-[350px] overflow-hidden">
-          <img 
-            alt="Taj Mahal" 
-            className="w-full h-full object-cover" 
-            src={experience.image_url}
+          <img
+            alt={experience.name}
+            className="w-full h-full object-cover"
+            src={images[0] || experience.image_url}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-          
+
           <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
-            <button 
-              onClick={() => navigate(-1)} 
+            <button
+              onClick={() => navigate(-1)}
               className="p-2.5 bg-black/40 hover:bg-black/60 text-white rounded-full transition-all cursor-pointer"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -199,14 +253,14 @@ export function ExperienceDetails() {
                 </span>
                 <div className="flex items-center gap-1 bg-[#f9ad12] text-slate-900 px-2 py-0.5 rounded font-black text-[10px]">
                   <Star className="w-3.5 h-3.5 fill-current" />
-                  <span>4.9 (12.4k)</span>
+                  <span>{Number(experience.average_rating || 5.0).toFixed(1)} ({experience.total_reviews || 0})</span>
                 </div>
               </div>
               <h2 className="text-xl sm:text-3xl font-extrabold mb-1.5 leading-tight tracking-tight">
                 {experience.name}
               </h2>
               <p className="text-white/80 text-xs font-semibold flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-white" /> {experience.location}
+                <MapPin className="w-4 h-4 text-white" /> {experience.address || `${experience.city}, India`}
               </p>
             </div>
           </div>
@@ -222,20 +276,20 @@ export function ExperienceDetails() {
 
         {/* Main Content Area */}
         <div className="px-4 sm:px-8 py-8 space-y-8">
-          
+
           {/* Pricing cards */}
           <section id="pricing-cards-section" className="grid grid-cols-2 gap-4">
             <div className="p-5 bg-white rounded-2xl border border-[#e7e8e9] shadow-xs">
               <p className="text-xs font-semibold text-[#3b4a44] mb-1">Indian National</p>
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black text-[#006b55]">₹45</span>
+                <span className="text-2xl font-black text-[#006b55]">₹{ticketPrices.indian}</span>
                 <span className="text-[10px] text-[#636467] font-bold">/ guest</span>
               </div>
             </div>
             <div className="p-5 bg-white rounded-2xl border border-[#e7e8e9] shadow-xs">
               <p className="text-xs font-semibold text-[#3b4a44] mb-1">Foreigner</p>
               <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black text-[#006b55]">₹1,050</span>
+                <span className="text-2xl font-black text-[#006b55]">₹{ticketPrices.foreigner}</span>
                 <span className="text-[10px] text-[#636467] font-bold">/ guest</span>
               </div>
             </div>
@@ -247,25 +301,25 @@ export function ExperienceDetails() {
               <div className="w-12 h-12 rounded-full bg-[#006b55]/10 flex items-center justify-center text-[#006b55]">
                 <Clock className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-bold leading-tight text-[#3b4a44]">Free<br/>Cancellation</span>
+              <span className="text-[10px] font-bold leading-tight text-[#3b4a44]">Free<br />Cancellation</span>
             </div>
             <div className="flex flex-col items-center min-w-[75px] text-center gap-1.5">
               <div className="w-12 h-12 rounded-full bg-[#006b55]/10 flex items-center justify-center text-[#006b55]">
                 <Award className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-bold leading-tight text-[#3b4a44]">Authorized<br/>Partner</span>
+              <span className="text-[10px] font-bold leading-tight text-[#3b4a44]">Authorized<br />Partner</span>
             </div>
             <div className="flex flex-col items-center min-w-[75px] text-center gap-1.5">
               <div className="w-12 h-12 rounded-full bg-[#006b55]/10 flex items-center justify-center text-[#006b55]">
                 <Gauge className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-bold leading-tight text-[#3b4a44]">Fast-track<br/>Entry</span>
+              <span className="text-[10px] font-bold leading-tight text-[#3b4a44]">Fast-track<br />Entry</span>
             </div>
             <div className="flex flex-col items-center min-w-[75px] text-center gap-1.5">
               <div className="w-12 h-12 rounded-full bg-[#006b55]/10 flex items-center justify-center text-[#006b55]">
                 <Ticket className="w-5 h-5" />
               </div>
-              <span className="text-[10px] font-bold leading-tight text-[#3b4a44]">Mobile<br/>Tickets</span>
+              <span className="text-[10px] font-bold leading-tight text-[#3b4a44]">Mobile<br />Tickets</span>
             </div>
           </section>
 
@@ -288,25 +342,25 @@ export function ExperienceDetails() {
             </ul>
           </section>
 
-          {experience.image_sunrise && ( 
-<>
-{/* Why Sunrise Editorial */}
-          <section className="bg-[#F7F9F9] -mx-4 sm:-mx-8 px-4 sm:px-8 py-8 rounded-3xl">
-            <h3 className="text-lg font-black text-[#191c1d] mb-3">Why visit at Sunrise?</h3>
-            <p className="text-xs sm:text-sm text-[#3b4a44] leading-relaxed font-semibold mb-6">
-              Witnessing the ivory-white marble turn shades of soft pink and gold is a once-in-a-lifetime experience. At sunrise, the crowds are thinnest, the air is crisp, and the reflection in the Yamuna River is most serene.
-            </p>
-            <div className="h-64 rounded-2xl overflow-hidden shadow-xs relative">
-              <img 
-                alt="Taj Mahal Sunrise" 
-                className="w-full h-full object-cover" 
-                src={experience.image_sunrise} 
-              />
-            </div>
-          </section>
-</>
-)}
-{/* Bento Pro Tips */}
+          {experience.image_sunrise && (
+            <>
+              {/* Why Sunrise Editorial */}
+              <section className="bg-[#F7F9F9] -mx-4 sm:-mx-8 px-4 sm:px-8 py-8 rounded-3xl">
+                <h3 className="text-lg font-black text-[#191c1d] mb-3">Why visit at Sunrise?</h3>
+                <p className="text-xs sm:text-sm text-[#3b4a44] leading-relaxed font-semibold mb-6">
+                  Witnessing the ivory-white marble turn shades of soft pink and gold is a once-in-a-lifetime experience. At sunrise, the crowds are thinnest, the air is crisp, and the reflection in the Yamuna River is most serene.
+                </p>
+                <div className="h-64 rounded-2xl overflow-hidden shadow-xs relative">
+                  <img
+                    alt={`${experience.name} Sunrise`}
+                    className="w-full h-full object-cover"
+                    src={experience.image_sunrise}
+                  />
+                </div>
+              </section>
+            </>
+          )}
+          {/* Bento Pro Tips */}
           <section className="space-y-4">
             <h3 className="text-lg font-black text-[#191c1d]">Pro Tips</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -333,25 +387,31 @@ export function ExperienceDetails() {
           </section>
 
           {/* Traveler Reviews */}
-          <section className="space-y-4">
-            <h3 className="text-lg font-black text-[#191c1d]">Traveler Reviews</h3>
-            <div className="p-5 bg-white rounded-2xl border border-[#e7e8e9] shadow-xs">
-              <div className="flex justify-between items-center mb-2.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-[#e1e3e4] flex items-center justify-center text-[#006b55] font-bold text-xs uppercase">
-                    S
+          {reviewsList.length > 0 && (
+            <section className="space-y-4">
+              <h3 className="text-lg font-black text-[#191c1d]">Traveler Reviews</h3>
+              <div className="space-y-4">
+                {reviewsList.map((review) => (
+                  <div key={review.id} className="p-5 bg-white rounded-2xl border border-[#e7e8e9] shadow-xs">
+                    <div className="flex justify-between items-center mb-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-[#e1e3e4] flex items-center justify-center text-[#006b55] font-bold text-xs uppercase">
+                          {review.user_name ? review.user_name.charAt(0) : "U"}
+                        </div>
+                        <span className="text-xs font-bold text-[#191c1d]">{review.user_name}</span>
+                      </div>
+                      <div className="flex text-[#f9ad12]">
+                        {"★".repeat(review.rating || 5)}
+                      </div>
+                    </div>
+                    <p className="text-xs sm:text-sm text-[#3b4a44] leading-relaxed font-semibold">
+                      "{review.review_text}"
+                    </p>
                   </div>
-                  <span className="text-xs font-bold text-[#191c1d]">Sarah Jenkins</span>
-                </div>
-                <div className="flex text-[#f9ad12]">
-                  {"★".repeat(5)}
-                </div>
+                ))}
               </div>
-              <p className="text-xs sm:text-sm text-[#3b4a44] leading-relaxed font-semibold">
-                "Booking through this app was seamless. The QR code worked instantly at the West Gate. Sunrise was magical!"
-              </p>
-            </div>
-          </section>
+            </section>
+          )}
 
         </div>
 
@@ -359,9 +419,9 @@ export function ExperienceDetails() {
         <footer className="fixed bottom-0 left-0 w-full z-45 bg-white px-6 py-4 border-t border-[#e7e8e9] flex items-center justify-between shadow-lg">
           <div className="flex flex-col">
             <span className="text-[10px] text-[#636467] font-bold uppercase tracking-wider">Starting from</span>
-            <span className="text-xl font-extrabold text-[#006b55]">₹45</span>
+            <span className="text-xl font-extrabold text-[#006b55]">₹{ticketPrices.indian}</span>
           </div>
-          <button 
+          <button
             onClick={togglePicker}
             className="bg-[#006b55] hover:brightness-110 text-white px-10 py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all cursor-pointer"
           >
@@ -370,23 +430,21 @@ export function ExperienceDetails() {
         </footer>
 
         {/* Mobile Bottom Sheet Date & Guest Picker Modal */}
-        <div 
+        <div
           onClick={togglePicker}
-          className={`fixed inset-0 bg-black/40 z-50 transition-opacity duration-300 ${
-            showDatePicker ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-          }`}
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            className={`absolute bottom-0 left-0 w-full bg-white rounded-t-[32px] p-6 sm:p-8 transition-transform duration-300 shadow-2xl ${
-              showDatePicker ? "translate-y-0" : "translate-y-full"
+          className={`fixed inset-0 bg-black/40 z-50 transition-opacity duration-300 ${showDatePicker ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
             }`}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`absolute bottom-0 left-0 w-full bg-white rounded-t-[32px] p-6 sm:p-8 transition-transform duration-300 shadow-2xl ${showDatePicker ? "translate-y-0" : "translate-y-full"
+              }`}
           >
             <div className="w-12 h-1.5 bg-[#e5e2e3] rounded-full mx-auto mb-6"></div>
             <h4 className="text-lg font-black text-center mb-6 text-[#191c1d]">Plan your visit</h4>
-            
+
             <div className="space-y-6">
-              
+
               {/* Date selection inside sheet */}
               <div className="space-y-3">
                 <p className="text-xs font-bold text-[#3b4a44]">Select Date</p>
@@ -397,11 +455,10 @@ export function ExperienceDetails() {
                       <button
                         key={date.iso}
                         onClick={() => setSelectedDateIndex(index)}
-                        className={`flex flex-col items-center justify-center min-w-[70px] h-20 rounded-2xl border transition-colors cursor-pointer ${
-                          isSelected 
-                            ? "border-[#006b55] bg-[#006b55]/5 text-[#006b55] font-bold" 
-                            : "border-[#e7e8e9] hover:border-[#006b55]"
-                        }`}
+                        className={`flex flex-col items-center justify-center min-w-[70px] h-20 rounded-2xl border transition-colors cursor-pointer ${isSelected
+                          ? "border-[#006b55] bg-[#006b55]/5 text-[#006b55] font-bold"
+                          : "border-[#e7e8e9] hover:border-[#006b55]"
+                          }`}
                       >
                         <span className="text-[8px] font-black">{date.month}</span>
                         <span className="text-xl font-extrabold my-0.5">{date.day}</span>
@@ -415,21 +472,21 @@ export function ExperienceDetails() {
               {/* Guest adjusters inside sheet */}
               <div className="space-y-3">
                 <p className="text-xs font-bold text-[#3b4a44]">Guests</p>
-                
+
                 <div className="p-4 border border-[#e7e8e9] rounded-2xl flex items-center justify-between">
                   <div>
                     <p className="font-bold text-xs sm:text-sm text-[#191c1d]">Indian National</p>
-                    <p className="text-[10px] text-[#636467] font-semibold">Adults (15+ years) • ₹45</p>
+                    <p className="text-[10px] text-[#636467] font-semibold">Adults (15+ years) • ₹{ticketPrices.indian}</p>
                   </div>
                   <div className="flex items-center gap-4">
-                    <button 
+                    <button
                       onClick={() => handleIndianCountChange(-1)}
                       className="w-8 h-8 rounded-full border border-[#bdc9c3] flex items-center justify-center text-[#636467] hover:bg-slate-50 cursor-pointer active:scale-90"
                     >
                       -
                     </button>
                     <span className="font-extrabold text-sm text-[#191c1d] w-3 text-center">{indianCount}</span>
-                    <button 
+                    <button
                       onClick={() => handleIndianCountChange(1)}
                       className="w-8 h-8 rounded-full border border-[#006b55] text-[#006b55] flex items-center justify-center hover:bg-[#006b55]/5 cursor-pointer active:scale-90"
                     >
@@ -441,17 +498,17 @@ export function ExperienceDetails() {
                 <div className="p-4 border border-[#e7e8e9] rounded-2xl flex items-center justify-between">
                   <div>
                     <p className="font-bold text-xs sm:text-sm text-[#191c1d]">Foreigner</p>
-                    <p className="text-[10px] text-[#636467] font-semibold">Adults (15+ years) • ₹1,050</p>
+                    <p className="text-[10px] text-[#636467] font-semibold">Adults (15+ years) • ₹{ticketPrices.foreigner}</p>
                   </div>
                   <div className="flex items-center gap-4">
-                    <button 
+                    <button
                       onClick={() => handleForeignerCountChange(-1)}
                       className="w-8 h-8 rounded-full border border-[#bdc9c3] flex items-center justify-center text-[#636467] hover:bg-slate-50 cursor-pointer active:scale-90"
                     >
                       -
                     </button>
                     <span className="font-extrabold text-sm text-[#191c1d] w-3 text-center">{foreignerCount}</span>
-                    <button 
+                    <button
                       onClick={() => handleForeignerCountChange(1)}
                       className="w-8 h-8 rounded-full border border-[#006b55] text-[#006b55] flex items-center justify-center hover:bg-[#006b55]/5 cursor-pointer active:scale-90"
                     >
@@ -462,13 +519,13 @@ export function ExperienceDetails() {
 
               </div>
 
-              <button 
+              <button
                 onClick={handleBuyNow}
                 className="w-full bg-[#006b55] hover:brightness-110 text-white py-4 rounded-xl font-bold text-sm mt-4 shadow-md active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
                 Proceed to Payment • ₹{totalPrice}
               </button>
-              
+
             </div>
           </div>
         </div>
@@ -476,24 +533,28 @@ export function ExperienceDetails() {
 
       {/* -------------------- DESKTOP LAYOUT (attr-desc.txt) -------------------- */}
       <div className="hidden lg:block max-w-[1280px] mx-auto px-6 py-8">
-        
+
         {/* Breadcrumb & Title Section */}
         <div className="mb-8">
           <nav className="flex gap-1.5 text-[#3b4a44] font-semibold text-xs mb-2 uppercase tracking-wider">
             <Link className="hover:text-[#006b55] transition-colors" to="/">India</Link>
             <span>/</span>
-            <Link className="hover:text-[#006b55] transition-colors" to="/cities">Agra</Link>
-            <span>/</span>
-            <span className="text-[#191c1d] font-bold">Taj Mahal</span>
+            {experience.city && (
+              <>
+                <Link className="hover:text-[#006b55] transition-colors" to={`/city/${experience.city.toLowerCase().replace(/\s+/g, '-')}`}>{experience.city}</Link>
+                <span>/</span>
+              </>
+            )}
+            <span className="text-[#191c1d] font-bold">{experience.name}</span>
           </nav>
-          
+
           <div className="flex justify-between items-end gap-6">
             <div>
               <h1 className="text-3xl font-extrabold text-[#191c1d] mb-1.5">{experience.name}</h1>
               <div className="flex items-center gap-4 text-[#3b4a44] text-sm font-semibold">
                 <span className="flex items-center gap-1">
                   <MapPin className="w-4 h-4 text-[#006b55]" />
-                  Agra, Uttar Pradesh
+                  {experience.address || `${experience.city}, India`}
                 </span>
                 <span className="w-1.5 h-1.5 bg-[#bdc9c3] rounded-full"></span>
                 <span className="flex items-center gap-1 text-[#006b55] font-extrabold">
@@ -502,45 +563,47 @@ export function ExperienceDetails() {
                 </span>
               </div>
             </div>
-            
-            <div className="flex items-center gap-2 bg-[#e1e3e4] px-4 py-2 rounded-full">
-              <div className="flex items-center text-[#f9ad12]">
-                <Star className="w-4 h-4 fill-current" />
-                <span className="text-sm font-bold text-[#191c1d] ml-1">4.9</span>
+
+            {experience.average_rating && (
+              <div className="flex items-center gap-2 bg-[#e1e3e4] px-4 py-2 rounded-full">
+                <div className="flex items-center text-[#f9ad12]">
+                  <Star className="w-4 h-4 fill-current" />
+                  <span className="text-sm font-bold text-[#191c1d] ml-1">{Number(experience.average_rating).toFixed(1)}</span>
+                </div>
+                <span className="text-[#3b4a44] text-xs font-semibold">({experience.total_reviews} Reviews)</span>
               </div>
-              <span className="text-[#3b4a44] text-xs font-semibold">(12.4k+ Reviews)</span>
-            </div>
+            )}
           </div>
         </div>
 
         {/* 3-Column Split Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
-          
+
           {/* Left Columns (Content) */}
           <div className="lg:col-span-2 space-y-8">
-            
+
             {/* Immersive Gallery */}
             <section className="grid grid-cols-12 grid-rows-2 gap-4 h-[500px]">
               <div className="col-span-8 row-span-2 relative overflow-hidden rounded-2xl group cursor-pointer border border-[#e7e8e9]">
-                <img 
-                  alt="Taj Mahal Hero" 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-102" 
-                  src={experience.image_url} 
+                <img
+                  alt={experience.name}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-102"
+                  src={images[0] || experience.image_url}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
               <div className="col-span-4 row-span-1 overflow-hidden rounded-2xl group cursor-pointer border border-[#e7e8e9]">
-                <img 
-                  alt="Taj Mahal Detail" 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                  src={experience.image_detail} 
+                <img
+                  alt={experience.name}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  src={images[1] || images[0] || experience.image_url}
                 />
               </div>
               <div className="col-span-4 row-span-1 relative overflow-hidden rounded-2xl group cursor-pointer border border-[#e7e8e9]">
-                <img 
-                  alt="Taj Mahal Gardens" 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-                  src={experience.image_gardens} 
+                <img
+                  alt={experience.name}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  src={images[2] || images[0] || experience.image_url}
                 />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <span className="text-white text-xs font-black border border-white px-4 py-2 rounded-lg">View All Photos</span>
@@ -583,39 +646,39 @@ export function ExperienceDetails() {
               </ul>
             </section>
 
-            {experience.image_sunrise && ( 
-<>
-{/* Why Visit at Sunrise */}
-            <section className="py-4">
-              <div className="flex flex-col md:flex-row gap-8 items-center">
-                <div className="md:w-1/2 space-y-4">
-                  <h2 className="text-lg font-black text-[#191c1d]">Why Visit at Sunrise?</h2>
-                  <p className="text-sm text-[#3b4a44] font-semibold leading-relaxed">
-                    Witnessing the Taj Mahal at dawn is a spiritual experience. As the first rays of the sun hit the semi-translucent white marble, the monument transforms from a soft grey-blue to a vibrant, glowing gold. This "Editorial Hour" offers the best photography light and significantly thinner crowds, allowing for a moment of quiet contemplation in the shadow of eternal love.
-                  </p>
-                  <div className="flex gap-4 pt-2">
-                    <div className="bg-[#F7F9F9] p-4 rounded-xl border border-[#e7e8e9] flex-1">
-                      <span className="block text-xl font-black text-[#006b55] mb-1">05:30</span>
-                      <span className="text-[10px] text-[#3b4a44] font-bold">Recommended Arrival</span>
+            {experience.image_sunrise && (
+              <>
+                {/* Why Visit at Sunrise */}
+                <section className="py-4">
+                  <div className="flex flex-col md:flex-row gap-8 items-center">
+                    <div className="md:w-1/2 space-y-4">
+                      <h2 className="text-lg font-black text-[#191c1d]">Why Visit at Sunrise?</h2>
+                      <p className="text-sm text-[#3b4a44] font-semibold leading-relaxed">
+                        Witnessing the Taj Mahal at dawn is a spiritual experience. As the first rays of the sun hit the semi-translucent white marble, the monument transforms from a soft grey-blue to a vibrant, glowing gold. This "Editorial Hour" offers the best photography light and significantly thinner crowds, allowing for a moment of quiet contemplation in the shadow of eternal love.
+                      </p>
+                      <div className="flex gap-4 pt-2">
+                        <div className="bg-[#F7F9F9] p-4 rounded-xl border border-[#e7e8e9] flex-1">
+                          <span className="block text-xl font-black text-[#006b55] mb-1">05:30</span>
+                          <span className="text-[10px] text-[#3b4a44] font-bold">Recommended Arrival</span>
+                        </div>
+                        <div className="bg-[#F7F9F9] p-4 rounded-xl border border-[#e7e8e9] flex-1">
+                          <span className="block text-xl font-black text-[#006b55] mb-1">85%</span>
+                          <span className="text-[10px] text-[#3b4a44] font-bold">Fewer Crowds</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="bg-[#F7F9F9] p-4 rounded-xl border border-[#e7e8e9] flex-1">
-                      <span className="block text-xl font-black text-[#006b55] mb-1">85%</span>
-                      <span className="text-[10px] text-[#3b4a44] font-bold">Fewer Crowds</span>
+                    <div className="md:w-1/2">
+                      <img
+                        alt="Sunrise at Taj"
+                        className="rounded-2xl border border-[#e7e8e9] shadow-sm w-full h-[280px] object-cover"
+                        src={experience.image_sunrise}
+                      />
                     </div>
                   </div>
-                </div>
-                <div className="md:w-1/2">
-                  <img 
-                    alt="Sunrise at Taj" 
-                    className="rounded-2xl border border-[#e7e8e9] shadow-sm w-full h-[280px] object-cover" 
-                    src={experience.image_sunrise} 
-                  />
-                </div>
-              </div>
-            </section>
-</>
-)}
-{/* Pro Tips Section */}
+                </section>
+              </>
+            )}
+            {/* Pro Tips Section */}
             <section className="space-y-6">
               <h2 className="text-lg font-black text-[#191c1d]">Pro Tips for Your Visit</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -638,36 +701,45 @@ export function ExperienceDetails() {
             </section>
 
             {/* Traveler Reviews */}
-            <section className="border-t border-[#e7e8e9] pt-8 space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-black text-[#191c1d]">Traveler Reviews</h2>
-                <button className="text-[#006b55] font-extrabold text-xs hover:underline">Read All 12k+ Reviews</button>
-              </div>
-              <div className="p-5 rounded-2xl bg-[#f6f3f4] border border-[#e7e8e9]">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#8ef6d8] flex items-center justify-center font-black text-xs text-[#002019]">AM</div>
-                    <div>
-                      <p className="text-xs font-black text-[#191c1d]">Arjun Mehta</p>
-                      <p className="text-[10px] text-[#3b4a44] font-bold">October 2025 • Verified Guest</p>
-                    </div>
-                  </div>
-                  <div className="flex text-[#f9ad12]">
-                    {"★".repeat(5)}
-                  </div>
+            {reviewsList.length > 0 && (
+              <section className="border-t border-[#e7e8e9] pt-8 space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-black text-[#191c1d]">Traveler Reviews</h2>
                 </div>
-                <p className="text-xs sm:text-sm text-[#191c1d] font-semibold italic leading-relaxed">
-                  "The skip-the-line ticket was a lifesaver. We entered via the West gate at 5:45 AM and were inside before the big rush. Seeing the marble change colors is something I'll never forget."
-                </p>
-              </div>
-            </section>
+                <div className="space-y-4">
+                  {reviewsList.map((review) => (
+                    <div key={review.id} className="p-5 rounded-2xl bg-[#f6f3f4] border border-[#e7e8e9]">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-[#8ef6d8] flex items-center justify-center font-black text-xs text-[#002019]">
+                            {review.user_name ? review.user_name.slice(0, 2).toUpperCase() : "US"}
+                          </div>
+                          <div>
+                            <p className="text-xs font-black text-[#191c1d]">{review.user_name}</p>
+                            <p className="text-[10px] text-[#3b4a44] font-bold">
+                              {review.created_at ? new Date(review.created_at).toLocaleDateString("en-US", { month: 'long', year: 'numeric' }) : "Verified Guest"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex text-[#f9ad12]">
+                          {"★".repeat(review.rating || 5)}
+                        </div>
+                      </div>
+                      <p className="text-xs sm:text-sm text-[#191c1d] font-semibold italic leading-relaxed">
+                        "{review.review_text}"
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
           </div>
 
           {/* Right Column: Sticky Booking Widget */}
           <div className="lg:col-span-1">
             <div className="sticky top-28 bg-white border border-[#e7e8e9] rounded-2xl p-5 shadow-sm space-y-4">
-              
+
               {/* Urgency Banner */}
               <div className="bg-[#ffdad6] text-[#93000a] px-3 py-2 rounded-lg flex items-center gap-2">
                 <Flame className="w-4 h-4 animate-pulse shrink-0" />
@@ -676,7 +748,7 @@ export function ExperienceDetails() {
 
               {/* Price display */}
               <div className="flex items-baseline gap-1">
-                <h2 className="text-2xl font-black text-[#006b55]">₹{totalPrice > 0 ? totalPrice : 45}</h2>
+                <h2 className="text-2xl font-black text-[#006b55]">₹{totalPrice > 0 ? totalPrice : ticketPrices.indian}</h2>
                 <span className="text-xs text-[#3b4a44] font-semibold">/{totalTickets > 0 ? `${totalTickets} traveler${totalTickets > 1 ? 's' : ''}` : 'person'}</span>
               </div>
 
@@ -686,7 +758,7 @@ export function ExperienceDetails() {
                 <div className="flex items-center justify-between px-4 py-3 border-b border-[#e7e8e9]">
                   <div>
                     <p className="text-xs font-black text-[#191c1d]">Indian National</p>
-                    <p className="text-[10px] text-[#006b55] font-bold">₹45 / person</p>
+                    <p className="text-[10px] text-[#006b55] font-bold">₹{ticketPrices.indian} / person</p>
                   </div>
                   <div className="flex items-center gap-2.5">
                     <button
@@ -704,7 +776,7 @@ export function ExperienceDetails() {
                 <div className="flex items-center justify-between px-4 py-3">
                   <div>
                     <p className="text-xs font-black text-[#191c1d]">Foreigner</p>
-                    <p className="text-[10px] text-[#006b55] font-bold">₹1,050 / person</p>
+                    <p className="text-[10px] text-[#006b55] font-bold">₹{ticketPrices.foreigner} / person</p>
                   </div>
                   <div className="flex items-center gap-2.5">
                     <button
@@ -724,17 +796,17 @@ export function ExperienceDetails() {
               <div className="space-y-3">
                 <div>
                   <label className="block text-[10px] font-bold text-[#3b4a44] uppercase tracking-wider mb-1">Date</label>
-                  <input 
+                  <input
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
                     min={new Date().toISOString().split("T")[0]}
-                    className="w-full h-10 px-3 border border-[#e7e8e9] rounded-xl focus:ring-2 focus:ring-[#006b55] focus:border-[#006b55] focus:outline-none transition-all text-xs font-semibold bg-white" 
+                    className="w-full h-10 px-3 border border-[#e7e8e9] rounded-xl focus:ring-2 focus:ring-[#006b55] focus:border-[#006b55] focus:outline-none transition-all text-xs font-semibold bg-white"
                     type="date"
                   />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-[#3b4a44] uppercase tracking-wider mb-1">Time Slot</label>
-                  <select 
+                  <select
                     value={timeSlot}
                     onChange={(e) => setTimeSlot(e.target.value)}
                     className="w-full h-10 px-3 border border-[#e7e8e9] rounded-xl focus:ring-2 focus:ring-[#006b55] focus:border-[#006b55] focus:outline-none transition-all text-xs font-semibold bg-white appearance-none"
@@ -748,7 +820,7 @@ export function ExperienceDetails() {
               </div>
 
               {/* Book Now CTA */}
-              <button 
+              <button
                 onClick={handleBuyNow}
                 disabled={!experience.is_open}
                 className="w-full py-3.5 bg-[#006b55] hover:brightness-110 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed"
@@ -756,14 +828,10 @@ export function ExperienceDetails() {
                 Book Now
                 <ArrowRight className="w-4 h-4" />
               </button>
-
             </div>
           </div>
-
         </div>
-
       </div>
-
     </div>
   );
 }
