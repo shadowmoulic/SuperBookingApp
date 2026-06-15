@@ -1,132 +1,197 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import api from '../api/api';
-import { ArrowRight, MapPin } from 'lucide-react';
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, MapPin, Search } from "lucide-react";
+import api from "../api/api";
 
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&q=80&w=1200";
 
-const CITIES_LIST = [
-  { id: 'jaipur', name: 'Jaipur', desc: 'The Pink City', img: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=400&q=80', attractions: '34+' },
-  { id: 'delhi', name: 'Delhi', desc: 'Historic Capital', img: 'https://www.mistay.in/travel-blog/content/images/size/w2000/2020/06/cover-10.jpg', attractions: '24+' },
-  { id: 'agra', name: 'Agra', desc: 'Mughal Capital', img: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=400&q=80', attractions: '8+' },
-  { id: 'kolkata', name: 'Kolkata', desc: 'Cultural Center', img: 'https://www.oberoihotels.com/-/media/oberoi-hotel/kolkata_8-aug-24/destination/banner1920x980.jpg', attractions: '28+' },
-  { id: 'hyderabad', name: 'Hyderabad', desc: 'Nizam City', img: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/0f/98/f7/df/charminar.jpg?w=400&h=-1&s=1', attractions: '12+' },
-  { id: 'hampi', name: 'Hampi', desc: 'Kingdom of Ruins', img: 'https://www.hampitrip.com/_next/image?url=https%3A%2F%2Fstorage.hampitrip.com%2Fhampitrip%2Fhampi%2Fhampi03.webp&w=400&q=80', attractions: '100+' },
-  { id: 'varanasi', name: 'Varanasi', desc: 'Spiritual Capital', img: 'https://theorionhotels.com/_next/image?url=https%3A%2F%2Fassets.theasar.com%2Fblogs%2F1768561498185_top_10_places_to_visit_in_varanasi.webp&w=400&q=75', attractions: '23,000+' },
-  { id: 'bengaluru', name: 'Bengaluru', desc: 'The Garden City & Tech Hub', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBM0YhSFCqt7pHdlhWdWulztaoR4Bkj8_DAr26U-sjovfH6jPaoAR0uhWrwiBZJyh4b6hrx7-VsjyxnEDw7NdSqhoY5wT95TodIYHVsBw2iyNb92z3_nWfDMf70UPS2vlpHDjdhCucOWbYK84JelRaHHZp4JZhPdmK7SRuA-R-Ccqjp0YtGJ0BmIm8N189tl5X7mT3XkClFPITKq9VaWfPdTSur6n5fQ1qasPCbhEI7SkFVMQhF-lD14aQzD1dYYH1K5752xE-TgvVC', attractions: '42+' },
-  { id: 'mysuru', name: 'Mysuru', desc: 'Cultural Capital', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDUWr1VixdRFBUoWNkt-9qlhO8zMrAu1DO_9OHRL0b3R6xKovPbm8GgJ4RXpl3VsI_xSyhn1Ru6aFUSrYeRslDk17X3PjNfodCuWPFkp0rji6xPjFhSlQwVNLi5zh__FhCD-GsqTRx0KjwrNZbrJuVLQLuwuxeDmC1hVr2fxUJb1u19_bR2w4z8oT-2ljMFGkYdNqxW0ez_3Zxc6_p3jBHI02YRpHNckoCFk9AXBkNVKawjAm8CZzezGFY_qwwnl-Vhc9I3xgq9WwNL', attractions: '28+' },
-  { id: 'coorg', name: 'Coorg', desc: 'Scotland of India', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBI7R8NDTqXe-H1gA1BSOh6X_8ZjIO-xCjHApxE3fcDxTNbg6gfTUyc5fTjKgvuhnBWrl745JtVbsk-daLYJ8jqGoKJ6nM9rG9ePZAPB_u1AN5CFRD8EzGoZ4s0wle7bszBLgPru6tKEkaK9TVbO8Jp_wh_8AHcYCKjGNctQBX5cTf78Ul6efqEI9udVpBCihdF-E6FiD05dyn5LepCXHlhuB0NTkfMlHQMHhucktZHFJNmQHRk6Ayc3ZzqUm5Db54ETyvC-ketZ5LA', attractions: '20+' },
-  { id: 'udaipur', name: 'Udaipur', desc: 'City of Lakes', img: 'https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?auto=format&fit=crop&w=400&q=80', attractions: '18+' },
-  { id: 'jodhpur', name: 'Jodhpur', desc: 'The Blue City', img: 'https://images.unsplash.com/photo-1562158074-d021c172ee18?auto=format&fit=crop&w=400&q=80', attractions: '22+' },
-  { id: 'jaisalmer', name: 'Jaisalmer', desc: 'The Golden City', img: 'https://images.unsplash.com/photo-1603262110263-fb0112e7cc33?auto=format&fit=crop&w=400&q=80', attractions: '15+' },
-  { id: 'kochi', name: 'Kochi', desc: 'Queen of the Arabian Sea', img: 'https://images.unsplash.com/photo-1589308078059-be1415eab4c3?auto=format&fit=crop&w=400&q=80', attractions: '24+' },
-  { id: 'munnar', name: 'Munnar', desc: 'Hill Station & Tea Gardens', img: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&w=400&q=80', attractions: '16+' },
-  { id: 'alleppey', name: 'Alleppey', desc: 'Venice of the East', img: 'https://images.unsplash.com/photo-1593693411515-c202e974fe08?auto=format&fit=crop&w=400&q=80', attractions: '12+' },
-  { id: 'wayanad', name: 'Wayanad', desc: 'Land of Paddy Fields', img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=400&q=80', attractions: '14+' }
-];
+const fetchAllPages = async (initialUrl) => {
+  let url = initialUrl;
+  const items = [];
+
+  while (url) {
+    const response = await api.get(url);
+    const data = response.data;
+
+    if (Array.isArray(data)) {
+      items.push(...data);
+      break;
+    }
+
+    if (Array.isArray(data?.results)) {
+      items.push(...data.results);
+      url = data.next;
+      continue;
+    }
+
+    break;
+  }
+
+  return items;
+};
+
+const normalizeSlug = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
 
 const CityIndex = () => {
-  const navigate = useNavigate();
   const [cities, setCities] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-
-  const fetchCities = async () => {
-    setLoading(true);
-    try {
-      let allCities = [];
-      let url = "/api/cities/";
-      while (url) {
-        const res = await api.get(url);
-        if (Array.isArray(res.data)) {
-          allCities = [...allCities, ...res.data];
-          url = null;
-        } else if (Array.isArray(res.data?.results)) {
-          allCities = [...allCities, ...res.data.results];
-          url = res.data.next;
-        } else {
-          url = null;
-        }
-      }
-      setCities(allCities);
-      setError(null);
-    } catch (err) {
-      setError(err.message || 'Something went wrong');
-      console.error('Error fetching locations:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchCities();
+    const loadCities = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const items = await fetchAllPages("/api/cities/");
+        setCities(items);
+      } catch (err) {
+        setError(err?.message || "Failed to load cities.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCities();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="max-w-[1280px] mx-auto px-6 md:px-12 py-10 w-full relative min-h-[400px] flex flex-col items-center justify-center">
-        <div className="flex items-center gap-2 text-primary font-['Hanken_Grotesk'] text-sm font-bold uppercase tracking-[0.15em]">
-          <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
-          Loading Cities...
-        </div>
-      </div>
-    );
-  }
+  const filteredCities = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return cities;
 
-  if (error) {
-    return (
-      <div className="max-w-[1280px] mx-auto px-6 md:px-12 py-10 w-full relative min-h-[400px] flex flex-col items-center justify-center text-error font-['Inter'] text-center px-6">
-        <span className="material-symbols-outlined text-4xl mb-3 select-none">error</span>
-        <p className="text-sm font-semibold">Failed to load cities: {error}</p>
-        <button
-          onClick={fetchCities}
-          className="mt-4 px-5 py-2 bg-primary text-on-primary rounded-lg text-xs font-semibold hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-sm"
-        >
-          Retry Loading
-        </button>
-      </div>
-    );
-  }
+    return cities.filter((city) => {
+      return [city.name, city.slug, city.state, city["best-time"], city.best_time]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query));
+    });
+  }, [searchQuery, cities]);
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 pb-16 px-4 sm:px-6 lg:px-8 font-['Sora']">
-      <div className="max-w-[1280px] mx-auto">
-        <h1 className="text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">Explore India's Heritage Cities</h1>
-        <p className="text-slate-600 mb-12 max-w-2xl text-base leading-relaxed">
-          From ancient spiritual ghats to majestic desert fortresses and verdant hill stations, discover incredible locales brimming with architecture and history.
-        </p>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(19,107,85,0.12),_transparent_38%),linear-gradient(180deg,_#f8fafc_0%,_#f0f7fb_100%)] text-slate-900">
+      <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 lg:px-8">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.06),transparent_60%)]" />
+        <div className="relative mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-white/80 px-4 py-2 text-[11px] font-black uppercase tracking-[0.26em] text-sky-700 shadow-sm backdrop-blur-md">
+              <MapPin className="h-4 w-4" />
+              City Directory
+            </div>
+            <h1 className="mt-6 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+              Explore India city by city.
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+              Browse the backend city catalog with state context, experience counts, and quick jumps into destination detail pages.
+            </p>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {cities.map((city) => (
-            <div
-              key={city.public_id}
-              onClick={() => navigate(`/${city.slug || city.name.toLowerCase()}`)}
-              className="bg-white rounded-3xl overflow-hidden shadow-[0px_8px_16px_rgba(0,0,0,0.03)] border border-slate-100 hover:shadow-xl hover:scale-[1.01] transition-all cursor-pointer group flex flex-col justify-between"
-            >
-              <div className="h-44 bg-slate-100 relative overflow-hidden">
-                <img
-                  src={city.image_url || city.icon_url || "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=400&q=80"}
-                  alt={city.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            <div className="mt-8 max-w-2xl rounded-2xl bg-white p-2 shadow-xl shadow-slate-900/5 ring-1 ring-slate-200/70">
+              <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3">
+                <Search className="h-5 w-5 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search cities by name, state, or best time"
+                  className="w-full bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent z-10" />
-                <span className="absolute top-3 left-3 bg-white/95 text-slate-900 text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full shadow-sm flex items-center gap-1">
-                  <MapPin className="w-2.5 h-2.5 text-[#006955]" />
-                  {city.experience_count} Sites
-                </span>
-                <div className="absolute bottom-3 left-4 z-20">
-                  <h3 className="text-white text-lg font-bold">{city.name}</h3>
-                </div>
-              </div>
-              <div className="p-4 flex items-center justify-between">
-                <p className="text-slate-500 text-xs truncate max-w-[150px] font-semibold">{city.state || "India"}</p>
-                <div className="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-[#006955] transition-colors">
-                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-all" />
-                </div>
               </div>
             </div>
-          ))}
+          </div>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
+        {loading ? (
+          <div className="rounded-3xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-sky-100 border-t-[#136b55]" />
+            <p className="mt-4 text-sm font-semibold text-slate-500">Loading cities...</p>
+          </div>
+        ) : error ? (
+          <div className="rounded-3xl border border-red-200 bg-white px-6 py-16 text-center shadow-sm">
+            <p className="text-sm font-semibold text-red-600">Failed to load cities: {error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 rounded-full bg-[#136b55] px-5 py-2 text-xs font-bold text-white transition-colors hover:bg-[#0c4c3b]"
+            >
+              Retry Loading
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {filteredCities.map((city) => {
+                const citySlug = city.slug || normalizeSlug(city.name);
+                const cityHref = `/city/${citySlug}`;
+                const experienceCount = city.experience_count ?? 0;
+                const bestTime = city["best-time"] || city.best_time || "Year round";
+
+                return (
+                  <Link
+                    key={city.public_id || citySlug}
+                    to={cityHref}
+                    className="group overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                  >
+                    <div className="relative h-72 overflow-hidden">
+                      <img
+                        src={city.image_url || city.icon_url || FALLBACK_IMAGE}
+                        alt={city.name}
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/35 to-transparent" />
+                      <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-900 backdrop-blur-md">
+                        <MapPin className="h-3.5 w-3.5 text-[#136b55]" />
+                        {experienceCount} Experiences
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+                        <p className="text-xs font-bold uppercase tracking-[0.26em] text-cyan-100/90">
+                          {city.state || "India"}
+                        </p>
+                        <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{city.name}</h2>
+                      </div>
+                    </div>
+
+                    <div className="p-5 sm:p-6">
+                      <p className="text-sm leading-7 text-slate-600 line-clamp-2">
+                        {city.description || "Discover city-level experiences curated from the backend catalog."}
+                      </p>
+                      <div className="mt-5 flex items-center justify-between">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-slate-400">
+                            Best time to visit
+                          </p>
+                          <p className="mt-1 text-sm font-bold text-slate-900">{bestTime}</p>
+                        </div>
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-colors group-hover:bg-slate-950 group-hover:text-white">
+                          <ArrowRight className="h-4 w-4" />
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {filteredCities.length === 0 && (
+              <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
+                <Search className="mx-auto h-12 w-12 text-slate-300" />
+                <h3 className="mt-4 text-lg font-bold text-slate-900">No cities found</h3>
+                <p className="mt-2 text-sm text-slate-500">Try a different search term.</p>
+              </div>
+            )}
+          </>
+        )}
+      </section>
+
+      <div className="mx-auto flex max-w-7xl justify-end px-4 pb-8 sm:px-6 lg:px-8">
+        <Link to="/state" className="text-sm font-semibold text-slate-500 transition-colors hover:text-[#136b55]">
+          View states instead
+        </Link>
       </div>
     </div>
   );

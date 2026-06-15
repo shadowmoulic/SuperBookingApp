@@ -1,12 +1,12 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useContext, useState } from "react";
 import AuthContext from "../context/AuthContext";
 import ModalContext from "../context/ModalContext";
 import { Search, Menu, X } from "lucide-react";
 
 const NAV_LINKS = [
-    { label: "Explore", href: "/states" },
-    { label: "Cities", href: "/cities" },
+    { label: "Explore", href: "/state" },
+    { label: "Cities", href: "/city" },
     { label: "Heritage Trails", href: "/trails" },
     { label: "Trip Planner", href: "/itineraries" },
     { label: "Nearby", href: "/explore-near-me" },
@@ -15,7 +15,6 @@ const NAV_LINKS = [
 function Navbar() {
     const { user, logout } = useContext(AuthContext);
     const { openLoginModal } = useContext(ModalContext);
-    const location = useLocation();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");

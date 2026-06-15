@@ -1,240 +1,219 @@
-import React, { useState } from 'react';
-import { Search, MapPin, Calendar, ArrowRight, ChevronDown, ChevronUp, Star } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Calendar, MapPin, Search } from "lucide-react";
+import api from "../api/api";
 
-const INDIAN_STATES = [
-  {
-    id: 'karnataka',
-    name: 'Karnataka',
-    tagline: 'Heritage & Discovery',
-    bestMonth: 'Oct - Mar',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCGMiZYYBKKncNnPXHKiGVIEYqAvLNnfFH8kCTUlVeiS_-DCZ-ME5caatacmFnLLgcT6Q4O7u95xXZZuoXkGrQkeGgx9SnC4ulWpAE2h40oZXCcQSmzAPXVUurjJQr2kfCM8-IAuLwj6lvmaqa1zv6bgRbhjFHsry9twwfjGyPlDsY7QJWJef-eq-lHy2qjW8I2YB2Q3ghNi9Gt4eH2lFd0TQBRrRd4fmByvrYv1SWAwtXzrLYem9cCslN87N5eC-A4H7Ne3fopjBhn',
-    attractionsCount: 120
-  },
-  {
-    id: 'rajasthan',
-    name: 'Rajasthan',
-    tagline: 'Land of Kings',
-    bestMonth: 'Oct - Mar',
-    img: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&q=80&w=800',
-    attractionsCount: 142
-  },
-  {
-    id: 'kerala',
-    name: 'Kerala',
-    tagline: 'God\'s Own Country',
-    bestMonth: 'Sep - Mar',
-    img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&q=80&w=800',
-    attractionsCount: 89
-  },
-  {
-    id: 'maharashtra',
-    name: 'Maharashtra',
-    tagline: 'Gateway to the Heart of India',
-    bestMonth: 'Oct - Mar',
-    img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&q=80&w=800',
-    attractionsCount: 215
-  },
-  {
-    id: 'himachal',
-    name: 'Himachal Pradesh',
-    tagline: 'Abode of Snow',
-    bestMonth: 'Mar - Jun',
-    img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&q=80&w=800',
-    attractionsCount: 112
-  },
-  {
-    id: 'goa',
-    name: 'Goa',
-    tagline: 'Pearl of the Orient',
-    bestMonth: 'Nov - Feb',
-    img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&q=80&w=800',
-    attractionsCount: 45
-  },
-  {
-    id: 'tamilnadu',
-    name: 'Tamil Nadu',
-    tagline: 'Where Stories Never End',
-    bestMonth: 'Nov - Feb',
-    img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&q=80&w=800',
-    attractionsCount: 178
-  }
-];
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&q=80&w=1200";
 
-const FAQS = [
-  {
-    question: "When is the best time to visit India?",
-    answer: "The best time to visit most of India is during the winter months (October to March) when the weather is cool and dry. However, the Himalayas are best visited during summer (April to June), and the monsoon season (July to September) offers lush green landscapes in regions like Kerala and Goa."
-  },
-  {
-    question: "Do I need to book heritage monuments in advance?",
-    answer: "While many monuments offer on-the-spot tickets, we highly recommend booking in advance through ZeQue. This allows you to skip the long queues, especially at UNESCO World Heritage sites like the Taj Mahal, Amer Fort, and Qutub Minar during peak tourist season."
-  },
-  {
-    question: "Which states have the most UNESCO World Heritage Sites?",
-    answer: "Maharashtra leads with the highest number of UNESCO World Heritage Sites, including the Ajanta and Ellora Caves. It is closely followed by Rajasthan (Hill Forts), Delhi, and Uttar Pradesh (Taj Mahal, Agra Fort, Fatehpur Sikri)."
+const fetchAllPages = async (initialUrl) => {
+  let url = initialUrl;
+  const items = [];
+
+  while (url) {
+    const response = await api.get(url);
+    const data = response.data;
+
+    if (Array.isArray(data)) {
+      items.push(...data);
+      break;
+    }
+
+    if (Array.isArray(data?.results)) {
+      items.push(...data.results);
+      url = data.next;
+      continue;
+    }
+
+    break;
   }
-];
+
+  return items;
+};
+
+const normalizeSlug = (value) =>
+  String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
 
 const StateIndex = () => {
-  const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [openFaq, setOpenFaq] = useState(null);
+  const [states, setStates] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const filteredStates = INDIAN_STATES.filter(state => 
-    state.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    state.tagline.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  useEffect(() => {
+    const loadStates = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const items = await fetchAllPages("/api/states/");
+        setStates(items);
+      } catch (err) {
+        setError(err?.message || "Failed to load states.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStates();
+  }, []);
+
+  const filteredStates = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return states;
+
+    return states.filter((state) => {
+      return [
+        state.name,
+        state.slug,
+        state.best_time,
+        state["best-time"],
+        state.description,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query));
+    });
+  }, [searchQuery, states]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 bg-[#136b55] overflow-hidden">
-        {/* Abstract background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="dotPattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="2" cy="2" r="1" fill="currentColor"></circle>
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#dotPattern)"></rect>
-          </svg>
-        </div>
-        
-        <div className="relative max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight mb-6">
-            Discover the Incredible States of India
-          </h1>
-          <p className="text-lg sm:text-xl text-emerald-100/90 mb-10 max-w-2xl mx-auto font-medium">
-            From the majestic forts of Rajasthan to the serene backwaters of Kerala, explore the cultural diversity, rich heritage, and historic monuments of every Indian state.
-          </p>
-          
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto relative group">
-            <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-emerald-600/50 group-focus-within:text-[#136b55] transition-colors" />
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(19,107,85,0.12),_transparent_38%),linear-gradient(180deg,_#f8fafc_0%,_#f0f7fb_100%)] text-slate-900">
+      <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 lg:px-8">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.06),transparent_60%)]" />
+        <div className="relative mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-4 py-2 text-[11px] font-black uppercase tracking-[0.26em] text-emerald-700 shadow-sm backdrop-blur-md">
+              <MapPin className="h-4 w-4" />
+              State Directory
             </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-12 pr-4 py-4 border-none rounded-2xl leading-5 bg-white shadow-xl shadow-emerald-900/20 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-emerald-400/30 sm:text-base font-semibold text-slate-900 transition-all"
-              placeholder="Search by state name (e.g., Rajasthan, Kerala)..."
-            />
+            <h1 className="mt-6 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+              Explore India, state by state.
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+              Browse every state from the backend catalog and jump into a detailed destination view with one click.
+            </p>
+
+            <div className="mt-8 max-w-2xl rounded-2xl bg-white p-2 shadow-xl shadow-slate-900/5 ring-1 ring-slate-200/70">
+              <div className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3">
+                <Search className="h-5 w-5 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search states by name, description, or best time"
+                  className="w-full bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Main Content Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 -mt-10 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredStates.map((state) => (
-            <div 
-              key={state.id} 
-              onClick={() => navigate(`/${state.id}`)}
-              className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-200/60 hover:shadow-2xl hover:border-emerald-500/30 transition-all duration-300 group cursor-pointer flex flex-col"
-            >
-              <div className="relative h-64 overflow-hidden">
-                <img 
-                  src={state.img} 
-                  alt={state.name} 
-                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
-                
-                {/* Top badges */}
-                <div className="absolute top-4 left-4 flex gap-2">
-                  <span className="bg-white/90 backdrop-blur-md text-slate-900 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5">
-                    <MapPin className="w-3 h-3 text-[#136b55]" />
-                    {state.attractionsCount} Sites
-                  </span>
-                </div>
-
-                {/* Bottom text over image */}
-                <div className="absolute bottom-4 left-5 right-5">
-                  <h3 className="text-3xl font-black text-white tracking-tight mb-1">{state.name}</h3>
-                  <p className="text-emerald-300 text-sm font-semibold">{state.tagline}</p>
-                </div>
-              </div>
-
-              <div className="p-5 flex-1 flex flex-col justify-between bg-white">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Best Time to Visit</span>
-                    <span className="flex items-center gap-1.5 text-sm font-bold text-slate-900">
-                      <Calendar className="w-4 h-4 text-amber-500" />
-                      {state.bestMonth}
-                    </span>
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-[#136b55] transition-colors">
-                    <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-white transition-colors" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        {filteredStates.length === 0 && (
-          <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 border-dashed">
-            <Search className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-slate-900">No states found</h3>
-            <p className="text-slate-500">Try adjusting your search criteria.</p>
+      <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
+        {loading ? (
+          <div className="rounded-3xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-emerald-100 border-t-[#136b55]" />
+            <p className="mt-4 text-sm font-semibold text-slate-500">Loading states...</p>
           </div>
+        ) : error ? (
+          <div className="rounded-3xl border border-red-200 bg-white px-6 py-16 text-center shadow-sm">
+            <p className="text-sm font-semibold text-red-600">Failed to load states: {error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 rounded-full bg-[#136b55] px-5 py-2 text-xs font-bold text-white transition-colors hover:bg-[#0c4c3b]"
+            >
+              Retry Loading
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {filteredStates.map((state) => {
+                const stateSlug = state.slug || normalizeSlug(state.name);
+                const stateHref = `/state/${stateSlug}`;
+                const cityCount = state.city_count ?? 0;
+                const experienceCount = state.experience_count ?? 0;
+                const bestTime = state["best-time"] || state.best_time || "Year round";
+
+                return (
+                  <Link
+                    key={state.public_id || stateSlug}
+                    to={stateHref}
+                    className="group overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                  >
+                    <div className="relative h-72 overflow-hidden">
+                      <img
+                        src={state.image_url || FALLBACK_IMAGE}
+                        alt={state.name}
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/35 to-transparent" />
+                      <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-slate-900 backdrop-blur-md">
+                        <MapPin className="h-3.5 w-3.5 text-[#136b55]" />
+                        {cityCount} Cities
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+                        <p className="text-xs font-bold uppercase tracking-[0.26em] text-emerald-100/90">
+                          {experienceCount} Experiences
+                        </p>
+                        <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{state.name}</h2>
+                      </div>
+                    </div>
+
+                    <div className="p-5 sm:p-6">
+                      <p className="text-sm leading-7 text-slate-600 line-clamp-2">
+                        {state.description || "Discover heritage, cities, and experiences curated from the backend catalog."}
+                      </p>
+                      <div className="mt-5 flex items-center justify-between">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-slate-400">
+                            Best time to visit
+                          </p>
+                          <p className="mt-1 text-sm font-bold text-slate-900">{bestTime}</p>
+                        </div>
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-colors group-hover:bg-slate-950 group-hover:text-white">
+                          <ArrowRight className="h-4 w-4" />
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {filteredStates.length === 0 && (
+              <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
+                <Search className="mx-auto h-12 w-12 text-slate-300" />
+                <h3 className="mt-4 text-lg font-bold text-slate-900">No states found</h3>
+                <p className="mt-2 text-sm text-slate-500">Try a different search term.</p>
+              </div>
+            )}
+          </>
         )}
       </section>
 
-      {/* SEO Content Section */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-slate-200/60">
-        <div className="prose prose-slate prose-lg max-w-none prose-headings:font-black prose-headings:text-slate-900 prose-a:text-[#136b55] hover:prose-a:text-emerald-700">
-          <h2>Why Explore the States of India?</h2>
-          <p>
-            India is not just a country; it's a continent disguised as a nation. Each state operates almost like a distinct country, boasting its own language, cuisine, architecture, and historical lineage. From the snow-capped peaks of Himachal Pradesh in the north to the ancient Dravidian temples of Tamil Nadu in the south, the diversity is unparalleled.
-          </p>
-          <h3>Uncover Centuries of Heritage</h3>
-          <p>
-            Whether you're exploring the Rajputana grandeur of the forts in Rajasthan, tracing the roots of the Maratha empire in Maharashtra, or wandering through the Portuguese-influenced streets of Goa, every state tells a different story. ZeQue makes it effortless to book tickets to India's most iconic monuments, ensuring you spend your time experiencing history rather than waiting in lines.
-          </p>
-          <h3>Planning Your Indian Adventure</h3>
-          <p>
-            The climate in India varies drastically. While the coastal states are tropical and warm year-round, the northern regions experience distinct summers and winters. We've compiled the <strong>best time to visit</strong> for every state to help you plan the perfect itinerary. Dive into a state to explore curated heritage trails, uncover hidden gems, and seamlessly book your entry tickets.
-          </p>
+      <div className="mx-auto flex max-w-7xl justify-end px-4 pb-8 sm:px-6 lg:px-8">
+        <Link to="/city" className="text-sm font-semibold text-slate-500 transition-colors hover:text-[#136b55]">
+          View cities instead
+        </Link>
+      </div>
+
+      <section className="mx-auto max-w-5xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
+        <div className="rounded-3xl border border-slate-200/80 bg-white p-8 shadow-sm">
+          <div className="prose prose-slate max-w-none">
+            <h2>Why explore by state?</h2>
+            <p>
+              State-level browsing gives travelers a clear entry point into the broader destination catalog. It keeps the experience organized while still connecting each state to its cities and experiences.
+            </p>
+            <p>
+              The page is now driven by the backend catalog, so the grid reflects live data from <code>/api/states/</code> instead of static placeholders.
+            </p>
+          </div>
         </div>
       </section>
-
-      {/* FAQ Section */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-slate-200/60 mb-12">
-        <h2 className="text-3xl font-black text-slate-900 mb-8 text-center">Frequently Asked Questions</h2>
-        <div className="space-y-4">
-          {FAQS.map((faq, index) => (
-            <div 
-              key={index}
-              className="bg-white border border-slate-200/60 rounded-2xl overflow-hidden transition-all duration-300 shadow-sm hover:shadow-md"
-            >
-              <button
-                onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                className="w-full px-6 py-5 text-left flex items-center justify-between focus:outline-none"
-              >
-                <span className="font-bold text-slate-900 pr-4">{faq.question}</span>
-                {openFaq === index ? (
-                  <ChevronUp className="w-5 h-5 text-[#136b55] flex-shrink-0" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                )}
-              </button>
-              <div 
-                className={`px-6 overflow-hidden transition-all duration-300 ease-in-out ${openFaq === index ? 'max-h-96 pb-5 opacity-100' : 'max-h-0 opacity-0'}`}
-              >
-                <p className="text-slate-600 text-sm leading-relaxed border-t border-slate-100 pt-4">
-                  {faq.answer}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
     </div>
   );
 };

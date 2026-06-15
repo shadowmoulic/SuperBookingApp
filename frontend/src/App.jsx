@@ -93,6 +93,8 @@ function AppContent() {
           <Route path="/payments/failed" element={<FailedPage />} />
           <Route path="/category/:id" element={<SingleCategoryPage />} />
           <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/state" element={<StateIndex />} />
+          <Route path="/city" element={<CityIndex />} />
           <Route path="/states" element={<StateIndex />} />
           <Route path="/cities" element={<CityIndex />} />
           <Route path="/categories" element={<CategoryIndex />} />

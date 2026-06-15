@@ -129,7 +129,7 @@ const UserDashboard = () => {
                   <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Welcome back, {fullName.split(" ")[0]}.</h1>
                   <p className="text-slate-500 mt-2">Ready for your next heritage discovery?</p>
                 </div>
-                <button onClick={() => navigate("/states")} className="hidden sm:flex items-center gap-2 bg-[#136b55] hover:bg-[#0c4c3b] text-white px-6 py-3 rounded-full text-sm font-bold transition-all shadow-lg hover:-translate-y-0.5">
+                <button onClick={() => navigate("/state")} className="hidden sm:flex items-center gap-2 bg-[#136b55] hover:bg-[#0c4c3b] text-white px-6 py-3 rounded-full text-sm font-bold transition-all shadow-lg hover:-translate-y-0.5">
                   <Search className="w-4 h-4" /> Explore Maps
                 </button>
               </div>
@@ -216,7 +216,7 @@ const UserDashboard = () => {
                   </div>
                   <h3 className="text-lg font-bold text-slate-900 mb-2">No active bookings</h3>
                   <p className="text-slate-500 text-sm max-w-sm mx-auto mb-6">You haven't booked any tickets yet. Explore monuments to skip the queues.</p>
-                  <button onClick={() => navigate("/states")} className="bg-[#136b55] hover:bg-[#0c4c3b] text-white px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-md">
+                  <button onClick={() => navigate("/state")} className="bg-[#136b55] hover:bg-[#0c4c3b] text-white px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-md">
                     Explore Monuments
                   </button>
                </div>
