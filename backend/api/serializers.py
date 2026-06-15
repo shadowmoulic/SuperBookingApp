@@ -120,12 +120,24 @@ class ExperienceSerializer(serializers.ModelSerializer):
         return ReviewSerializer(reviews[:10], many=True).data
 
 
-class LocationSerializer(serializers.ModelSerializer):
+class StateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ContentModel.Location
+        model = ContentModel.State
         fields = [
             "public_id",
             "name",
+        ]
+
+
+class CitySerializer(serializers.ModelSerializer):
+    state = serializers.CharField(source="state.name", default=None, read_only=True)
+
+    class Meta:
+        model = ContentModel.City
+        fields = [
+            "public_id",
+            "name",
+            "state",
             "icon_url",
         ]
 

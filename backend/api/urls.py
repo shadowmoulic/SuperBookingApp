@@ -10,8 +10,12 @@ urlpatterns = [
         views.RetrieveExperienceReviewsView.as_view(),
         name="experience_reviews",
     ),
-    path("location/", views.LocationListView.as_view(), name="location_list"),
-    path("location/<str:public_id>", views.LocationView.as_view(), name="location"),
+    path("states/", views.StateListView.as_view(), name="state_list"),                           # GET all states
+    path("state/<str:public_id>", views.StateView.as_view(), name="state"),                     # GET a single state by public_id
+    path("cities/", views.CityListView.as_view(), name="city_list"),                            # GET all cities
+    path("city/<str:public_id>", views.CityView.as_view(), name="city"),                        # GET a single city by public_id
+    path("location/", views.CityListView.as_view(), name="location_list"),                      # backward compat alias
+    path("location/<str:public_id>", views.CityView.as_view(), name="location"),                # backward compat alias
     path("experiences/", views.ExperienceListView.as_view(), name="experience_list"),
     path("category/<int:id>", views.CategoryView.as_view(), name="category"),
     path("booking/<str:reference>", views.BookingView.as_view(), name="booking"),

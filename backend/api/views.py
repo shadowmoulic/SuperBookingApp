@@ -115,21 +115,45 @@ class ExperienceListView(generics.ListAPIView):
         return context
 
 
-class LocationListView(generics.ListAPIView):
-    serializer_class = ContentSerializer.LocationSerializer
+class StateListView(generics.ListAPIView):
+    serializer_class = ContentSerializer.StateSerializer
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return ContentModel.Location.objects.all()
+        return ContentModel.State.objects.all()
 
 
-class LocationView(generics.RetrieveAPIView):
-    serializer_class = ContentSerializer.LocationSerializer
+class StateView(generics.RetrieveAPIView):
+    serializer_class = ContentSerializer.StateSerializer
     permission_classes = [AllowAny]
     lookup_field = "public_id"
 
     def get_queryset(self):
-        return ContentModel.Location.objects.filter(public_id=self.kwargs["public_id"])
+        return ContentModel.State.objects.filter(public_id=self.kwargs["public_id"])
+
+
+class CityListView(generics.ListAPIView):
+    serializer_class = ContentSerializer.CitySerializer
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        return ContentModel.City.objects.select_related("state").all()
+
+
+class CityView(generics.RetrieveAPIView):
+    serializer_class = ContentSerializer.CitySerializer
+    permission_classes = [AllowAny]
+    lookup_field = "public_id"
+
+    def get_queryset(self):
+        return ContentModel.City.objects.select_related("state").filter(
+            public_id=self.kwargs["public_id"]
+        )
+
+
+# kept for backward compatibility
+LocationListView = CityListView
+LocationView = CityView
 
 
 class BookingView(generics.RetrieveAPIView):
@@ -408,9 +432,9 @@ class HomeView(generics.RetrieveAPIView):
         else:
             continue_booking = {}
 
-        # 2. Get all locations
-        locations = ContentModel.Location.objects.all()
-        locations_serializer = ContentSerializer.LocationSerializer(
+        # 2. Get all cities
+        locations = ContentModel.City.objects.select_related("state").all()
+        locations_serializer = ContentSerializer.CitySerializer(
             locations, many=True
         )
 

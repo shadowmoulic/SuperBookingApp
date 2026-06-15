@@ -10,19 +10,16 @@ def generate_random_id(length=10):
     return "".join(secrets.choice(characters) for i in range(length))
 
 
-class Location(models.Model):
+class State(models.Model):
     id = models.BigAutoField(primary_key=True)
     public_id = models.CharField(max_length=10, unique=True, blank=True, editable=False)
-    name = models.CharField(
-        max_length=100, unique=True, help_text="e.g. temple, fort, museum"
-    )
-    icon_url = models.CharField(max_length=500, blank=True, null=True)
+    name = models.CharField(max_length=100, unique=True)
 
     class Meta:
-        db_table = "location"
+        db_table = "states"
         indexes = [
-            models.Index(fields=["public_id"], name="idx_locations_public_id"),
-            models.Index(fields=["name"], name="idx_locations_name"),
+            models.Index(fields=["public_id"], name="idx_states_public_id"),
+            models.Index(fields=["name"], name="idx_states_name"),
         ]
 
     def __str__(self):
@@ -32,8 +29,37 @@ class Location(models.Model):
         if not self.public_id:
             while True:
                 random_id = generate_random_id(length=8)
-                if not Location.objects.filter(public_id=f"l-{random_id}").exists():
-                    self.public_id = f"l-{random_id}"
+                if not State.objects.filter(public_id=f"s-{random_id}").exists():
+                    self.public_id = f"s-{random_id}"
+                    break
+        super().save(*args, **kwargs)
+
+
+class City(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    public_id = models.CharField(max_length=10, unique=True, blank=True, editable=False)
+    name = models.CharField(max_length=100, unique=True)
+    state = models.ForeignKey(
+        State, on_delete=models.SET_NULL, null=True, blank=True, related_name="cities"
+    )
+    icon_url = models.CharField(max_length=500, blank=True, null=True)
+
+    class Meta:
+        db_table = "cities"
+        indexes = [
+            models.Index(fields=["public_id"], name="idx_cities_public_id"),
+            models.Index(fields=["name"], name="idx_cities_name"),
+        ]
+
+    def __str__(self):
+        return f"{self.name} - {self.public_id}"
+
+    def save(self, *args, **kwargs):
+        if not self.public_id:
+            while True:
+                random_id = generate_random_id(length=8)
+                if not City.objects.filter(public_id=f"c-{random_id}").exists():
+                    self.public_id = f"c-{random_id}"
                     break
         super().save(*args, **kwargs)
 
@@ -73,7 +99,7 @@ class Experience(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     location = models.ForeignKey(
-        Location,
+        City,
         on_delete=models.CASCADE,
         db_column="location_id",
         related_name="experiences",
@@ -308,7 +334,7 @@ class Trip(models.Model):
     # The user is the Django auth.User (which stores the Supabase UUID in its username)
     user = models.ForeignKey("auth.User", on_delete=models.CASCADE, related_name="trips")
     title = models.CharField(max_length=255)
-    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, blank=True, related_name="trips")
+    location = models.ForeignKey(City, on_delete=models.SET_NULL, null=True, blank=True, related_name="trips")
     days = models.IntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
