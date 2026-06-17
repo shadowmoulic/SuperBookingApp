@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { BookMarked, MapPin, Calendar, Settings, Compass, ChevronRight, LogOut, Search, CreditCard, Award, Loader2 } from 'lucide-react';
 import AuthContext from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import api from '../api/api';
 
 const UserDashboard = () => {
   const { user, logout, updateProfile } = useContext(AuthContext);
@@ -11,6 +12,14 @@ const UserDashboard = () => {
   const [editPhone, setEditPhone] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMsg, setUpdateMsg] = useState({ text: "", type: "" });
+  // added srikanth 
+
+  const[savedAttractions, setSavedAttractions] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const[dashboardStats, setDashboardStats] = useState({ savedCount: 0, upcomingCount: 0, citiesCount: 0 });
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+ 
+ 
 
   useEffect(() => {
     if (user) {
@@ -19,6 +28,31 @@ const UserDashboard = () => {
       setEditPhone(user.mobile || "");
     }
   }, [user]);
+   
+   useEffect(() => { 
+    async function loadDashboard(){
+      try {
+        setDashboardLoading(true);
+        const[statsRes,bookingsRes,savedRes] = await Promise.all([
+          api.get("/dashboard/"),
+          api.get("/bookings/"),
+          api.get("/saved/")
+
+        ]);
+        setDashboardStats(statsRes.data);
+        setBookings(bookingsRes.data);
+
+      }
+      catch(err){
+        console.log(err);
+      }
+      finally{
+        setDashboardLoading(false);
+      }}
+      if(user){
+        loadDashboard();
+      }
+    },[user]);
 
   const fullName = user
     ? `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.username || user.email
@@ -30,12 +64,12 @@ const UserDashboard = () => {
     .substring(0, 2)
     .toUpperCase();
 
-  const savedAttractions = [
+  /*const savedAttractions = [
     { id: 1, name: 'Amer Fort', city: 'Jaipur', img: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=800&w=800' },
     { id: 2, name: 'Taj Mahal', city: 'Agra', img: 'https://images.unsplash.com/photo-1564507592208-028fdb71ec1e?auto=format&fit=crop&w=800&w=800' },
     { id: 3, name: 'Hawa Mahal', city: 'Jaipur', img: 'https://images.unsplash.com/photo-1599661559882-628d01b1b016?auto=format&fit=crop&w=800&w=800' }
   ];
-
+*/
   const handleLogout = async () => {
     await logout();
     navigate("/");
@@ -62,7 +96,14 @@ const UserDashboard = () => {
       setTimeout(() => setUpdateMsg({ text: "", type: "" }), 4000);
     }
   };
-
+    // for data loader
+    if(dashboardLoading){
+      return(
+        <div className ="min-h-screen flex justify-center items-center">
+          <Loader2 className ="w-10 h-10 animate-spin"></Loader2>
+        </div>
+      )
+    }
   return (
     <div className="min-h-screen bg-slate-50 pt-28 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-10">

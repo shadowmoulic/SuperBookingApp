@@ -92,7 +92,7 @@ function AppContent() {
           <Route path="/payments/success" element={<SuccessPage />} />
           <Route path="/payments/failed" element={<FailedPage />} />
           <Route path="/category/:id" element={<SingleCategoryPage />} />
-          <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
           <Route path="/state" element={<StateIndex />} />
           <Route path="/city" element={<CityIndex />} />
           <Route path="/states" element={<StateIndex />} />
