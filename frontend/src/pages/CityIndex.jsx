@@ -74,7 +74,7 @@ const CityIndex = () => {
   }, [searchQuery, cities]);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(19,107,85,0.12),_transparent_38%),linear-gradient(180deg,_#f8fafc_0%,_#f0f7fb_100%)] text-slate-900">
+    <div className="bg-surface-container-lowest min-h-screen w-full relative">
       <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 lg:px-8">
         <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.06),transparent_60%)]" />
         <div className="relative mx-auto max-w-7xl">
@@ -83,10 +83,10 @@ const CityIndex = () => {
               <MapPin className="h-4 w-4" />
               City Directory
             </div>
-            <h1 className="mt-6 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+            <h1 className="mt-6 text-4xl font-black tracking-tight text-on-surface sm:text-5xl lg:text-6xl">
               Explore India city by city.
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+            <p className="mt-5 max-w-2xl text-base leading-7 text-on-surface-variant sm:text-lg">
               Browse the backend city catalog with state context, experience counts, and quick jumps into destination detail pages.
             </p>
 
@@ -135,7 +135,7 @@ const CityIndex = () => {
                   <Link
                     key={city.public_id || citySlug}
                     to={cityHref}
-                    className="group overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                    className="group overflow-hidden rounded-3xl bg-surface-container-low shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
                   >
                     <div className="relative h-72 overflow-hidden">
                       <img
@@ -167,7 +167,7 @@ const CityIndex = () => {
                           </p>
                           <p className="mt-1 text-sm font-bold text-slate-900">{bestTime}</p>
                         </div>
-                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-colors group-hover:bg-slate-950 group-hover:text-white">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-container-low border-2 border-primary text-primary transition-colors group-hover:bg-primary group-hover:text-on-surface">
                           <ArrowRight className="h-4 w-4" />
                         </div>
                       </div>

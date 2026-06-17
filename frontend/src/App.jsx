@@ -36,8 +36,8 @@ import UnescoSites from "./pages/UnescoSites";
 import TopPlaces from "./pages/TopPlaces";
 import ExploreNearMe from "./pages/ExploreNearMe";
 import BookingPage from "./pages/BookingPage";
-import StatePage from "./pages/Statepage";
-import CityPage from "./pages/Citypage";
+import StatePage from "./pages/StatePage";
+import CityPage from "./pages/CityPage";
 
 function LocationRouteWrapper() {
   const { locationName } = useParams();

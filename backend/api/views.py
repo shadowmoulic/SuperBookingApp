@@ -732,3 +732,544 @@ class RetrieveExperienceReviewsView(generics.ListAPIView):
             .select_related("user_id__user", "experience_id")
             .order_by("-created_at")
         )
+
+
+# ── OFFICIAL PORTAL VIEWS ──────────────────────────────────────────
+
+import os
+import csv
+import io
+from datetime import datetime
+from django.views import View
+from django.shortcuts import render, redirect
+from rest_framework import permissions
+from rest_framework.parsers import MultiPartParser
+
+class IsOfficialAuthenticated(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.session.get('is_official_authenticated'))
+
+
+class OfficialPortalView(View):
+    def get(self, request):
+        if request.session.get('is_official_authenticated') is True:
+            return render(request, "api/official_portal.html", {"authenticated": True})
+        return render(request, "api/official_portal.html", {"authenticated": False})
+
+    def post(self, request):
+        password = request.POST.get("password")
+        target_password = os.getenv("OFFICIAL_PORTAL_PASSWORD", "admin123")
+        if password == target_password:
+            request.session['is_official_authenticated'] = True
+            return redirect("official_portal")
+        return render(
+            request, 
+            "api/official_portal.html", 
+            {"authenticated": False, "error": "Invalid password. Access Denied."}
+        )
+
+
+class OfficialLogoutView(View):
+    def get(self, request):
+        request.session.flush()
+        return redirect("official_portal")
+
+
+class OfficialMetaView(APIView):
+    permission_classes = [IsOfficialAuthenticated]
+
+    def get(self, request):
+        states = ContentModel.State.objects.all().order_by("name")
+        cities = ContentModel.City.objects.select_related("state").all().order_by("name")
+        categories = ContentModel.Category.objects.all().order_by("name")
+
+        states_data = [{"id": s.id, "public_id": s.public_id, "name": s.name} for s in states]
+        cities_data = [
+            {
+                "id": c.id, 
+                "public_id": c.public_id, 
+                "name": c.name, 
+                "state_name": c.state.name if c.state else ""
+            } 
+            for c in cities
+        ]
+        categories_data = [{"id": cat.id, "name": cat.name} for cat in categories]
+
+        # Overall Stats
+        stats = {
+            "total_experiences": ContentModel.Experience.objects.filter(deleted_at__isnull=True).count(),
+            "total_cities": ContentModel.City.objects.count(),
+            "total_states": ContentModel.State.objects.count(),
+            "total_categories": ContentModel.Category.objects.count(),
+        }
+
+        return Response({
+            "states": states_data,
+            "cities": cities_data,
+            "categories": categories_data,
+            "stats": stats
+        })
+
+
+class OfficialCSVUploadView(APIView):
+    permission_classes = [IsOfficialAuthenticated]
+    parser_classes = [MultiPartParser]
+
+    def post(self, request):
+        table = request.query_params.get("table", "experience").strip().lower()
+        csv_file = request.FILES.get("file")
+        if not csv_file:
+            return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            file_data = csv_file.read().decode("utf-8")
+            csv_data = io.StringIO(file_data)
+            reader = csv.DictReader(csv_data)
+        except Exception as e:
+            return Response({"error": f"Failed to parse CSV file: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        headers = [h.strip() if h else "" for h in (reader.fieldnames or [])]
+        
+        created_count = 0
+        skipped_count = 0
+        errors = []
+
+        if table == "category":
+            required_headers = ["NAME"]
+            missing_headers = [h for h in required_headers if h not in headers]
+            if missing_headers:
+                return Response({"error": f"Missing required headers for Category: {', '.join(missing_headers)}"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            for row_idx, row in enumerate(reader, start=2):
+                try:
+                    name = row["NAME"].strip()
+                    if not name:
+                        raise ValueError("Name field is empty")
+                    
+                    category, created = ContentModel.Category.objects.get_or_create(
+                        name=name,
+                        defaults={
+                            "description": row.get("DESCRIPTION", "").strip(),
+                            "icon_url": row.get("ICON_URL", "").strip(),
+                            "image_url": row.get("IMAGE_URL", "").strip(),
+                            "seo_title": row.get("SEO_TITLE", "").strip(),
+                            "seo_description": row.get("SEO_DESCRIPTION", "").strip(),
+                        }
+                    )
+                    if created:
+                        created_count += 1
+                    else:
+                        skipped_count += 1
+                except Exception as e:
+                    errors.append({"row": row_idx, "name": row.get("NAME", f"Row {row_idx}"), "error": str(e)})
+
+        elif table == "state":
+            required_headers = ["NAME"]
+            missing_headers = [h for h in required_headers if h not in headers]
+            if missing_headers:
+                return Response({"error": f"Missing required headers for State: {', '.join(missing_headers)}"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            for row_idx, row in enumerate(reader, start=2):
+                try:
+                    name = row["NAME"].strip()
+                    if not name:
+                        raise ValueError("Name field is empty")
+                    
+                    state, created = ContentModel.State.objects.get_or_create(
+                        name=name,
+                        defaults={
+                            "description": row.get("DESCRIPTION", "").strip(),
+                            "image_url": row.get("IMAGE_URL", "").strip(),
+                            "best_time": row.get("BEST_TIME", "").strip(),
+                            "seo_title": row.get("SEO_TITLE", "").strip(),
+                            "seo_description": row.get("SEO_DESCRIPTION", "").strip(),
+                            "website": row.get("WEBSITE", "").strip(),
+                        }
+                    )
+                    if created:
+                        created_count += 1
+                    else:
+                        skipped_count += 1
+                except Exception as e:
+                    errors.append({"row": row_idx, "name": row.get("NAME", f"Row {row_idx}"), "error": str(e)})
+
+        elif table == "city":
+            required_headers = ["NAME"]
+            missing_headers = [h for h in required_headers if h not in headers]
+            if missing_headers:
+                return Response({"error": f"Missing required headers for City: {', '.join(missing_headers)}"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            states = {s.name.strip().lower(): s for s in ContentModel.State.objects.all()}
+            
+            for row_idx, row in enumerate(reader, start=2):
+                try:
+                    name = row["NAME"].strip()
+                    if not name:
+                        raise ValueError("Name field is empty")
+                    
+                    state_name = row.get("STATE_NAME", "").strip()
+                    state_obj = None
+                    if state_name:
+                        state_key = state_name.lower()
+                        state_obj = states.get(state_key)
+                        if not state_obj:
+                            state_obj, _ = ContentModel.State.objects.get_or_create(name=state_name)
+                            states[state_key] = state_obj
+                    
+                    latitude = row.get("LATITUDE", "").strip()
+                    longitude = row.get("LONGITUDE", "").strip()
+
+                    city, created = ContentModel.City.objects.get_or_create(
+                        name=name,
+                        defaults={
+                            "state": state_obj,
+                            "description": row.get("DESCRIPTION", "").strip(),
+                            "image_url": row.get("IMAGE_URL", "").strip(),
+                            "icon_url": row.get("ICON_URL", "").strip(),
+                            "best_time": row.get("BEST_TIME", "").strip(),
+                            "seo_title": row.get("SEO_TITLE", "").strip(),
+                            "seo_description": row.get("SEO_DESCRIPTION", "").strip(),
+                            "latitude": float(latitude) if latitude else None,
+                            "longitude": float(longitude) if longitude else None,
+                        }
+                    )
+                    if created:
+                        created_count += 1
+                    else:
+                        skipped_count += 1
+                except Exception as e:
+                    errors.append({"row": row_idx, "name": row.get("NAME", f"Row {row_idx}"), "error": str(e)})
+
+        else: # table == "experience"
+            required_headers = [
+                "NAME", "CATEGORY", "LOCATION", "IS_OPEN", 
+                "OPENING_TIME", "CLOSING_TIME", "LAST_ENTRY_TIME", 
+                "DESCRIPTION", "LATITUDE", "LONGITUDE", "IMAGE_URL", 
+                "MAX_DAILY_CAPACITY", "ENTRY_FEE_BASE"
+            ]
+            missing_headers = [h for h in required_headers if h not in headers]
+            if missing_headers:
+                return Response({"error": f"Missing required headers for Experience: {', '.join(missing_headers)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+            categories = {c.name.strip().lower(): c for c in ContentModel.Category.objects.all()}
+            cities = {c.name.strip().lower(): c for c in ContentModel.City.objects.all()}
+
+            for row_idx, row in enumerate(reader, start=2):
+                try:
+                    name = row["NAME"].strip()
+                    if not name:
+                        raise ValueError("Name field is empty")
+
+                    cat_name = row["CATEGORY"].strip()
+                    cat_key = cat_name.lower()
+                    category = categories.get(cat_key)
+                    if not category:
+                        category, _ = ContentModel.Category.objects.get_or_create(name=cat_name)
+                        categories[cat_key] = category
+
+                    city_name = row["LOCATION"].strip()
+                    city_key = city_name.lower()
+                    city = cities.get(city_key)
+                    if not city:
+                        city, _ = ContentModel.City.objects.get_or_create(name=city_name)
+                        cities[city_key] = city
+
+                    is_open = row["IS_OPEN"].strip().lower() in ["true", "1", "yes", "open"]
+
+                    def parse_time(time_str):
+                        if not time_str or not time_str.strip():
+                            return None
+                        try:
+                            return datetime.strptime(time_str.strip(), "%H:%M:%S").time()
+                        except ValueError:
+                            try:
+                                return datetime.strptime(time_str.strip(), "%H:%M").time()
+                            except ValueError:
+                                parts = time_str.strip().split(":")
+                                if len(parts) >= 2:
+                                    h, m = int(parts[0]), int(parts[1])
+                                    s = int(parts[2]) if len(parts) > 2 else 0
+                                    return datetime.min.time().replace(hour=h, minute=m, second=s)
+                                raise
+
+                    opening_time = parse_time(row["OPENING_TIME"])
+                    closing_time = parse_time(row["CLOSING_TIME"])
+                    last_entry_time = parse_time(row["LAST_ENTRY_TIME"])
+
+                    place, created = ContentModel.Experience.objects.get_or_create(
+                        name=name,
+                        city=city,
+                        defaults={
+                            "description": row["DESCRIPTION"],
+                            "latitude": float(row["LATITUDE"]) if row["LATITUDE"] else 0.0,
+                            "longitude": float(row["LONGITUDE"]) if row["LONGITUDE"] else 0.0,
+                            "image_url": row["IMAGE_URL"],
+                            "max_daily_capacity": int(row["MAX_DAILY_CAPACITY"]) if row["MAX_DAILY_CAPACITY"] else 100,
+                            "entry_fee_base": float(row["ENTRY_FEE_BASE"]) if row["ENTRY_FEE_BASE"] else 0.0,
+                            "is_open": is_open,
+                            "opening_time": opening_time,
+                            "closing_time": closing_time,
+                            "last_entry_time": last_entry_time,
+                            "category": category,
+                            "deleted_at": None,
+                        },
+                    )
+
+                    if created:
+                        created_count += 1
+                    else:
+                        skipped_count += 1
+
+                except Exception as e:
+                    errors.append({
+                        "row": row_idx,
+                        "name": row.get("NAME", f"Row {row_idx}"),
+                        "error": str(e)
+                    })
+
+        return Response({
+            "message": "CSV upload processed",
+            "created": created_count,
+            "skipped": skipped_count,
+            "errors": errors
+        })
+
+
+class OfficialExperienceView(APIView):
+    permission_classes = [IsOfficialAuthenticated]
+
+    def get(self, request, pk=None):
+        if pk:
+            try:
+                exp = ContentModel.Experience.objects.get(id=pk)
+                data = {
+                    "id": exp.id,
+                    "public_id": exp.public_id,
+                    "name": exp.name,
+                    "subtitle": exp.subtitle,
+                    "description": exp.description,
+                    "address": exp.address,
+                    "category": exp.category.name,
+                    "category_id": exp.category.id,
+                    "city": exp.city.name if exp.city else "",
+                    "city_id": exp.city.id if exp.city else "",
+                    "latitude": float(exp.latitude) if exp.latitude else 0.0,
+                    "longitude": float(exp.longitude) if exp.longitude else 0.0,
+                    "image_url": exp.image_url,
+                    "max_daily_capacity": exp.max_daily_capacity,
+                    "entry_fee_base": float(exp.entry_fee_base),
+                    "is_open": exp.is_open,
+                    "opening_time": exp.opening_time.strftime("%H:%M:%S") if exp.opening_time else "",
+                    "closing_time": exp.closing_time.strftime("%H:%M:%S") if exp.closing_time else "",
+                    "last_entry_time": exp.last_entry_time.strftime("%H:%M:%S") if exp.last_entry_time else "",
+                }
+                return Response(data)
+            except ContentModel.Experience.DoesNotExist:
+                return Response({"error": "Experience not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        queryset = ContentModel.Experience.objects.filter(deleted_at__isnull=True).select_related("category", "city")
+        
+        search = request.query_params.get("search")
+        category_id = request.query_params.get("category_id")
+        city_id = request.query_params.get("city_id")
+
+        if search:
+            queryset = queryset.filter(Q(name__icontains=search) | Q(description__icontains=search))
+        if category_id:
+            queryset = queryset.filter(category_id=category_id)
+        if city_id:
+            queryset = queryset.filter(city_id=city_id)
+
+        queryset = queryset.order_by("-id")
+
+        total = queryset.count()
+        page = int(request.query_params.get("page", 1))
+        page_size = int(request.query_params.get("page_size", 10))
+        start = (page - 1) * page_size
+        end = start + page_size
+        
+        experiences = queryset[start:end]
+        
+        exp_list = []
+        for exp in experiences:
+            exp_list.append({
+                "id": exp.id,
+                "public_id": exp.public_id,
+                "name": exp.name,
+                "category": exp.category.name,
+                "city": exp.city.name if exp.city else "",
+                "entry_fee_base": float(exp.entry_fee_base),
+                "is_open": exp.is_open,
+            })
+
+        return Response({
+            "results": exp_list,
+            "total": total,
+            "page": page,
+            "page_size": page_size
+        })
+
+    def post(self, request):
+        data = request.data
+        try:
+            category = ContentModel.Category.objects.get(id=data.get("category_id"))
+            city = ContentModel.City.objects.get(id=data.get("city_id")) if data.get("city_id") else None
+
+            def parse_time(t_str):
+                if not t_str:
+                    return None
+                try:
+                    return datetime.strptime(t_str, "%H:%M:%S").time()
+                except ValueError:
+                    try:
+                        return datetime.strptime(t_str, "%H:%M").time()
+                    except ValueError:
+                        return None
+
+            exp = ContentModel.Experience.objects.create(
+                name=data.get("name"),
+                subtitle=data.get("subtitle", ""),
+                description=data.get("description", ""),
+                address=data.get("address", ""),
+                category=category,
+                city=city,
+                latitude=float(data.get("latitude")) if data.get("latitude") else 0.0,
+                longitude=float(data.get("longitude")) if data.get("longitude") else 0.0,
+                image_url=data.get("image_url", ""),
+                max_daily_capacity=int(data.get("max_daily_capacity")) if data.get("max_daily_capacity") else 100,
+                entry_fee_base=float(data.get("entry_fee_base")) if data.get("entry_fee_base") else 0.0,
+                is_open=bool(data.get("is_open", True)),
+                opening_time=parse_time(data.get("opening_time")),
+                closing_time=parse_time(data.get("closing_time")),
+                last_entry_time=parse_time(data.get("last_entry_time")),
+            )
+            return Response({"message": "Experience created", "id": exp.id}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, pk):
+        data = request.data
+        try:
+            exp = ContentModel.Experience.objects.get(id=pk)
+            
+            if "category_id" in data:
+                exp.category = ContentModel.Category.objects.get(id=data["category_id"])
+            if "city_id" in data:
+                exp.city = ContentModel.City.objects.get(id=data["city_id"]) if data["city_id"] else None
+            
+            if "name" in data:
+                exp.name = data["name"]
+            if "subtitle" in data:
+                exp.subtitle = data["subtitle"]
+            if "description" in data:
+                exp.description = data["description"]
+            if "address" in data:
+                exp.address = data["address"]
+            if "latitude" in data:
+                exp.latitude = float(data["latitude"]) if data["latitude"] is not None else 0.0
+            if "longitude" in data:
+                exp.longitude = float(data["longitude"]) if data["longitude"] is not None else 0.0
+            if "image_url" in data:
+                exp.image_url = data["image_url"]
+            if "max_daily_capacity" in data:
+                exp.max_daily_capacity = int(data["max_daily_capacity"])
+            if "entry_fee_base" in data:
+                exp.entry_fee_base = float(data["entry_fee_base"])
+            if "is_open" in data:
+                exp.is_open = bool(data["is_open"])
+                
+            def parse_time(t_str):
+                if not t_str:
+                    return None
+                try:
+                    return datetime.strptime(t_str, "%H:%M:%S").time()
+                except ValueError:
+                    try:
+                        return datetime.strptime(t_str, "%H:%M").time()
+                    except ValueError:
+                        return None
+
+            if "opening_time" in data:
+                exp.opening_time = parse_time(data["opening_time"])
+            if "closing_time" in data:
+                exp.closing_time = parse_time(data["closing_time"])
+            if "last_entry_time" in data:
+                exp.last_entry_time = parse_time(data["last_entry_time"])
+
+            exp.save()
+            return Response({"message": "Experience updated"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        try:
+            exp = ContentModel.Experience.objects.get(id=pk)
+            exp.soft_delete()
+            return Response({"message": "Experience deleted"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class OfficialCityView(APIView):
+    permission_classes = [IsOfficialAuthenticated]
+
+    def post(self, request):
+        data = request.data
+        try:
+            state = ContentModel.State.objects.get(id=data.get("state_id")) if data.get("state_id") else None
+            city = ContentModel.City.objects.create(
+                name=data.get("name"),
+                description=data.get("description", ""),
+                state=state,
+                image_url=data.get("image_url", ""),
+                icon_url=data.get("icon_url", ""),
+                best_time=data.get("best_time", ""),
+                seo_title=data.get("seo_title", ""),
+                seo_description=data.get("seo_description", ""),
+                latitude=float(data.get("latitude")) if data.get("latitude") else None,
+                longitude=float(data.get("longitude")) if data.get("longitude") else None,
+            )
+            return Response({"message": "City created", "id": city.id}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class OfficialStateView(APIView):
+    permission_classes = [IsOfficialAuthenticated]
+
+    def post(self, request):
+        data = request.data
+        try:
+            state = ContentModel.State.objects.create(
+                name=data.get("name"),
+                description=data.get("description", ""),
+                image_url=data.get("image_url", ""),
+                best_time=data.get("best_time", ""),
+                seo_title=data.get("seo_title", ""),
+                seo_description=data.get("seo_description", ""),
+                website=data.get("website", ""),
+            )
+            return Response({"message": "State created", "id": state.id}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class OfficialCategoryView(APIView):
+    permission_classes = [IsOfficialAuthenticated]
+
+    def post(self, request):
+        data = request.data
+        try:
+            category = ContentModel.Category.objects.create(
+                name=data.get("name"),
+                description=data.get("description", ""),
+                icon_url=data.get("icon_url", ""),
+                image_url=data.get("image_url", ""),
+                seo_title=data.get("seo_title", ""),
+                seo_description=data.get("seo_description", ""),
+            )
+            return Response({"message": "Category created", "id": category.id}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+

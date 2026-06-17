@@ -80,7 +80,7 @@ const StateIndex = () => {
   }, [searchQuery, states]);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(19,107,85,0.12),_transparent_38%),linear-gradient(180deg,_#f8fafc_0%,_#f0f7fb_100%)] text-slate-900">
+    <div className="bg-surface-container-lowest min-h-screen w-full relative">
       <section className="relative overflow-hidden px-4 pb-16 pt-24 sm:px-6 lg:px-8">
         <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.06),transparent_60%)]" />
         <div className="relative mx-auto max-w-7xl">
@@ -89,10 +89,10 @@ const StateIndex = () => {
               <MapPin className="h-4 w-4" />
               State Directory
             </div>
-            <h1 className="mt-6 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+            <h1 className="mt-6 text-4xl font-black tracking-tight text-on-surface sm:text-5xl lg:text-6xl">
               Explore India, state by state.
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+            <p className="mt-5 max-w-2xl text-base leading-7 text-on-surface sm:text-lg">
               Browse every state from the backend catalog and jump into a detailed destination view with one click.
             </p>
 
@@ -112,7 +112,7 @@ const StateIndex = () => {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
+      <section className="bg-surface-container-lowest mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
         {loading ? (
           <div className="rounded-3xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
             <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-emerald-100 border-t-[#136b55]" />
@@ -142,7 +142,7 @@ const StateIndex = () => {
                   <Link
                     key={state.public_id || stateSlug}
                     to={stateHref}
-                    className="group overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                    className="group overflow-hidden rounded-3xl bg-surface-container-low shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
                   >
                     <div className="relative h-72 overflow-hidden">
                       <img
@@ -174,7 +174,7 @@ const StateIndex = () => {
                           </p>
                           <p className="mt-1 text-sm font-bold text-slate-900">{bestTime}</p>
                         </div>
-                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-colors group-hover:bg-slate-950 group-hover:text-white">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-container-low border-2 border-primary text-primary transition-colors group-hover:bg-primary group-hover:text-surface-container-lowest">
                           <ArrowRight className="h-4 w-4" />
                         </div>
                       </div>
@@ -195,21 +195,18 @@ const StateIndex = () => {
         )}
       </section>
 
-      <div className="mx-auto flex max-w-7xl justify-end px-4 pb-8 sm:px-6 lg:px-8">
-        <Link to="/city" className="text-sm font-semibold text-slate-500 transition-colors hover:text-[#136b55]">
+      <div className="mx-auto flex max-w-7xl bg-surface-container-lowest justify-end px-4 pb-8 sm:px-6 lg:px-8">
+        <Link to="/city" className="text-sm font-semibold text-primary transition-colors hover:text-[#136b55]">
           View cities instead
         </Link>
       </div>
 
-      <section className="mx-auto max-w-5xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
-        <div className="rounded-3xl border border-slate-200/80 bg-white p-8 shadow-sm">
+      <section className="mx-auto max-w-5xl bg-surface-container-lowest px-4 pb-16 pt-8 sm:px-6 lg:px-8 text-on-surface">
+        <div className="rounded-3xl border border-slate-200/80 bg-surface-container-low p-8 shadow-sm">
           <div className="prose prose-slate max-w-none">
             <h2>Why explore by state?</h2>
             <p>
               State-level browsing gives travelers a clear entry point into the broader destination catalog. It keeps the experience organized while still connecting each state to its cities and experiences.
-            </p>
-            <p>
-              The page is now driven by the backend catalog, so the grid reflects live data from <code>/api/states/</code> instead of static placeholders.
             </p>
           </div>
         </div>

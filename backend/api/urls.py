@@ -26,4 +26,17 @@ urlpatterns = [
     path("reviews/retrieve", views.RetrieveReviewView.as_view(), name="retrievereview"),
     path("reviews/update", views.UpdateReviewView.as_view(), name="updatereview"),
     path("reviews/delete", views.DeleteReviewView.as_view(), name="deletereview"),
+
+    # Official Portal routes
+    path("official-portal/", views.OfficialPortalView.as_view(), name="official_portal"),
+    path("official/logout/", views.OfficialLogoutView.as_view(), name="official_logout"),
+    path("official/meta/", views.OfficialMetaView.as_view(), name="official_meta"),
+    path("official/upload-csv/", views.OfficialCSVUploadView.as_view(), name="official_upload_csv"),
+    path("official/experiences/", views.OfficialExperienceView.as_view(), name="official_experiences_list"),
+    path("official/experiences/<int:pk>/", views.OfficialExperienceView.as_view(), name="official_experiences_detail"),
+    path("official/cities/", views.OfficialCityView.as_view(), name="official_cities"),
+    path("official/states/", views.OfficialStateView.as_view(), name="official_states"),
+    path("official/categories/", views.OfficialCategoryView.as_view(), name="official_categories"),
 ]
+
+
