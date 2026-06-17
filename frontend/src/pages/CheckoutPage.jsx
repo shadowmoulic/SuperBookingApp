@@ -101,7 +101,7 @@ export default function CheckoutPage() {
 
   const openRazorpay = (order, paymentRef) => {
     const options = {
-      key: order.razorpay_key || "YOUR_RAZORPAY_KEY",
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID || order.razorpay_key || "YOUR_RAZORPAY_KEY",
       amount: order.amount,
       currency: order.currency,
       order_id: order.razorpay_order_id,
@@ -113,6 +113,7 @@ export default function CheckoutPage() {
       modal: {
         ondismiss: function () {
           setLoadingPayment(false);
+          alert("Payment window closed. The transaction was cancelled.");
         },
       },
       theme: {
@@ -121,6 +122,11 @@ export default function CheckoutPage() {
     };
 
     const paymentObject = new window.Razorpay(options);
+    paymentObject.on("payment.failed", function (response) {
+      console.error("Razorpay payment failure:", response.error);
+      alert(`Payment failed: ${response.error.description || "Unknown error occurred"}`);
+      setLoadingPayment(false);
+    });
     paymentObject.open();
   };
 

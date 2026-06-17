@@ -277,13 +277,48 @@ class CreatePaymentView(APIView):
         payment = serializer.save()
         amount_ = int(payment.amount * 100)
 
+        # Validate amount >= 100 paise
+        if amount_ < 100:
+            payment.delete()
+            return Response(
+                {"error": "Payment amount must be at least 100 paise (₹1.00)"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         order_data = {
             "amount": amount_,
             "currency": "INR",
             "receipt": str(payment.booking),
         }
 
-        razorpay_order = client.order.create(data=order_data)
+        try:
+            razorpay_order = client.order.create(data=order_data)
+        except razorpay.errors.BadRequestError as e:
+            payment.delete()
+            error_msg = str(e)
+            # If the error is due to authentication or expired keys, return 401 Unauthorized
+            if any(term in error_msg.lower() for term in ["key", "secret", "expired", "auth", "credential"]):
+                return Response(
+                    {"error": f"Razorpay authentication failed: {error_msg}"},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+            return Response(
+                {"error": f"Razorpay bad request: {error_msg}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except (razorpay.errors.ServerError, razorpay.errors.GatewayError) as e:
+            payment.delete()
+            return Response(
+                {"error": "Razorpay server error. Please try again later."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+        except Exception as e:
+            payment.delete()
+            return Response(
+                {"error": f"Razorpay API error: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
         payment.gateway_transaction_id = razorpay_order["id"]
         payment.save(update_fields=["gateway_transaction_id", "updated_at"])
         return Response(
@@ -331,17 +366,15 @@ class VerifyPaymentView(APIView):
             )
 
         try:
-            if settings.DEBUG:
-                payment.status = "success"
-            else:
-                client.utility.verify_payment_signature(
-                    {
-                        "razorpay_order_id": razorpay_order_id,
-                        "razorpay_payment_id": razorpay_payment_id,
-                        "razorpay_signature": razorpay_signature,
-                    }
-                )
-                payment.status = "success"
+            # Enforce signature verification using the provided credentials
+            client.utility.verify_payment_signature(
+                {
+                    "razorpay_order_id": razorpay_order_id,
+                    "razorpay_payment_id": razorpay_payment_id,
+                    "razorpay_signature": razorpay_signature,
+                }
+            )
+            payment.status = "success"
             payment.paid_at = timezone.now()
             payment.save(update_fields=["status", "paid_at", "updated_at"])
 
