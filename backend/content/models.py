@@ -24,6 +24,7 @@ class State(models.Model):
 
     class Meta:
         db_table = "states"
+        ordering = ["id"]
         indexes = [
             models.Index(fields=["public_id"], name="idx_states_public_id"),
             models.Index(fields=["name"], name="idx_states_name"),
@@ -64,6 +65,7 @@ class City(models.Model):
 
     class Meta:
         db_table = "cities"
+        ordering = ["id"]
         indexes = [
             models.Index(fields=["public_id"], name="idx_cities_public_id"),
             models.Index(fields=["name"], name="idx_cities_name"),
@@ -207,6 +209,7 @@ class Experience(models.Model):
 
     class Meta:
         db_table = "experience"
+        ordering = ["id"]
         indexes = [
             models.Index(fields=["public_id"], name="idx_experience_public_id"),
             models.Index(fields=["category"], name="idx_experience_category"),

@@ -438,9 +438,10 @@ export function ExperienceDetails() {
           </div>
           <button
             onClick={togglePicker}
-            className="bg-[#006b55] hover:brightness-110 text-white px-10 py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all cursor-pointer"
+            disabled={!experience.is_open}
+            className="bg-[#006b55] hover:brightness-110 text-white px-10 py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all cursor-pointer disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
           >
-            Book Now
+            {experience.is_open ? "Book Now" : "Coming Soon"}
           </button>
         </footer>
 
@@ -536,9 +537,10 @@ export function ExperienceDetails() {
 
               <button
                 onClick={handleBuyNow}
-                className="w-full bg-[#006b55] hover:brightness-110 text-white py-4 rounded-xl font-bold text-sm mt-4 shadow-md active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+                disabled={!experience.is_open}
+                className="w-full bg-[#006b55] hover:brightness-110 text-white py-4 rounded-xl font-bold text-sm mt-4 shadow-md active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
               >
-                Proceed to Payment • ₹{totalPrice}
+                {experience.is_open ? `Proceed to Payment • ₹${totalPrice}` : "Coming Soon"}
               </button>
 
             </div>
@@ -838,10 +840,16 @@ export function ExperienceDetails() {
               <button
                 onClick={handleBuyNow}
                 disabled={!experience.is_open}
-                className="w-full py-3.5 bg-[#006b55] hover:brightness-110 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="w-full py-3.5 bg-[#006b55] hover:brightness-110 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
               >
-                Book Now
-                <ArrowRight className="w-4 h-4" />
+                {experience.is_open ? (
+                  <>
+                    Book Now
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                ) : (
+                  "Coming Soon"
+                )}
               </button>
             </div>
           </div>
