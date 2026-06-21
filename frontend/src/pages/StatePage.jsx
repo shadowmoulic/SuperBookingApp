@@ -2,7 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import api from "../api/api";
 import LocationCard from "../components/LocationCard";
-import { ChevronRight, MapPin, Clock, Globe, Star, Building2 } from "lucide-react";
+import { ChevronRight, MapPin, Clock, Globe, Star, Building2, Compass } from "lucide-react";
 
 export default function StatePage() {
   const { id } = useParams();
@@ -25,6 +25,7 @@ export default function StatePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("rating");
   const [favorites, setFavorites] = useState({});
+  const [isExpanded, setIsExpanded] = useState(false);
   const itemsPerPage = 8;
 
   useEffect(() => {
@@ -38,6 +39,21 @@ export default function StatePage() {
       .then((res) => {
         setStateData(res.data);
         setError(null);
+        
+        // Add to recently explored
+        const item = {
+          type: "state",
+          name: res.data.name,
+          image: res.data.image_url,
+          url: `/state/${id}`,
+          subtitle: "State Directory"
+        };
+        try {
+          const list = JSON.parse(localStorage.getItem("recently_explored") || "[]");
+          const filtered = list.filter(x => x.url !== item.url);
+          filtered.unshift(item);
+          localStorage.setItem("recently_explored", JSON.stringify(filtered.slice(0, 4)));
+        } catch (e) {}
       })
       .catch((err) => {
         setError(err.message);
@@ -49,12 +65,54 @@ export default function StatePage() {
   // SEO
   useEffect(() => {
     if (!stateData) return;
-    document.title = stateData["SEO-title"] || `Explore ${stateData.name} | ZeQue`;
+    document.title = stateData["SEO-title"] || `Explore ${stateData.name} | Tourism, Attractions & Cities | ZeQue`;
     const meta = document.querySelector('meta[name="description"]');
     if (meta) {
-      meta.setAttribute("content", stateData["SEO-description"] || "");
+      meta.setAttribute(
+        "content",
+        stateData["SEO-description"] || `Discover unique attractions, local monuments, guided tours and beautiful cities in ${stateData.name}. Find best time to visit and book entry tickets on ZeQue.`
+      );
     }
   }, [stateData]);
+
+  // Inject structured data for tourist destination
+  const structuredData = useMemo(() => {
+    if (!stateData) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "TouristDestination",
+      "name": stateData.name,
+      "description": stateData.description || "",
+      "image": stateData.image_url || "",
+      "containedInPlace": {
+        "@type": "Country",
+        "name": "India"
+      },
+      "touristType": ["Culture", "History", "Nature", "Sightseeing"]
+    };
+  }, [stateData]);
+
+  useEffect(() => {
+    if (!structuredData) return;
+    
+    const existingScript = document.getElementById("state-structured-data");
+    if (existingScript) {
+      existingScript.remove();
+    }
+    
+    const script = document.createElement("script");
+    script.id = "state-structured-data";
+    script.type = "application/ld+json";
+    script.innerHTML = JSON.stringify(structuredData);
+    document.head.appendChild(script);
+    
+    return () => {
+      const scriptToRemove = document.getElementById("state-structured-data");
+      if (scriptToRemove) {
+        scriptToRemove.remove();
+      }
+    };
+  }, [structuredData]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -142,21 +200,20 @@ export default function StatePage() {
   }
 
   return (
-    <div className="bg-surface-container-lowest min-h-screen w-full relative">
-      <div className="mx-auto py-16 w-full relative">
+    <div className="bg-surface-container-lowest min-h-screen w-full relative pt-[72px]">
+      
+      {/* ── HERO ───────────────────────────────────────────── */}
+      <div className="relative h-[45vh] min-h-[320px] w-full overflow-hidden">
+        <img
+          src={stateData.image_url}
+          alt={stateData.name}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-slate-900/10" />
 
-        {/* ── HERO ───────────────────────────────────────────── */}
-        <div className="relative h-[60vh] min-h-[420px] overflow-hidden">
-          <img
-            src={stateData.image_url}
-            alt={stateData.name}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-slate-900/20" />
-
-          {/* Overlay content */}
-          <div className="absolute bottom-10 left-6 right-6 sm:left-12 max-w-7xl">
-
+        {/* Overlay content */}
+        <div className="absolute bottom-8 left-0 right-0 w-full px-6 md:px-12">
+          <div className="max-w-[1280px] mx-auto">
             {/* Breadcrumb */}
             <div className="flex items-center gap-1.5 text-xs text-slate-300 mb-3">
               <Link to="/" className="hover:text-white transition-colors">Home</Link>
@@ -166,70 +223,121 @@ export default function StatePage() {
 
             {/* State Name */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight">
-              Explore {stateData.name}
+              {stateData.name}
             </h1>
 
-            {/* Description */}
-            {stateData.description && (
-              <p className="mt-3 max-w-2xl text-sm sm:text-base text-slate-300 font-['Inter'] leading-relaxed">
-                {stateData.description}
-              </p>
-            )}
-
-            {/* Badges row */}
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              {stateData["best-time"] && (
-                <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 text-sm text-white font-['Inter']">
-                  <Clock size={13} className="text-amber-400" />
-                  Best Time: <span className="font-semibold text-amber-300">{stateData["best-time"]}</span>
-                </span>
-              )}
-              {stateData.capital && (
-                <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 text-sm text-white font-['Inter']">
-                  <Building2 size={13} className="text-primary" />
-                  Capital: <span className="font-semibold">{stateData.capital}</span>
-                </span>
-              )}
-              {stateData.website && (
-                <a
-                  href={stateData.website}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary/30 border border-primary/40 text-sm text-white hover:bg-primary/50 backdrop-blur-sm transition-all font-['Inter']"
-                >
-                  <Globe size={13} />
-                  Official Tourism Website
-                </a>
-              )}
-            </div>
-
             {/* Stats row */}
-            <div className="mt-6 flex flex-wrap items-center gap-6">
+            <div className="mt-4 flex flex-wrap items-center gap-6">
               <div>
-                <p className="text-3xl font-black text-primary">{stateData.experience_count ?? 0}</p>
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-['Inter'] mt-0.5">Experiences</p>
+                <span className="text-2xl font-black text-primary">{stateData.experience_count ?? 0}</span>
+                <span className="text-[10px] text-slate-400 uppercase tracking-widest font-['Inter'] ml-1.5">Experiences</span>
               </div>
               <div>
-                <p className="text-3xl font-black text-amber-400">{stateData.city_count ?? citiesList.length ?? 0}</p>
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-['Inter'] mt-0.5">Cities</p>
+                <span className="text-2xl font-black text-primary">{stateData.city_count ?? citiesList.length ?? 0}</span>
+                <span className="text-[10px] text-slate-400 uppercase tracking-widest font-['Inter'] ml-1.5">Cities</span>
               </div>
               {stateData.average_rating && (
-                <div>
-                  <p className="text-3xl font-black text-white flex items-center gap-1">
-                    <Star size={20} className="fill-white" />
+                <div className="flex items-center gap-1">
+                  <Star size={16} className="fill-amber-400 text-amber-400" />
+                  <span className="text-2xl font-black text-amber-400">
                     {Number(stateData.average_rating).toFixed(1)}
-                  </p>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-['Inter'] mt-0.5">Avg Rating</p>
+                  </span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-['Inter'] ml-1">Rating</span>
                 </div>
               )}
             </div>
           </div>
         </div>
+      </div>
 
-        {/* ── MAIN CONTENT ────────────────────────────────────── */}
-        <div className="max-w-[1280px] mx-auto px-6 md:px-12 py-12">
+      {/* ── MAIN CONTENT ────────────────────────────────────── */}
+      <div className="max-w-[1280px] mx-auto px-6 md:px-12 py-12">
 
-          {/* ── EXPERIENCES SECTION ─────────────────────────── */}
+        {/* ── ABOUT & QUICK FACTS ───────────────────────────── */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 mb-16">
+          <div className="lg:col-span-2 flex flex-col justify-start">
+            <h2 className="font-['Hanken_Grotesk'] text-2xl sm:text-3xl font-bold text-primary mb-4">
+              About {stateData.name}
+            </h2>
+            {stateData.description ? (
+              <div className="relative">
+                <div 
+                  className={`text-on-surface-variant font-['Inter'] text-base leading-relaxed text-justify transition-all duration-300 overflow-hidden ${
+                    isExpanded || stateData.description.length <= 250 ? "max-h-none" : "max-h-[120px] relative pb-6"
+                  }`}
+                >
+                  <p className="whitespace-pre-line">{stateData.description}</p>
+                  {!isExpanded && stateData.description.length > 250 && (
+                    <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/80 to-transparent pointer-events-none" />
+                  )}
+                </div>
+                {stateData.description.length > 250 && (
+                  <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="mt-2 text-primary hover:text-primary/85 font-bold font-['Hanken_Grotesk'] text-sm transition-all focus:outline-none cursor-pointer flex items-center gap-1"
+                  >
+                    {isExpanded ? "Show Less" : "Read More"}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <p className="text-on-surface-variant/70 font-['Inter'] text-base italic">
+                No description available for {stateData.name} yet.
+              </p>
+            )}
+          </div>
+
+          {/* Quick Facts Sidebar */}
+          <div className="bg-surface-container-low border border-outline-variant/40 rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-xs h-fit">
+            <h3 className="font-['Hanken_Grotesk'] text-lg font-bold text-primary pb-3 border-b border-outline-variant/30">
+              Quick Facts
+            </h3>
+            
+            <div className="flex flex-col gap-4">
+              {stateData.capital && (
+                <div className="flex items-start gap-3">
+                  <MapPin size={18} className="text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">Capital</p>
+                    <p className="text-sm font-semibold text-on-surface">{stateData.capital}</p>
+                  </div>
+                </div>
+              )}
+              
+              {stateData["best-time"] && (
+                <div className="flex items-start gap-3">
+                  <Clock size={18} className="text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">Best Time to Visit</p>
+                    <p className="text-sm font-semibold text-on-surface">{stateData["best-time"]}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-start gap-3">
+                <Compass size={18} className="text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">Total Cataloged Cities</p>
+                  <p className="text-sm font-semibold text-on-surface">{stateData.city_count ?? citiesList.length ?? 0} cities</p>
+                </div>
+              </div>
+            </div>
+
+            {stateData.website && (
+              <a
+                href={stateData.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 w-full text-center inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary font-['Hanken_Grotesk'] font-semibold text-sm hover:brightness-110 transition-all shadow-sm"
+              >
+                <Globe size={16} />
+                Official Tourism Website
+              </a>
+            )}
+          </div>
+        </section>
+
+        {/* ── EXPERIENCES SECTION ─────────────────────────── */}
           <section className="mb-16">
             {/* Section heading */}
             <div className="flex justify-between items-end mb-8">
@@ -486,7 +594,6 @@ export default function StatePage() {
               )}
             </div>
           </section>
-        </div>
       </div>
     </div>
   );

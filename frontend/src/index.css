@@ -172,11 +172,8 @@ div::-webkit-scrollbar {
 /* Smooth Transitions for theme toggling */
 body,
 header,
-nav,
 footer,
 div,
-a,
-button,
 h1,
 h2,
 h3,
@@ -188,6 +185,11 @@ span,
 input,
 select {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* nav needs transform included so scroll-hide/show animation works */
+nav {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 button,

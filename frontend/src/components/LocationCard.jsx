@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 
 function LocationCard({ location }) {
+  const citySlug = location.slug || (location.name ? location.name.toLowerCase().replace(/\s+/g, '-') : location.public_id);
   return (
-    <Link to={`/city/${location.public_id}`} className="block h-full">
+    <Link to={`/city/${citySlug}`} className="block h-full">
       <div className="relative group cursor-pointer rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 h-48 md:h-56 w-full">
 
         {/* Background Image */}

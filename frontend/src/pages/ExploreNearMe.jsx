@@ -175,7 +175,7 @@ const ExploreNearMe = () => {
           <Marker
             position={userLocation}
             icon={L.divIcon({
-              html: `<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg animate-pulse"></div>`,
+              html: `<div class="w-4 h-4 bg-[#006b55] rounded-full border-2 border-white shadow-lg animate-pulse"></div>`,
               className: 'custom-user-marker',
               iconSize: [16, 16],
               iconAnchor: [8, 8]

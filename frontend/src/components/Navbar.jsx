@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext, useRef } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import AuthContext from "../context/AuthContext";
 import ModalContext from "../context/ModalContext";
 import LocationContext from "../context/LocationContext";
@@ -9,21 +9,41 @@ function Navbar() {
   const { user, logout } = useContext(AuthContext);
   const { openLoginModal } = useContext(ModalContext);
   const { locations, selectedLocation, changeLocation } = useContext(LocationContext);
-  const { locationName, categoryName } = useParams();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   const handleLocationSelect = (locName) => {
     changeLocation(locName);
-    if (locationName) {
-      const locSlug = locName.toLowerCase().replace(/\s+/g, "-");
-      const catSlug = categoryName ? categoryName.toLowerCase().replace(/\s+/g, "-") : "all";
-      navigate(`/${locSlug}/${catSlug}`);
-    }
   };
 
   const lastScrollYRef = useRef(0);
   const [visible, setVisible] = useState(true);
-  const [showSearch, setShowSearch] = useState(false);
+
+  // Always show navbar when route changes
+  useEffect(() => {
+    setVisible(true);
+    lastScrollYRef.current = 0;
+  }, [pathname]);
+
+  // Hide navbar on scroll down, show on scroll up
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const diff = currentScrollY - lastScrollYRef.current;
+
+      if (currentScrollY <= 80) {
+        setVisible(true);
+      } else if (diff > 10) {
+        setVisible(false);
+      } else if (diff < -10) {
+        setVisible(true);
+      }
+      lastScrollYRef.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const { isSearchOpen, openSearch, closeSearch, searchInitialQuery } = useContext(ModalContext);
   const [searchQuery, setSearchQuery] = useState("");
@@ -47,32 +67,6 @@ function Navbar() {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const diff = currentScrollY - lastScrollYRef.current;
-
-      if (currentScrollY <= 80) {
-        setVisible(true);
-      } else if (diff > 10) {
-        setVisible(false);
-      } else if (diff < -10) {
-        setVisible(true);
-      }
-      lastScrollYRef.current = currentScrollY;
-
-      // Show search bar only after scrolling past the hero section (400px)
-      if (currentScrollY > 400) {
-        setShowSearch(true);
-      } else {
-        setShowSearch(false);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -112,8 +106,13 @@ function Navbar() {
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 w-full bg-surface-container-low backdrop-blur-md border-b border-outline-variant/30 shadow-xs transition-transform duration-300 ${visible ? "translate-y-0" : "-translate-y-full"
-        }`}>
+      <nav
+        className="fixed top-0 left-0 right-0 z-[60] w-full bg-surface-container-low backdrop-blur-md border-b border-outline-variant/30 shadow-xs"
+        style={{
+          transform: visible ? "translateY(0)" : "translateY(-100%)",
+          transition: "transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease",
+        }}
+      >
         <div className="navbar-content max-w-[1280px] mx-auto flex items-center justify-between gap-6 px-6 py-4">
 
           {/* Brand Logo & Nav Links */}
@@ -141,46 +140,53 @@ function Navbar() {
             {/* Navigation Links */}
             <div className="hidden lg:flex items-center gap-1 font-['Hanken_Grotesk']">
               <Link
-                to="/"
+                to="/state"
                 className="px-3.5 py-2 rounded-lg text-sm font-semibold text-on-surface-variant hover:text-primary hover:bg-surface-container active:scale-98 transition-all"
               >
-                Discover
+                Explore
               </Link>
               <Link
-                to={`/${selectedLocation.toLowerCase().replace(/\s+/g, '-')}/museum`}
+                to="/city"
                 className="px-3.5 py-2 rounded-lg text-sm font-semibold text-on-surface-variant hover:text-primary hover:bg-surface-container active:scale-98 transition-all"
               >
-                Museums
+                Cities
               </Link>
               <Link
-                to={`/${selectedLocation.toLowerCase().replace(/\s+/g, '-')}/heritage`}
+                to="/attractions"
                 className="px-3.5 py-2 rounded-lg text-sm font-semibold text-on-surface-variant hover:text-primary hover:bg-surface-container active:scale-98 transition-all"
               >
-                Heritage
+                Attractions
+              </Link>
+              <Link
+                to="/itineraries"
+                className="px-3.5 py-2 rounded-lg text-sm font-semibold text-on-surface-variant hover:text-primary hover:bg-surface-container active:scale-98 transition-all"
+              >
+                Trip Planner
               </Link>
             </div>
           </div>
 
           {/* Centered Search Wrapper (Desktop) */}
-          <div className={`flex-1 max-w-sm relative hidden sm:flex items-center bg-surface-container border border-outline-variant rounded-full shadow-xs px-2 py-1.5 font-['Inter'] transition-all duration-300 ${
-            showSearch ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
-          }`}>
+          <div className="flex-1 max-w-sm relative hidden sm:flex items-center bg-surface-container border border-outline-variant rounded-full shadow-xs px-2 py-1.5 font-['Inter']">
             <div ref={navbarLocRef} className="relative flex items-center select-none border-r border-outline-variant pr-1 pl-1">
               <button
                 type="button"
                 onClick={() => setIsNavbarLocOpen(!isNavbarLocOpen)}
                 className="flex items-center gap-0.5 text-xs font-bold text-on-surface hover:text-primary transition-colors cursor-pointer bg-transparent border-none py-0.5 pr-2 focus:outline-none"
-                style={{ transform: 'none', boxShadow: 'none' }}
+                style={{ transform: "none", boxShadow: "none" }}
               >
                 <span className="material-symbols-outlined text-primary text-base leading-none">location_on</span>
                 <span>{selectedLocation}</span>
-                <span className="material-symbols-outlined text-[10px] text-outline-variant ml-0.5 select-none transition-transform duration-200" style={{ transform: isNavbarLocOpen ? 'rotate(180deg)' : 'none', fontSize: '10px' }}>
+                <span
+                  className="material-symbols-outlined text-[10px] text-outline-variant ml-0.5 select-none leading-none"
+                  style={{ transform: isNavbarLocOpen ? "rotate(180deg)" : "none", fontSize: "10px", transition: "transform 0.2s ease" }}
+                >
                   keyboard_arrow_down
                 </span>
               </button>
 
               {isNavbarLocOpen && (
-                <div className="absolute left-0 top-full mt-2 w-40 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg z-50 py-1 animate-scale-in">
+                <div className="absolute left-0 top-full mt-2 w-40 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg z-[70] py-1 animate-scale-in">
                   {locations.map((loc) => {
                     const isSelected = loc.name === selectedLocation;
                     return (
@@ -191,8 +197,8 @@ function Navbar() {
                           handleLocationSelect(loc.name);
                           setIsNavbarLocOpen(false);
                         }}
-                        className={`w-full flex items-center justify-between text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors border-none bg-transparent`}
-                        style={{ transform: 'none', boxShadow: 'none' }}
+                        className="w-full flex items-center justify-between text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors border-none bg-transparent"
+                        style={{ transform: "none", boxShadow: "none" }}
                       >
                         <span className={isSelected ? "text-primary" : "text-on-surface-variant"}>{loc.name}</span>
                         {isSelected && (
@@ -207,7 +213,7 @@ function Navbar() {
             <button
               onClick={() => openSearch()}
               className="flex-1 flex items-center justify-between text-left text-xs text-outline-variant pl-3 pr-2 py-0.5 focus:outline-none cursor-pointer"
-              style={{ transform: 'none', boxShadow: 'none' }}
+              style={{ transform: "none", boxShadow: "none" }}
             >
               <span>Search experiences...</span>
               <span className="material-symbols-outlined text-outline-variant text-lg">search</span>
@@ -218,23 +224,21 @@ function Navbar() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => openSearch()}
-              className={`sm:hidden flex w-10 h-10 rounded-full border border-outline-variant text-on-surface items-center justify-center hover:text-primary hover:border-primary transition-all shadow-xs cursor-pointer bg-surface-container-lowest ${
-                showSearch ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none w-0 overflow-hidden border-none p-0 m-0"
-              }`}
+              className="sm:hidden flex w-10 h-10 rounded-full border border-outline-variant text-on-surface items-center justify-center hover:text-primary hover:border-primary transition-all shadow-xs cursor-pointer bg-surface-container-lowest"
               aria-label="Search"
             >
               <span className="material-symbols-outlined text-xl">search</span>
             </button>
 
             <Link
-              to="/my-bookings"
+              to="/dashboard"
               className="lg:flex hidden border border-outline-variant text-on-surface hover:text-primary hover:border-primary px-4 py-2 rounded-full text-xs sm:text-sm font-bold font-['Hanken_Grotesk'] tracking-wide transition-all flex items-center gap-1.5 shadow-xs hover:shadow-sm"
             >
               <span className="material-symbols-outlined text-base leading-none">shopping_bag</span>
               My Bookings
             </Link>
             <Link
-              to="/my-bookings"
+              to="/dashboard"
               className="lg:hidden flex w-10 h-10 rounded-full border border-outline-variant text-on-surface hover:text-primary hover:border-primary items-center justify-center transition-all shadow-xs bg-surface-container-lowest"
               aria-label="My Bookings"
             >
@@ -278,7 +282,8 @@ function Navbar() {
             )}
           </div>
 
-        </div>    </nav>
+        </div>
+      </nav>
 
       {/* Search Overlay/Modal Dialog */}
       {isSearchOpen && (
@@ -308,11 +313,14 @@ function Navbar() {
                   type="button"
                   onClick={() => setIsSearchLocOpen(!isSearchLocOpen)}
                   className="flex items-center gap-1 bg-surface-container-low hover:bg-surface-container border border-outline-variant rounded-lg px-2.5 py-1.5 transition-all text-xs font-semibold text-on-surface cursor-pointer"
-                  style={{ transform: 'none', boxShadow: 'none' }}
+                  style={{ transform: "none", boxShadow: "none" }}
                 >
                   <span className="material-symbols-outlined text-primary text-xs leading-none">location_on</span>
                   <span>{selectedLocation}</span>
-                  <span className="material-symbols-outlined text-[10px] text-outline-variant select-none ml-0.5 leading-none transition-transform duration-200" style={{ transform: isSearchLocOpen ? 'rotate(180deg)' : 'none' }}>
+                  <span
+                    className="material-symbols-outlined text-[10px] text-outline-variant select-none ml-0.5 leading-none"
+                    style={{ transform: isSearchLocOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s ease" }}
+                  >
                     keyboard_arrow_down
                   </span>
                 </button>
@@ -329,8 +337,8 @@ function Navbar() {
                             handleLocationSelect(loc.name);
                             setIsSearchLocOpen(false);
                           }}
-                          className={`w-full flex items-center justify-between text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors border-none bg-transparent`}
-                          style={{ transform: 'none', boxShadow: 'none' }}
+                          className="w-full flex items-center justify-between text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors border-none bg-transparent"
+                          style={{ transform: "none", boxShadow: "none" }}
                         >
                           <span className={isSelected ? "text-primary" : "text-on-surface-variant"}>{loc.name}</span>
                           {isSelected && (
@@ -371,7 +379,7 @@ function Navbar() {
                       <Link
                         key={expId}
                         to={`/attraction/${exp.slug}`}
-                        onClick={() => setIsSearchOpen(false)}
+                        onClick={() => closeSearch()}
                         className="flex items-center gap-4 p-3 rounded-xl hover:bg-primary/5 border border-transparent hover:border-primary/10 transition-all group"
                       >
                         <img

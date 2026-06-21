@@ -26,13 +26,12 @@ def initialize_razorpay_client():
         client.order.all({"count": 1})
         logger.info("Successfully authenticated with Razorpay.")
         return client
-    except razorpay.errors.AuthenticationError as e:
-        logger.error(
-            "Razorpay authentication failed. Please check your RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET."
+    except Exception as e:
+        logger.warning(
+            f"Razorpay credentials verification failed: {e}. "
+            "Continuing initialization to prevent application crash on startup."
         )
-        raise ImproperlyConfigured(
-            "Razorpay authentication failed. Please check your credentials."
-        ) from e
+        return razorpay.Client(auth=(key_id, key_secret))
 
 
 client = initialize_razorpay_client()

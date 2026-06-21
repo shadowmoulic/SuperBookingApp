@@ -25,7 +25,7 @@ const AdminDashboard = () => {
           </div>
           <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">Admin Access</h2>
           <p className="text-center text-gray-500 mb-8">Enter the gatephrase to proceed.</p>
-          
+
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <input
@@ -48,7 +48,7 @@ const AdminDashboard = () => {
 
   // Mock Stats
   const stats = [
-    { label: 'Total Signups', value: '1,248', icon: Users, color: 'text-blue-500', bg: 'bg-blue-100' },
+    { label: 'Total Signups', value: '1,248', icon: Users, color: 'text-[#006b55]', bg: 'bg-blue-100' },
     { label: 'Active Sessions', value: '42', icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-100' },
     { label: 'Total Attractions', value: '315', icon: Database, color: 'text-purple-500', bg: 'bg-purple-100' },
   ];
@@ -56,7 +56,7 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        
+
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">Admin Overview</h1>
           <button onClick={() => setIsAuthenticated(false)} className="text-sm font-medium text-rose-500 hover:text-rose-600 px-4 py-2 bg-rose-50 rounded-lg">

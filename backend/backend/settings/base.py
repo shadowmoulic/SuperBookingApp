@@ -159,13 +159,25 @@ RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
 RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
 
 # Firebase Configuration
-FIREBASE_KEY_PATH = os.getenv(
-    "FIREBASE_CREDENTIALS_PATH", BASE_DIR / "firebase-service-account.json"
-)
+firebase_path_env = os.getenv("FIREBASE_CREDENTIALS_PATH")
+if firebase_path_env:
+    # If relative, resolve it relative to BASE_DIR
+    if not os.path.isabs(firebase_path_env):
+        # strip './' or '.\'
+        clean_path = firebase_path_env
+        if clean_path.startswith("./"):
+            clean_path = clean_path[2:]
+        elif clean_path.startswith(".\\"):
+            clean_path = clean_path[2:]
+        FIREBASE_KEY_PATH = BASE_DIR / clean_path
+    else:
+        FIREBASE_KEY_PATH = Path(firebase_path_env)
+else:
+    FIREBASE_KEY_PATH = BASE_DIR / "firebase-service-account.json"
 
 if not firebase_admin._apps:
     try:
-        cred = credentials.Certificate(FIREBASE_KEY_PATH)
+        cred = credentials.Certificate(str(FIREBASE_KEY_PATH))
         firebase_admin.initialize_app(cred)
     except Exception as e:
         print(f"Warning: Firebase initialization failed: {e}")

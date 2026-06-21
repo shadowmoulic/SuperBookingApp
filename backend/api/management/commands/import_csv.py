@@ -1,11 +1,11 @@
 import csv
 from datetime import datetime
 from django.core.management.base import BaseCommand
-from content.models import Experience, Category, Location
+from content.models import Experience, Category, City
 
 
 class Command(BaseCommand):
-    help = "Import places with foreign keys"
+    help = "Import places with foreign keys mapped to Category and City"
 
     def add_arguments(self, parser):
         parser.add_argument("csv_file", type=str)
@@ -15,7 +15,7 @@ class Command(BaseCommand):
 
         # Cache using lowercase key for lookup, store actual object
         categories = {c.name.strip().lower(): c for c in Category.objects.all()}
-        locations = {l.name.strip().lower(): l for l in Location.objects.all()}
+        cities = {c.name.strip().lower(): c for c in City.objects.all()}
 
         created_count = 0
         skipped_count = 0
@@ -34,12 +34,12 @@ class Command(BaseCommand):
                         category, _ = Category.objects.get_or_create(name=cat_name)
                         categories[cat_key] = category
 
-                    loc_name = row["LOCATION"].strip()
-                    loc_key = loc_name.lower()
-                    location = locations.get(loc_key)
-                    if not location:
-                        location, _ = Location.objects.get_or_create(name=loc_name)
-                        locations[loc_key] = location
+                    city_name = row["LOCATION"].strip()
+                    city_key = city_name.lower()
+                    city_obj = cities.get(city_key)
+                    if not city_obj:
+                        city_obj, _ = City.objects.get_or_create(name=city_name)
+                        cities[city_key] = city_obj
 
                     is_open = row["IS_OPEN"].strip().lower() in ["true", "1", "yes"]
 
@@ -56,7 +56,7 @@ class Command(BaseCommand):
                     # Use get_or_create to avoid duplicates on re-import
                     place, created = Experience.objects.get_or_create(
                         name=row["NAME"],
-                        location=location,
+                        city=city_obj,
                         defaults={
                             "description": row["DESCRIPTION"],
                             "latitude": float(row["LATITUDE"]),
@@ -88,4 +88,3 @@ class Command(BaseCommand):
                 f"Imported {created_count} places successfully! ({skipped_count} already existed, skipped)"
             )
         )
-

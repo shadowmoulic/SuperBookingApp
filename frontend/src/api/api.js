@@ -101,6 +101,8 @@ export const getExperience = (id) => api.get(`/api/experience/${id}`);
 export const createBooking = (data) => api.post("/api/booking/create/", data);
 export const getBookings = (userId) => api.get(`/bookings/user/${userId}`);
 export const loginUser = (data) => api.post("/auth/login", data);
+export const getStates = () => api.get("/api/states/");
+export const getCities = () => api.get("/api/cities/");
 export default api;
 
 
