@@ -5,6 +5,102 @@ import ModalContext from "../context/ModalContext";
 import LocationContext from "../context/LocationContext";
 import api from "../api/api";
 
+function LocationDropdown({ locations, selectedLocation, onSelect, align = "left" }) {
+  const scrollRef = useRef(null);
+  const [thumb, setThumb] = useState({ height: 0, top: 0, visible: false });
+
+  useEffect(() => {
+    const updateThumb = () => {
+      const element = scrollRef.current;
+      if (!element) return;
+
+      const { scrollTop, scrollHeight, clientHeight } = element;
+      const hasOverflow = scrollHeight > clientHeight + 1;
+
+      if (!hasOverflow) {
+        setThumb({ height: 0, top: 0, visible: false });
+        return;
+      }
+
+      const minThumbHeight = 36;
+      const thumbHeight = Math.max((clientHeight / scrollHeight) * clientHeight, minThumbHeight);
+      const maxThumbTop = clientHeight - thumbHeight;
+      const thumbTop = scrollHeight > clientHeight
+        ? (scrollTop / (scrollHeight - clientHeight)) * maxThumbTop
+        : 0;
+
+      setThumb({ height: thumbHeight, top: thumbTop, visible: true });
+    };
+
+    updateThumb();
+    window.addEventListener("resize", updateThumb);
+
+    return () => window.removeEventListener("resize", updateThumb);
+  }, [locations]);
+
+  return (
+    <div
+      className={`absolute top-full mt-2 w-40 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-lg overflow-hidden animate-scale-in ${
+        align === "right" ? "right-0 z-[110]" : "left-0 z-[70]"
+      }`}
+    >
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          onScroll={() => {
+            const element = scrollRef.current;
+            if (!element) return;
+
+            const { scrollTop, scrollHeight, clientHeight } = element;
+            const minThumbHeight = 36;
+            const thumbHeight = Math.max((clientHeight / scrollHeight) * clientHeight, minThumbHeight);
+            const maxThumbTop = clientHeight - thumbHeight;
+            const thumbTop = scrollHeight > clientHeight
+              ? (scrollTop / (scrollHeight - clientHeight)) * maxThumbTop
+              : 0;
+
+            setThumb((prev) => ({ ...prev, top: thumbTop }));
+          }}
+          className="max-h-80 overflow-y-auto py-1 pr-4 scroll-smooth"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {locations.map((loc) => {
+            const isSelected = loc.name === selectedLocation;
+            return (
+              <button
+                key={loc.public_id}
+                type="button"
+                onClick={() => onSelect(loc.name)}
+                className="w-full flex items-center justify-between text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors border-none bg-transparent hover:bg-primary/5"
+                style={{ transform: "none", boxShadow: "none" }}
+              >
+                <span className={isSelected ? "text-primary" : "text-on-surface-variant"}>{loc.name}</span>
+                {isSelected && (
+                  <span className="material-symbols-outlined text-primary text-xs leading-none">check</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {thumb.visible && (
+          <div className="pointer-events-none absolute top-3 bottom-3 right-2 flex w-2 justify-center">
+            <div className="relative h-full w-1 rounded-full bg-surface-container-high">
+              <div
+                className="absolute left-0 w-1 rounded-full bg-primary/60"
+                style={{
+                  height: `${thumb.height}px`,
+                  transform: `translateY(${thumb.top}px)`,
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Navbar() {
   const { user, logout } = useContext(AuthContext);
   const { openLoginModal } = useContext(ModalContext);
@@ -186,28 +282,14 @@ function Navbar() {
               </button>
 
               {isNavbarLocOpen && (
-                <div className="absolute left-0 top-full mt-2 w-40 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg z-[70] py-1 animate-scale-in">
-                  {locations.map((loc) => {
-                    const isSelected = loc.name === selectedLocation;
-                    return (
-                      <button
-                        key={loc.public_id}
-                        type="button"
-                        onClick={() => {
-                          handleLocationSelect(loc.name);
-                          setIsNavbarLocOpen(false);
-                        }}
-                        className="w-full flex items-center justify-between text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors border-none bg-transparent"
-                        style={{ transform: "none", boxShadow: "none" }}
-                      >
-                        <span className={isSelected ? "text-primary" : "text-on-surface-variant"}>{loc.name}</span>
-                        {isSelected && (
-                          <span className="material-symbols-outlined text-primary text-xs leading-none">check</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+                <LocationDropdown
+                  locations={locations}
+                  selectedLocation={selectedLocation}
+                  onSelect={(locName) => {
+                    handleLocationSelect(locName);
+                    setIsNavbarLocOpen(false);
+                  }}
+                />
               )}
             </div>
             <button
@@ -326,28 +408,15 @@ function Navbar() {
                 </button>
 
                 {isSearchLocOpen && (
-                  <div className="absolute right-0 mt-1.5 w-40 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg z-[110] py-1 animate-scale-in">
-                    {locations.map((loc) => {
-                      const isSelected = loc.name === selectedLocation;
-                      return (
-                        <button
-                          key={loc.public_id}
-                          type="button"
-                          onClick={() => {
-                            handleLocationSelect(loc.name);
-                            setIsSearchLocOpen(false);
-                          }}
-                          className="w-full flex items-center justify-between text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors border-none bg-transparent"
-                          style={{ transform: "none", boxShadow: "none" }}
-                        >
-                          <span className={isSelected ? "text-primary" : "text-on-surface-variant"}>{loc.name}</span>
-                          {isSelected && (
-                            <span className="material-symbols-outlined text-primary text-xs leading-none">check</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <LocationDropdown
+                    align="right"
+                    locations={locations}
+                    selectedLocation={selectedLocation}
+                    onSelect={(locName) => {
+                      handleLocationSelect(locName);
+                      setIsSearchLocOpen(false);
+                    }}
+                  />
                 )}
               </div>
 

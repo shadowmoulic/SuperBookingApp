@@ -708,12 +708,12 @@ export default function DemoHome() {
             <div className="lg:col-span-8">
               {itinerary && (
                 <div className="space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-tertiary/20 bg-tertiary/10 px-4 py-4 shadow-sm">
                     <div>
-                      <p className="text-xs font-bold text-primary uppercase tracking-widest">Your Itinerary</p>
-                      <h3 className="text-on-surface font-black text-2xl mt-1">{itinerary.title}</h3>
+                      <p className="text-xs font-bold text-tertiary uppercase tracking-widest">Your Itinerary</p>
+                      <h3 className="text-tertiary font-black text-2xl mt-1">{itinerary.title}</h3>
                     </div>
-                    <span className="self-start bg-primary text-on-primary text-xs font-black px-3.5 py-1.5 rounded-full">
+                    <span className="self-start bg-tertiary text-on-tertiary text-xs font-black px-3.5 py-1.5 rounded-full">
                       {itinerary.duration}
                     </span>
                   </div>
