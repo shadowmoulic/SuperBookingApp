@@ -5,12 +5,14 @@ import { useLocation } from "react-router-dom";
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: "assistant", content: "Hello. I am the ZeQue travel assistant. How may I help you plan your itinerary today?" }
+    { role: "assistant", content: "👋 Welcome to ZeQue Assistant.\n\nChoose an option below or ask me about places, itineraries, food, hotels, and attractions." }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const location = useLocation();
+
+  const quickOptions=["Places to visit in Hyderabad","Best restaurants in Hyderabad","Best hotels in Hyderabad","Best time to visit Hyderabad","Top attractions in Hyderabad"];
 
 
 
@@ -37,7 +39,21 @@ export default function Chatbot() {
         body: JSON.stringify({
           model: "llama-3.1-8b-instant",
           messages: [
-            { role: "system", content: "You are a professional, highly knowledgeable travel assistant for an application called ZeQue. You provide concise, accurate, and professional advice without using emojis." },
+            { role: "system", content: `You are ZeQue travel assistant.
+             Keep answers under 80 words.
+             Never write long paragraphs.
+             Use bullet points.
+             Recommend at most 3 places.
+             Format responses like:
+              📍 Charminar
+              Historic monument
+         📍 Golconda Fort
+           Famous fort
+            📍 Hussain Sagar
+             Lake and boating
+
+Keep responses clean and mobile friendly.
+` },
             ...messages.map(m => ({ role: m.role, content: m.content })),
             { role: "user", content: userMsg }
           ],
@@ -64,7 +80,7 @@ export default function Chatbot() {
   return (
     <div className={`fixed right-6 z-50 ${isDetailsPage ? "bottom-24 lg:bottom-6" : "bottom-6"}`}>
       {isOpen ? (
-        <div className="bg-surface-container-lowest rounded-3xl shadow-2xl border border-gray-150 w-80 h-[400px] flex flex-col overflow-hidden transition-all duration-300">
+        <div className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-gray-150 w-[380px] h-[500px] flex flex-col overflow-hidden transition-all duration-300">
           {/* Header */}
           <div className="bg-primary text-on-primary p-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -80,9 +96,25 @@ export default function Chatbot() {
 
           {/* Chat area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-surface-container-low">
+            {messages.length === 1 && (
+  <div className="grid grid-cols-1 gap-2 mb-4">
+    {quickOptions.map((option) => (
+      <button
+        key={option}
+        onClick={() => setInput(option)}
+        className="text-xs bg-white border rounded-xl p-3 hover:border-primary text-left"
+      >
+        {option}
+      </button>
+    ))}
+  </div>
+)}
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${msg.role === 'user' ? 'bg-primary text-on-primary rounded-br-sm' : 'bg-surface-container-lowest border border-gray-200 text-gray-700 rounded-bl-sm shadow-sm'}`}>
+                <div  className={`max-w-[85%] px-4 py-2 text-sm ${ msg.role === "user"
+                                    ? "bg-primary text-on-primary rounded-2xl rounded-br-md"
+                                  : "bg-white border border-gray-200 text-gray-700 rounded-2xl rounded-bl-md shadow-sm"
+                                                      }`}>
                   {msg.content}
                 </div>
               </div>
