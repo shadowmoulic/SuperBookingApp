@@ -200,13 +200,15 @@ const INTERESTS = ["History", "Architecture", "Photography", "Spiritual", "Famil
 
 
 
+const FALLBACK_EXP_IMAGE = "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&q=80&w=800";
+
 function SmallExperienceCard({ experience }) {
   const slug = experience.name ? experience.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : experience.public_id;
   const images = String(experience.image_url || "")
     .split(",")
     .map((url) => url.trim())
     .filter(Boolean);
-  const coverImage = images[0] || experience.image_url;
+  const coverImage = images[0] || experience.image_url || FALLBACK_EXP_IMAGE;
 
   return (
     <Link to={`/attraction/${slug}`} className="block h-full group">
@@ -218,6 +220,7 @@ function SmallExperienceCard({ experience }) {
             src={coverImage}
             alt={experience.name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
           />
           {/* Absolute Price Tag */}
           <div className="absolute top-4 right-4 bg-surface-container-lowest/95 backdrop-blur-xs px-3 py-1.5 rounded-lg shadow-sm border border-outline-variant/30">
@@ -231,7 +234,7 @@ function SmallExperienceCard({ experience }) {
         <div className="p-5 flex-1 flex flex-col justify-between">
           <div>
             {/* City Tag */}
-            <span className="text-xs font-semibold tracking-wider uppercase text-outline-variant font-['Inter'] block mb-1">
+            <span className="text-xs font-semibold tracking-wider uppercase text-on-surface-variant font-['Inter'] block mb-1">
               {experience.city}
             </span>
             {/* Name Title */}
@@ -485,19 +488,27 @@ function Home() {
           {/* Background slides */}
           {HERO_SLIDES.map((slide, i) => (
             <div key={i} className={`absolute inset-0 transition-opacity duration-700 ${i === currentSlide ? "opacity-100" : "opacity-0"}`}>
-              <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+              <img
+                src={slide.image}
+                alt={slide.title || "Hero Slide Banner"}
+                className="w-full h-full object-cover"
+                fetchpriority={i === 0 ? "high" : "low"}
+                loading="eager"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-slate-900/20" />
             </div>
           ))}
 
           {/* Slide nav dots */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1">
             {HERO_SLIDES.map((_, i) => (
               <button
                 key={i} onClick={() => setCurrentSlide(i)}
-                className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? "w-7 bg-amber-400" : "w-2 bg-white/40 hover:bg-white/70"}`}
+                className="h-12 w-8 flex items-center justify-center cursor-pointer group"
                 aria-label={`Slide ${i + 1}`}
-              />
+              >
+                <span className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? "w-7 bg-amber-400" : "w-2 bg-white/40 group-hover:bg-white/70"}`} />
+              </button>
             ))}
           </div>
 
@@ -844,8 +855,9 @@ function Home() {
                 <div className="space-y-5">
                   {/* City */}
                   <div>
-                    <label className="block font-['Inter'] text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Destination</label>
+                    <label htmlFor="home-planner-city" className="block font-['Inter'] text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Destination</label>
                     <select
+                      id="home-planner-city"
                       value={plannerCity}
                       onChange={(e) => { const c = e.target.value; setPlannerCity(c); setItinerary(FALLBACK_ITINERARIES[c]); }}
                       className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary font-['Inter'] cursor-pointer"
@@ -906,15 +918,49 @@ function Home() {
               <div className="lg:col-span-8">
                 {itinerary && (
                   <div className="space-y-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div>
-                        <p className="font-['Hanken_Grotesk'] text-xs font-bold text-primary uppercase tracking-widest">Your Itinerary</p>
-                        <h3 className="font-['Hanken_Grotesk'] text-on-surface font-bold text-2xl mt-1">{itinerary.title}</h3>
+                    <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-6 sm:p-8 shadow-md border border-outline-variant/30">
+                      {/* Background Image with overlay */}
+                      <div className="absolute inset-0 z-0">
+                        <img 
+                          src={
+                            plannerCity === "jaipur" 
+                              ? "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=800&q=80" 
+                              : plannerCity === "delhi"
+                              ? "https://images.unsplash.com/photo-1587135941948-670b381f08ec?auto=format&fit=crop&w=800&q=80"
+                              : plannerCity === "agra"
+                              ? "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=800&q=80"
+                              : plannerCity === "kolkata"
+                              ? "https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=800&q=80"
+                              : plannerCity === "hyderabad"
+                              ? "https://images.unsplash.com/photo-1627471900135-e110757d54b5?auto=format&fit=crop&w=800&q=80"
+                              : plannerCity === "hampi"
+                              ? "https://images.unsplash.com/photo-1600100397608-f010e42ed98e?auto=format&fit=crop&w=800&q=80"
+                              : "https://images.unsplash.com/photo-1561361062-8567535fde36?auto=format&fit=crop&w=800&q=80"
+                          } 
+                          alt={itinerary.title}
+                          className="w-full h-full object-cover brightness-40 transition-all duration-500" 
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/40 to-transparent" />
                       </div>
-                      <span className="self-start bg-primary text-on-primary text-xs font-['Hanken_Grotesk'] font-bold px-3.5 py-1.5 rounded-full shadow-xs">
-                        {itinerary.duration}
-                      </span>
+                      
+                      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-widest bg-amber-400/20 px-3 py-1 rounded-full border border-amber-400/30">
+                            Curated AI Tour
+                          </span>
+                          <h3 className="font-['Hanken_Grotesk'] text-white font-extrabold text-2xl sm:text-3xl mt-3 tracking-tight drop-shadow-md">
+                            {itinerary.title}
+                          </h3>
+                          <p className="font-['Inter'] text-slate-200 text-xs sm:text-sm mt-2 max-w-xl leading-relaxed">
+                            A custom heritage route built for you. Discover the best landmarks, cultural significance, and timing plans.
+                          </p>
+                        </div>
+                        <span className="self-start sm:self-auto bg-amber-400 text-slate-950 text-xs font-['Hanken_Grotesk'] font-black px-4 py-2 rounded-full shadow-md shrink-0">
+                          {itinerary.duration}
+                        </span>
+                      </div>
                     </div>
+
 
                     {itinerary.days.map((dayData, di) => (
                       <div key={di} className="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-xs">

@@ -739,8 +739,9 @@ export function ExperienceDetails() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-[#3e4945] uppercase tracking-wider mb-1">Time Slot</label>
+                  <label htmlFor="experience-mock-time-slot" className="block text-[10px] font-bold text-[#3e4945] uppercase tracking-wider mb-1">Time Slot</label>
                   <select 
+                    id="experience-mock-time-slot"
                     value={timeSlot}
                     onChange={(e) => setTimeSlot(e.target.value)}
                     className="w-full h-10 px-3 border border-[#E8ECEB] rounded-xl focus:ring-2 focus:ring-[#006955] focus:border-[#006955] focus:outline-none transition-all text-xs font-semibold bg-white appearance-none"

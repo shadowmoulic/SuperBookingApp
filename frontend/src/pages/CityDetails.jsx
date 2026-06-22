@@ -480,7 +480,9 @@ export default function CityDetails() {
           
           <div className="hidden md:flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
             <div className="relative">
+              <label htmlFor="city-details-rating" className="sr-only">Rating Filter</label>
               <select 
+                id="city-details-rating"
                 value={selectedRating} 
                 onChange={(e) => setSelectedRating(e.target.value)}
                 className="appearance-none bg-[#f0edee] border border-[#bdc9c3] rounded-xl pl-4 pr-10 py-1.5 text-xs font-semibold text-[#1b1b1c] outline-none cursor-pointer focus:ring-2 focus:ring-[#006955]/20 focus:border-[#006955]"

@@ -11,6 +11,8 @@ import AuthContext from "../context/AuthContext";
 import ModalContext from "../context/ModalContext";
 import Loading from "../components/Loading";
 
+const FALLBACK_EXP_IMAGE = "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&q=80&w=800";
+
 export function ExperienceDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -242,9 +244,12 @@ export function ExperienceDetails() {
         {/* Hero Section */}
         <section className="relative w-full h-[50vh] sm:h-[60vh] min-h-[350px] overflow-hidden">
           <img
-            alt={experience.name}
+            alt={experience?.name || "Experience Banner"}
             className="w-full h-full object-cover"
-            src={images[0] || experience.image_url}
+            src={images[0] || experience.image_url || FALLBACK_EXP_IMAGE}
+            onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
+            fetchpriority="high"
+            loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
 
@@ -369,7 +374,8 @@ export function ExperienceDetails() {
                   <img
                     alt={`${experience.name} Sunrise`}
                     className="w-full h-full object-cover"
-                    src={experience.image_sunrise}
+                    src={experience.image_sunrise || FALLBACK_EXP_IMAGE}
+                    onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
                   />
                 </div>
               </section>
@@ -379,23 +385,27 @@ export function ExperienceDetails() {
           <section className="space-y-4">
             <h3 className="text-lg font-black text-on-surface">Pro Tips</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-5 bg-primary/5 rounded-2xl border border-primary/10">
-                <CreditCard className="w-5 h-5 text-primary mb-2" />
+              <div className="p-5 bg-primary/5 rounded-2xl border border-primary/10 flex flex-col items-center text-center shadow-2xs">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary mb-2 shadow-xs">
+                  <CreditCard className="w-5 h-5" />
+                </div>
                 <p className="text-xs font-black text-on-surface mb-1">Carry ID</p>
-                <p className="text-[11px] text-on-surface-variant font-semibold leading-relaxed">A valid original government ID is mandatory for entry.</p>
+                <p className="text-[10px] text-on-surface-variant font-semibold leading-relaxed">A valid original government ID is mandatory for entry.</p>
               </div>
-              <div className="p-5 bg-tertiary/5 rounded-2xl border border-tertiary/10">
-                <Shirt className="w-5 h-5 text-tertiary mb-2" />
+              <div className="p-5 bg-primary/5 rounded-2xl border border-primary/10 flex flex-col items-center text-center shadow-2xs">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary mb-2 shadow-xs">
+                  <Shirt className="w-5 h-5" />
+                </div>
                 <p className="text-xs font-black text-on-surface mb-1">Dress Code</p>
-                <p className="text-[11px] text-on-surface-variant font-semibold leading-relaxed">Shoes must be removed at the mausoleum entrance.</p>
+                <p className="text-[10px] text-on-surface-variant font-semibold leading-relaxed">Shoes must be removed at the mausoleum entrance.</p>
               </div>
-              <div className="col-span-2 p-5 bg-secondary/5 rounded-2xl border border-secondary/10 flex items-center gap-4">
-                <div className="w-12 h-12 bg-surface-container-lowest border border-outline-variant/30 rounded-xl flex items-center justify-center shrink-0">
-                  <CameraOff className="w-6 h-6 text-secondary" />
+              <div className="col-span-2 p-5 bg-primary/5 rounded-2xl border border-primary/10 flex flex-col items-center text-center gap-3 shadow-2xs">
+                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-on-primary shadow-xs shrink-0">
+                  <CameraOff className="w-6 h-6" />
                 </div>
                 <div>
                   <p className="text-xs font-black text-on-surface mb-0.5">Pro Cameras Restricted</p>
-                  <p className="text-[11px] text-on-surface-variant font-semibold leading-relaxed">Tripods and professional lighting require prior written permission.</p>
+                  <p className="text-[10px] text-on-surface-variant font-semibold leading-relaxed">Tripods and professional lighting require prior written permission.</p>
                 </div>
               </div>
             </div>
@@ -603,24 +613,29 @@ export function ExperienceDetails() {
             <section className="grid grid-cols-12 grid-rows-2 gap-4 h-[500px]">
               <div className="col-span-8 row-span-2 relative overflow-hidden rounded-2xl group cursor-pointer border border-outline-variant/30">
                 <img
-                  alt={experience.name}
+                  alt={experience?.name || "Experience Main Image"}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-102"
-                  src={images[0] || experience.image_url}
+                  src={images[0] || experience.image_url || FALLBACK_EXP_IMAGE}
+                  onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
+                  fetchpriority="high"
+                  loading="eager"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
               <div className="col-span-4 row-span-1 overflow-hidden rounded-2xl group cursor-pointer border border-outline-variant/30">
                 <img
-                  alt={experience.name}
+                  alt={experience?.name || "Experience Detail Image"}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  src={images[1] || images[0] || experience.image_url}
+                  src={images[1] || images[0] || experience.image_url || FALLBACK_EXP_IMAGE}
+                  onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
                 />
               </div>
               <div className="col-span-4 row-span-1 relative overflow-hidden rounded-2xl group cursor-pointer border border-outline-variant/30">
                 <img
-                  alt={experience.name}
+                  alt={experience?.name || "Experience Detail Image"}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  src={images[2] || images[0] || experience.image_url}
+                  src={images[2] || images[0] || experience.image_url || FALLBACK_EXP_IMAGE}
+                  onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
                 />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <span className="text-white text-xs font-black border border-white px-4 py-2 rounded-lg">View All Photos</span>
@@ -688,7 +703,8 @@ export function ExperienceDetails() {
                       <img
                         alt="Sunrise at Taj"
                         className="rounded-2xl border border-outline-variant/30 shadow-sm w-full h-[280px] object-cover"
-                        src={experience.image_sunrise}
+                        src={experience.image_sunrise || FALLBACK_EXP_IMAGE}
+                        onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
                       />
                     </div>
                   </div>
@@ -699,19 +715,25 @@ export function ExperienceDetails() {
             <section className="space-y-6">
               <h2 className="text-lg font-black text-on-surface">Pro Tips for Your Visit</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all">
-                  <CreditCard className="w-8 h-8 text-primary mb-3" />
-                  <h3 className="text-sm font-extrabold text-on-surface mb-1.5">Valid ID</h3>
+                <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all flex flex-col items-center text-center shadow-2xs">
+                  <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-on-primary mb-4 shadow-sm">
+                    <CreditCard className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-sm font-extrabold text-on-surface mb-2">Valid ID</h3>
                   <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">All visitors must carry an original passport or government-issued ID card matching the booking name.</p>
                 </div>
-                <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all">
-                  <Shirt className="w-8 h-8 text-primary mb-3" />
-                  <h3 className="text-sm font-extrabold text-on-surface mb-1.5">Dress Code</h3>
+                <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all flex flex-col items-center text-center shadow-2xs">
+                  <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-on-primary mb-4 shadow-sm">
+                    <Shirt className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-sm font-extrabold text-on-surface mb-2">Dress Code</h3>
                   <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">Modest clothing is recommended. Shoe covers are provided and mandatory for entering the Mausoleum.</p>
                 </div>
-                <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all">
-                  <CameraOff className="w-8 h-8 text-primary mb-3" />
-                  <h3 className="text-sm font-extrabold text-on-surface mb-1.5">Camera Policy</h3>
+                <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all flex flex-col items-center text-center shadow-2xs">
+                  <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-on-primary mb-4 shadow-sm">
+                    <CameraOff className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-sm font-extrabold text-on-surface mb-2">Camera Policy</h3>
                   <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">Still photography is permitted on the grounds, but prohibited inside the main mausoleum chamber.</p>
                 </div>
               </div>
@@ -754,7 +776,7 @@ export function ExperienceDetails() {
           </div>
 
           {/* Right Column: Sticky Booking Widget */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 bg-primary/5 rounded-[24px] p-4">
             <div className="sticky top-28 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-sm space-y-4">
 
               {/* Urgency Banner */}
@@ -822,8 +844,9 @@ export function ExperienceDetails() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Time Slot</label>
+                  <label htmlFor="experience-details-time-slot" className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Time Slot</label>
                   <select
+                    id="experience-details-time-slot"
                     value={timeSlot}
                     onChange={(e) => setTimeSlot(e.target.value)}
                     className="w-full h-10 px-3 border border-outline-variant/30 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none transition-all text-xs font-semibold bg-surface-container-lowest text-on-surface appearance-none"

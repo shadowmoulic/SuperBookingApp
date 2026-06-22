@@ -293,10 +293,11 @@ export default function CategoryPage({ type }) {
         </div>
 
         <div className="flex items-center gap-4 w-full md:w-auto justify-end">
-          <span className="text-xs font-bold text-gray-400 uppercase font-['Inter'] tracking-wider">
+          <label htmlFor="category-sort-by" className="text-xs font-bold text-gray-400 uppercase font-['Inter'] tracking-wider">
             Sort By:
-          </span>
+          </label>
           <select
+            id="category-sort-by"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="bg-white border-none text-gray-700 font-bold focus:ring-0 cursor-pointer text-sm font-['Hanken_Grotesk'] py-1 px-2 rounded-md hover:bg-gray-50 transition-colors focus:outline-none"

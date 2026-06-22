@@ -372,10 +372,11 @@ export default function StatePage() {
               </div>
 
               <div className="flex items-center gap-3 w-full md:w-auto justify-end shrink-0">
-                <span className="text-[10px] font-bold text-on-surface-variant uppercase font-['Inter'] tracking-wider">
+                <label htmlFor="state-sort-by" className="text-[10px] font-bold text-on-surface-variant uppercase font-['Inter'] tracking-wider cursor-pointer">
                   Sort By:
-                </span>
+                </label>
                 <select
+                  id="state-sort-by"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="bg-surface-container-low border border-outline-variant/50 text-on-surface font-['Hanken_Grotesk'] font-semibold text-sm focus:ring-0 cursor-pointer py-1.5 px-3 rounded-xl hover:border-primary/40 transition-colors focus:outline-none"

@@ -1,25 +1,26 @@
-# ZeQue 
+# ZeQue
 
-ZeQue is India's premier heritage discovery and ticketing platform. We help travelers explore over 1,500 monuments, heritage trails, and historic cities with context, AI-powered itineraries, and seamless booking.
+ZeQue is a high-fidelity Indian heritage discovery and monument booking web platform. It helps users discover curated heritage sites, cultural exhibitions, monuments, and guided tours across various cities and states in India, and book entry passes/tickets instantly.
 
-## Core Features
-- **Heritage Context**: Deep historical backgrounds, visiting rules, and timings for every monument.
-- **AI Itinerary Planner**: Generate customized day-by-day itineraries based on your duration and interests (e.g., History, Photography, Family).
-- **Curated Trails**: Expertly designed routes like the Golden Triangle, Rajasthan Royal Trail, and Buddhist Circuit.
-- **Location Awareness**: Discover hidden gems and top attractions near you.
+## Core Features & Capabilities
 
-## Main Routes
-- `/`: The main landing page featuring our AI planner and top cities.
-- `/explore-near-me`: Location-based discovery of nearby attractions.
-- `/itineraries`: Ready-made expert travel plans (1 Day Jaipur, etc.).
-- `/top-places`: Curated rankings (Top 100 Attractions, Most Visited).
-- `/unesco-sites`: A dedicated showcase of India's 42 World Heritage Sites.
-- `/trails`: Historic pathways and cultural circuits.
-- `/categories`: Browse by attraction type (Forts, Museums, Palaces, Temples).
-- `/attractions`: Our complete directory of monuments and wonders.
+- **State Directory**: Discover states of India (e.g., Karnataka, Rajasthan, Kerala) with curated counts of attractions, cataloged cities, and local highlights.
+- **City Hubs**: Explore major heritage cities (e.g., Delhi, Agra, Jaipur, Hampi, Varanasi, Kolkata, Hyderabad, Bengaluru, Mysuru, Coorg, Udaipur, Jodhpur, Jaisalmer, Kochi, Munnar, Alleppey, Wayanad) including local travel guides, best time to visit, and localized monuments.
+- **Trip Planner & Circuits**: Standard pre-curated heritage circuits (e.g., Golden Triangle, Rajasthan Royal Trail, Buddhist Circuit, Deccan Forts, Temple Trail) and dynamic AI-powered custom day-by-day travel itineraries.
+- **Experience Booking**: Instant booking for entry tickets with customized options for traveler nationality (Indian vs. Foreigner), date, and preferred time slot (e.g., Sunrise/Sunset).
+- **Interactive Map**: Geolocation-based visual guide of nearby heritage monuments and sites with custom Leaflet markers.
+- **AI Chatbot**: Intelligent assistant on all pages offering contextual recommendations, query-based travel search, and suggestions for popular sights.
 
-## AI Assistant
-We feature the "ZeQue Assistant", a professional AI travel guide available on all pages to answer specific questions about Indian heritage, suggest routes, and provide contextual facts.
+## Site Structure & Key Routes
 
-## Target Audience
-Families, students, photographers, history buffs, and anyone looking to understand India rather than just visit it.
+- **Home / Landing Page**: `/` — Dynamic search bar, trending destinations, curated tour circuits, and the AI Trip Planner tool.
+- **States Directory**: `/state` or `/state/:id` — Detail view of a state containing statistics, capitalized information, recommended cities, and sorted top experiences.
+- **Cities Directory**: `/city` or `/city/:id` — Detail view of a city containing quick facts, bento highlights galleries, filterable experiences list, and local travel advice.
+- **Experience Details**: `/attraction/:slug` — Interactive ticketing dashboard, reviews feed, value propositions (mobile tickets, skip-the-line), pro tips, and opening/closing schedules.
+- **Map View**: `/map` — Geolocation map showing nearby attractions, price filters, and integration to add attractions directly to customized trips.
+- **My Bookings**: `/dashboard` — User profile containing pending, upcoming, and completed booking passes, ticket confirmation references, and visual QR-code validation passes.
+- **Trip Planner Page**: `/itineraries` — Dynamic interface for customizing trip itineraries.
+
+## For Developers and AI Agents
+
+AI agents and crawlers can consume pages cleanly by following the structured semantic hierarchy. Every select input has associated labels for screen readers. Images have descriptive alternative text tags. Core REST APIs are hosted on `/api/` endpoints (powered by Django REST framework).

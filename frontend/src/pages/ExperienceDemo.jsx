@@ -725,8 +725,9 @@ export function ExperienceDemo() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-[#3b4a44] uppercase tracking-wider mb-1">Time Slot</label>
+                  <label htmlFor="experience-demo-time-slot" className="block text-[10px] font-bold text-[#3b4a44] uppercase tracking-wider mb-1">Time Slot</label>
                   <select 
+                    id="experience-demo-time-slot"
                     value={timeSlot}
                     onChange={(e) => setTimeSlot(e.target.value)}
                     className="w-full h-10 px-3 border border-[#e7e8e9] rounded-xl focus:ring-2 focus:ring-[#006b55] focus:border-[#006b55] focus:outline-none transition-all text-xs font-semibold bg-white appearance-none"

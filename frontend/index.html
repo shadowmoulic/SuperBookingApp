@@ -10,12 +10,30 @@
   <link rel="icon" type="image/svg+xml" href="Logo.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link rel="preconnect" href="https://i.redd.it">
+  <link rel="preconnect" href="https://superbookingapp.firebaseapp.com">
+  <link rel="preconnect" href="https://api.zeque.in">
+  <link rel="preconnect" href="https://www.fabhotels.com">
+  <!-- Non-blocking font loading: media=print + onload prevents render-blocking -->
   <link
-    href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Syne:wght@400..800&display=swap"
-    rel="stylesheet">
+    rel="preload"
+    as="style"
+    href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700;800&family=Syne:wght@400..800&display=swap"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700;800&family=Syne:wght@400..800&display=swap" rel="stylesheet">
+  </noscript>
   <link
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-    rel="stylesheet" />
+    rel="preload"
+    as="style"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+  </noscript>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -33,7 +51,6 @@
 
 <body>
   <div id="root"></div>
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 

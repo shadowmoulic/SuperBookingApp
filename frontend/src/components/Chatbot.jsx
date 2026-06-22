@@ -14,6 +14,45 @@ export default function Chatbot() {
 
 
 
+  const SUGGESTION_CHIPS = [
+    "2-day trip to Jaipur",
+    "Top sights in Hampi",
+    "How to book tickets?"
+  ];
+
+  const handleSuggestionClick = async (chipText) => {
+    if (isLoading) return;
+    setMessages(prev => [...prev, { role: "user", content: chipText }]);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "llama-3.1-8b-instant",
+          messages: [
+            { role: "system", content: "You are a professional, highly knowledgeable travel assistant for an application called ZeQue. You provide extremely brief, structured, bullet-point advice. Avoid long paragraphs and verbose explanations. Keep responses clean and concise under 4 sentences. Do not use emojis." },
+            ...messages.map(m => ({ role: m.role, content: m.content })),
+            { role: "user", content: chipText }
+          ],
+          temperature: 0.5,
+          max_tokens: 250
+        })
+      });
+      if (!response.ok) throw new Error("API error");
+      const data = await response.json();
+      setMessages(prev => [...prev, { role: "assistant", content: data.choices[0].message.content }]);
+    } catch (err) {
+      setMessages(prev => [...prev, { role: "assistant", content: "I am currently unable to connect to the server. Please try again later." }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -37,12 +76,12 @@ export default function Chatbot() {
         body: JSON.stringify({
           model: "llama-3.1-8b-instant",
           messages: [
-            { role: "system", content: "You are a professional, highly knowledgeable travel assistant for an application called ZeQue. You provide concise, accurate, and professional advice without using emojis." },
+            { role: "system", content: "You are a professional, highly knowledgeable travel assistant for an application called ZeQue. You provide extremely brief, structured, bullet-point advice. Avoid long paragraphs and verbose explanations. Keep responses clean and concise under 4 sentences. Do not use emojis." },
             ...messages.map(m => ({ role: m.role, content: m.content })),
             { role: "user", content: userMsg }
           ],
           temperature: 0.5,
-          max_tokens: 300
+          max_tokens: 250
         })
       });
       if (!response.ok) throw new Error("API error");
@@ -64,7 +103,7 @@ export default function Chatbot() {
   return (
     <div className={`fixed right-6 z-50 ${isDetailsPage ? "bottom-24 lg:bottom-6" : "bottom-6"}`}>
       {isOpen ? (
-        <div className="bg-surface-container-lowest rounded-3xl shadow-2xl border border-gray-150 w-80 h-[400px] flex flex-col overflow-hidden transition-all duration-300">
+        <div className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-gray-150 w-80 h-[400px] flex flex-col overflow-hidden transition-all duration-300">
           {/* Header */}
           <div className="bg-primary text-on-primary p-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -87,6 +126,24 @@ export default function Chatbot() {
                 </div>
               </div>
             ))}
+
+            {messages.length === 1 && (
+              <div className="flex flex-col gap-2 pt-1">
+                <p className="text-[10px] font-bold text-primary uppercase tracking-wider">Suggested queries:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {SUGGESTION_CHIPS.map((chip, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSuggestionClick(chip)}
+                      className="text-xs bg-surface-container-lowest hover:bg-primary/5 text-primary border border-primary/20 rounded-full px-2.5 py-1 transition-all text-left font-medium active:scale-95 shadow-2xs"
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {isLoading && (
               <div className="flex justify-start">
                 <div className="bg-surface-container-lowest border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm flex items-center gap-1.5">

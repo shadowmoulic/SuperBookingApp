@@ -51,6 +51,20 @@ export default function CheckoutPage() {
     }
   }, [bookingReference]);
 
+  useEffect(() => {
+    // Load Razorpay script dynamically
+    if (window.Razorpay) return;
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
+
   const payableAmount = booking ? Number(booking.total_amount) - discount : 0;
 
   const offers = [

@@ -28,7 +28,9 @@ export default function Footer() {
             </div>
             <div className="flex gap-4">
               <a
-                href="#"
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-on-surface/10 hover:bg-primary/20 transition-all duration-300 transform hover:scale-110"
                 aria-label="Facebook"
               >
@@ -41,7 +43,9 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="#"
+                href="https://x.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-on-surface/10 hover:bg-primary/20 transition-all duration-300 transform hover:scale-110"
                 aria-label="Twitter"
               >
@@ -54,7 +58,9 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="#"
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-on-surface/10 hover:bg-primary/20 transition-all duration-300 transform hover:scale-110"
                 aria-label="Instagram"
               >
@@ -67,7 +73,9 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="#"
+                href="https://youtube.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="p-2 rounded-lg bg-on-surface/10 hover:bg-primary/20 transition-all duration-300 transform hover:scale-110"
                 aria-label="YouTube"
               >
@@ -82,13 +90,14 @@ export default function Footer() {
             </div>
           </div>
 
+
           <nav className="col-span-1">
             <h3 className="text-lg font-semibold text-on-surface mb-4">Discover</h3>
             <ul className="space-y-3">
               <li>
                 <Link
                   to={`/${locSlug}/museum`}
-                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
+                  className="text-on-surface-variant hover:text-primary transition-colors duration-300"
                 >
                   Museums
                 </Link>
@@ -96,7 +105,7 @@ export default function Footer() {
               <li>
                 <Link
                   to={`/${locSlug}/religious-site`}
-                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
+                  className="text-on-surface-variant hover:text-primary transition-colors duration-300"
                 >
                   Temples & Heritage
                 </Link>
@@ -104,7 +113,7 @@ export default function Footer() {
               <li>
                 <Link
                   to={`/${locSlug}/fort`}
-                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
+                  className="text-on-surface-variant hover:text-primary transition-colors duration-300"
                 >
                   Forts & Palaces
                 </Link>
@@ -112,7 +121,7 @@ export default function Footer() {
               <li>
                 <Link
                   to={`/${locSlug}/all`}
-                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
+                  className="text-on-surface-variant hover:text-primary transition-colors duration-300"
                 >
                   All Experiences
                 </Link>
@@ -129,7 +138,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
+                  className="text-on-surface-variant hover:text-primary transition-colors duration-300"
                 >
                   Help Center
                 </a>
@@ -137,7 +146,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
+                  className="text-on-surface-variant hover:text-primary transition-colors duration-300"
                 >
                   Booking FAQs
                 </a>
@@ -145,7 +154,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
+                  className="text-on-surface-variant hover:text-primary transition-colors duration-300"
                 >
                   Cancellation Policy
                 </a>
@@ -153,7 +162,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
+                  className="text-on-surface-variant hover:text-primary transition-colors duration-300"
                 >
                   Contact Us
                 </a>
@@ -170,7 +179,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
+                  className="text-on-surface-variant hover:text-primary transition-colors duration-300"
                 >
                   Privacy Policy
                 </a>
@@ -178,7 +187,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
+                  className="text-on-surface-variant hover:text-primary transition-colors duration-300"
                 >
                   Terms of Service
                 </a>
@@ -186,7 +195,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
+                  className="text-on-surface-variant hover:text-primary transition-colors duration-300"
                 >
                   Cookie Policy
                 </a>
@@ -194,7 +203,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-on-surface-variant/80 hover:text-primary transition-colors duration-300"
+                  className="text-on-surface-variant hover:text-primary transition-colors duration-300"
                 >
                   Security
                 </a>
@@ -208,34 +217,34 @@ export default function Footer() {
 
         {/* Bottom Section */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <p className="text-sm text-on-surface-variant/70">
+          <p className="text-sm text-on-surface-variant">
             © {currentYear} ZeQue. All rights reserved. | Bringing history to life
           </p>
           <div className="flex gap-4 flex-wrap justify-center items-center">
             <a
               href="#"
-              className="text-xs text-on-surface-variant/70 hover:text-primary transition-colors"
+              className="text-xs text-on-surface-variant hover:text-primary transition-colors"
             >
               Accessibility
             </a>
             <span className="text-outline-variant">•</span>
             <a
               href="#"
-              className="text-xs text-on-surface-variant/70 hover:text-primary transition-colors"
+              className="text-xs text-on-surface-variant hover:text-primary transition-colors"
             >
               Sitemap
             </a>
             <span className="text-outline-variant">•</span>
             <a
               href="#"
-              className="text-xs text-on-surface-variant/70 hover:text-primary transition-colors"
+              className="text-xs text-on-surface-variant hover:text-primary transition-colors"
             >
               Feedback
             </a>
             <span className="text-outline-variant">•</span>
             <button
               onClick={toggleTheme}
-              className="flex items-center gap-1.5 text-xs font-semibold text-on-surface-variant/70 hover:text-primary transition-colors bg-transparent border-none py-0 px-1 cursor-pointer focus:outline-none"
+              className="flex items-center gap-1.5 text-xs font-semibold text-on-surface-variant hover:text-primary transition-colors bg-transparent border-none py-0 px-1 cursor-pointer focus:outline-none"
               style={{ transform: 'none', boxShadow: 'none' }}
               aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
             >

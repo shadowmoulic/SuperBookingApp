@@ -320,19 +320,27 @@ export default function DemoHome() {
         {/* Background slides */}
         {HERO_SLIDES.map((slide, i) => (
           <div key={i} className={`absolute inset-0 transition-opacity duration-700 ${i === currentSlide ? "opacity-100" : "opacity-0"}`}>
-            <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+            <img
+              src={slide.image}
+              alt={slide.title || "Hero Slide Banner"}
+              className="w-full h-full object-cover"
+              fetchpriority={i === 0 ? "high" : "low"}
+              loading="eager"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-slate-900/20" />
           </div>
         ))}
 
         {/* Slide nav dots */}
-        <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1">
           {HERO_SLIDES.map((_, i) => (
             <button
               key={i} onClick={() => setCurrentSlide(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? "w-7 bg-amber-400" : "w-2 bg-white/40 hover:bg-white/70"}`}
+              className="h-12 w-8 flex items-center justify-center cursor-pointer group"
               aria-label={`Slide ${i + 1}`}
-            />
+            >
+              <span className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? "w-7 bg-amber-400" : "w-2 bg-white/40 group-hover:bg-white/70"}`} />
+            </button>
           ))}
         </div>
 
@@ -361,8 +369,9 @@ export default function DemoHome() {
               <div className="flex-1 flex items-center px-4 py-3 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer group">
                 <MapPin className="w-5 h-5 text-slate-400 mr-3 group-hover:text-[#136b55] transition-colors" />
                 <div className="text-left w-full">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Where to?</p>
+                  <label htmlFor="demo-home-where-to" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5 block">Where to?</label>
                   <select
+                    id="demo-home-where-to"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="bg-transparent border-none p-0 focus:ring-0 font-semibold text-slate-800 w-full cursor-pointer text-sm outline-none"
@@ -646,8 +655,9 @@ export default function DemoHome() {
               <div className="space-y-5">
                 {/* City */}
                 <div>
-                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Destination</label>
+                  <label htmlFor="demo-home-planner-city" className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Destination</label>
                   <select
+                    id="demo-home-planner-city"
                     value={plannerCity}
                     onChange={(e) => { const c = e.target.value; setPlannerCity(c); setItinerary(FALLBACK_ITINERARIES[c]); }}
                     className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 font-['Inter'] cursor-pointer"
