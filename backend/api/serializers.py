@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from content import models as ContentModel
 from booking import models as BookingModel
-from user.models import User_Data
+from user.models import User_Data, Enterprise, EnterpriseMember
 
 # from django.contrib.auth.models import User as AuthUser
 from .paginations import StandardResultsSetPagination
@@ -89,8 +89,76 @@ class PricingRuleSerializer(serializers.ModelSerializer):
 
 
 
+class BookingPolicySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContentModel.BookingPolicy
+        fields = [
+            "instant_confirmation",
+            "requires_manual_confirmation",
+            "cancellation_allowed",
+            "cancellation_before_hours",
+            "refund_allowed",
+            "validity_type",
+            "validity_duration",
+            "slot_booking_required",
+            "qr_reusable",
+        ]
+
+
+class TicketFeatureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContentModel.TicketFeature
+        fields = [
+            "feature_type",
+            "title",
+            "description",
+            "display_order",
+        ]
+
+
+class ScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookingModel.Schedule
+        fields = [
+            "id",
+            "recurrence_type",
+            "specific_date",
+            "day_of_week",
+            "start_date",
+            "end_date",
+            "start_time",
+            "end_time",
+            "capacity",
+            "available_capacity",
+            "is_active",
+        ]
+
+
+class ExperienceHighlightSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContentModel.ExperienceHighlight
+        fields = [
+            "title",
+            "icon",
+            "display_order",
+        ]
+
+
+class ExperienceAttributeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContentModel.ExperienceAttribute
+        fields = [
+            "key",
+            "value",
+            "display_order",
+        ]
+
+
 class TicketTypeSerializer(serializers.ModelSerializer):
     pricing_rules = PricingRuleSerializer(many=True, read_only=True)
+    booking_policy = BookingPolicySerializer(read_only=True)
+    ticket_features = TicketFeatureSerializer(many=True, read_only=True)
+    schedules = ScheduleSerializer(many=True, read_only=True)
 
     class Meta:
         model = ContentModel.TicketType
@@ -100,6 +168,9 @@ class TicketTypeSerializer(serializers.ModelSerializer):
             "description",
             "is_active",
             "pricing_rules",
+            "booking_policy",
+            "ticket_features",
+            "schedules",
         ]
 
 
@@ -112,6 +183,8 @@ class ExperienceSerializer(serializers.ModelSerializer):
     reviews = serializers.SerializerMethodField()
     provider = ProviderSerializer(read_only=True)
     ticket_types = TicketTypeSerializer(many=True, read_only=True)
+    highlights = ExperienceHighlightSerializer(many=True, read_only=True)
+    attributes = ExperienceAttributeSerializer(many=True, read_only=True)
 
     class Meta:
         model = ContentModel.Experience
@@ -126,6 +199,8 @@ class ExperienceSerializer(serializers.ModelSerializer):
             "city",
             "provider",
             "ticket_types",
+            "highlights",
+            "attributes",
             "latitude",
             "longitude",
             "image_url",
@@ -465,6 +540,7 @@ class CityShortSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    slug = serializers.SerializerMethodField()
     experiences = serializers.SerializerMethodField()
 
     class Meta:
@@ -472,6 +548,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
+            "slug",
             "description",
             "icon_url",
             "image_url",
@@ -479,6 +556,10 @@ class CategorySerializer(serializers.ModelSerializer):
             "seo_description",
             "experiences",
         ]
+
+    def get_slug(self, obj):
+        from django.utils.text import slugify
+        return slugify(obj.name)
 
     def get_experiences(self, obj):
         experiences = obj.experiences.select_related("category", "city", "provider").filter(deleted_at__isnull=True).order_by("id")
@@ -632,6 +713,14 @@ class CreatePaymentSerializer(serializers.ModelSerializer):
         if booking.status == "cancelled":
             raise serializers.ValidationError(
                 "Cannot create payment for cancelled booking."
+            )
+        if booking.status == "confirmed":
+            raise serializers.ValidationError(
+                "This booking is already confirmed and paid."
+            )
+        if booking.payments.filter(status="success").exists():
+            raise serializers.ValidationError(
+                "This booking has already been successfully paid."
             )
         return booking
 
@@ -795,3 +884,109 @@ class CollectionSerializer(serializers.ModelSerializer):
         ).order_by("display_order")
         active_relations = [r for r in relations if r.experience.deleted_at is None]
         return CollectionExperienceSerializer(active_relations, many=True).data
+
+
+class SeatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BookingModel.Seat
+        fields = [
+            "id",
+            "schedule",
+            "seat_number",
+            "seat_type",
+            "status",
+        ]
+
+
+class EnterpriseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Enterprise
+        fields = [
+            "public_id",
+            "organization_name",
+            "organization_type",
+            "gst_number",
+            "contact_person",
+            "contact_email",
+            "contact_phone",
+            "website",
+            "verification_status",
+            "is_active",
+        ]
+
+
+class EnterpriseMemberSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EnterpriseMember
+        fields = [
+            "id",
+            "enterprise",
+            "user",
+            "role",
+        ]
+
+    def get_user(self, obj):
+        return {
+            "id": obj.user.id,
+            "name": obj.user.user.get_full_name() or obj.user.user.username,
+            "email": obj.user.user.email,
+        }
+
+
+class BulkBookingRequestSerializer(serializers.ModelSerializer):
+    user_details = serializers.SerializerMethodField()
+    enterprise_details = serializers.SerializerMethodField()
+    experience_name = serializers.SerializerMethodField()
+    ticket_type_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BookingModel.BulkBookingRequest
+        fields = [
+            "public_id",
+            "enterprise",
+            "enterprise_details",
+            "user",
+            "user_details",
+            "experience",
+            "experience_name",
+            "ticket_type",
+            "ticket_type_name",
+            "booking_date",
+            "quantity",
+            "notes",
+            "status",
+            "approved_by",
+            "approved_at",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "public_id",
+            "status",
+            "approved_by",
+            "approved_at",
+            "created_at",
+            "updated_at",
+        ]
+
+    def get_user_details(self, obj):
+        return {
+            "name": obj.user.user.get_full_name() or obj.user.user.username,
+            "email": obj.user.user.email,
+        }
+
+    def get_enterprise_details(self, obj):
+        if obj.enterprise:
+            return {
+                "name": obj.enterprise.organization_name,
+                "public_id": obj.enterprise.public_id,
+            }
+        return None
+
+    def get_experience_name(self, obj):
+        return obj.experience.name
+
+    def get_ticket_type_name(self, obj):
+        return obj.ticket_type.name

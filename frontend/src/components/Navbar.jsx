@@ -40,9 +40,8 @@ function LocationDropdown({ locations, selectedLocation, onSelect, align = "left
 
   return (
     <div
-      className={`absolute top-full mt-2 w-40 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-lg overflow-hidden animate-scale-in ${
-        align === "right" ? "right-0 z-[110]" : "left-0 z-[70]"
-      }`}
+      className={`absolute top-full mt-2 w-40 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-lg overflow-hidden animate-scale-in ${align === "right" ? "right-0 z-[110]" : "left-0 z-[70]"
+        }`}
     >
       <div className="relative">
         <div
@@ -273,12 +272,7 @@ function Navbar() {
               >
                 <span className="material-symbols-outlined text-primary text-base leading-none">location_on</span>
                 <span>{selectedLocation}</span>
-                <span
-                  className="material-symbols-outlined text-[10px] text-outline-variant ml-0.5 select-none leading-none"
-                  style={{ transform: isNavbarLocOpen ? "rotate(180deg)" : "none", fontSize: "10px", transition: "transform 0.2s ease" }}
-                >
-                  keyboard_arrow_down
-                </span>
+                <span className="material-symbols-outlined text-[10px] text-outline-variant ml-0.5 select-none leading-none" style={{ transform: isNavbarLocOpen ? "rotate(180deg)" : "none", fontSize: "10px", transition: "transform 0.2s ease" }}>keyboard_arrow_down</span>
               </button>
 
               {isNavbarLocOpen && (
@@ -292,11 +286,7 @@ function Navbar() {
                 />
               )}
             </div>
-            <button
-              onClick={() => openSearch()}
-              className="flex-1 flex items-center justify-between text-left text-xs text-outline-variant pl-3 pr-2 py-0.5 focus:outline-none cursor-pointer"
-              style={{ transform: "none", boxShadow: "none" }}
-            >
+            <button onClick={() => openSearch()} className="flex-1 flex items-center justify-between text-left text-xs text-outline-variant pl-3 pr-2 py-0.5 focus:outline-none cursor-pointer" style={{ transform: "none", boxShadow: "none" }}>
               <span>Search experiences...</span>
               <span className="material-symbols-outlined text-outline-variant text-lg">search</span>
             </button>
@@ -304,11 +294,7 @@ function Navbar() {
 
           {/* Right-aligned User Actions */}
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => openSearch()}
-              className="sm:hidden flex w-10 h-10 rounded-full border border-outline-variant text-on-surface items-center justify-center hover:text-primary hover:border-primary transition-all shadow-xs cursor-pointer bg-surface-container-lowest"
-              aria-label="Search"
-            >
+            <button onClick={() => openSearch()} className="sm:hidden flex w-10 h-10 rounded-full border border-outline-variant text-on-surface items-center justify-center hover:text-primary hover:border-primary transition-all shadow-xs cursor-pointer bg-surface-container-lowest" aria-label="Search">
               <span className="material-symbols-outlined text-xl">search</span>
             </button>
 
@@ -399,10 +385,7 @@ function Navbar() {
                 >
                   <span className="material-symbols-outlined text-primary text-xs leading-none">location_on</span>
                   <span>{selectedLocation}</span>
-                  <span
-                    className="material-symbols-outlined text-[10px] text-outline-variant select-none ml-0.5 leading-none"
-                    style={{ transform: isSearchLocOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s ease" }}
-                  >
+                  <span className="material-symbols-outlined text-[10px] text-outline-variant select-none ml-0.5 leading-none" style={{ transform: isSearchLocOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s ease" }}>
                     keyboard_arrow_down
                   </span>
                 </button>

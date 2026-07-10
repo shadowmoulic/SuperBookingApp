@@ -93,6 +93,13 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": "100/hour",
         "user": "1000/hour",
+        "login": "5/min",
+        "signup": "5/min",
+        "otp": "3/10min",
+        "payment": "5/min",
+        "booking": "10/min",
+        "bulk_booking": "2/min",
+        "ticket_validation": "10/min",
     },
 }
 

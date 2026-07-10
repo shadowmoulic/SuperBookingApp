@@ -7,6 +7,8 @@ import {
 import api from "../api/api";
 import BookingCard from "../components/BookingCard";
 import Loading from "../components/Loading";
+import { HomeSkeleton } from "../components/SkeletonLoaders";
+import { ErrorScreen } from "../components/ErrorScreen";
 import LocationContext from "../context/LocationContext";
 import ModalContext from "../context/ModalContext";
 import TrailCard from "../components/TrailCard";
@@ -248,7 +250,7 @@ function SmallExperienceCard({ experience }) {
           <div className="mt-auto w-full">
             <div className="w-full py-2.5 rounded-lg border-2 border-primary text-primary font-['Hanken_Grotesk'] font-semibold text-sm transition-all duration-300 group-hover:bg-primary group-hover:text-on-primary flex items-center justify-center gap-1.5 active:scale-98">
               Book Tickets
-              <span className="material-symbols-outlined text-base">arrow_forward</span>
+              <ArrowRight className="stroke-[3]" />
             </div>
           </div>
         </div>
@@ -258,10 +260,9 @@ function SmallExperienceCard({ experience }) {
 }
 
 function CategoryGridCard({ category }) {
-  const { selectedLocation } = useContext(LocationContext);
   const catSlug = category.name.toLowerCase().replace(/s$/, '').replace(/\s+/g, '-');
   return (
-    <Link to={`/${selectedLocation.toLowerCase().replace(/\s+/g, '-')}/${catSlug}`} className="block group">
+    <Link to={`/category/${catSlug}`} className="block group">
       <div className="bg-surface-container-lowest rounded-xl p-5 flex flex-col items-center justify-center border border-outline-variant/30 hover:shadow-lg hover:border-primary/20 transition-all duration-300 cursor-pointer h-36">
         <div className="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center mb-3 group-hover:bg-primary/5 transition-all">
           {category.icon_url ? (
@@ -425,20 +426,9 @@ function Home() {
       .finally(() => setLoading(false));
   };
 
-  if (loading) return <Loading />;
+  if (loading) return <HomeSkeleton />;
   if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-red-500 font-['Inter'] text-center px-6">
-        <span className="material-symbols-outlined text-4xl mb-3 select-none">error</span>
-        <p className="text-sm font-semibold">Failed to load content: {error}</p>
-        <button
-          onClick={fetchHomeData}
-          className="mt-4 px-5 py-2 bg-primary text-white rounded-lg text-xs font-semibold hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-sm"
-        >
-          Retry Loading
-        </button>
-      </div>
-    );
+    return <ErrorScreen message={error} onRetry={fetchHomeData} />;
   }
   if (!homeData) {
     return (
@@ -701,7 +691,7 @@ function Home() {
                     </button>
                   </div>
                   <Link to="/cities" className="text-primary font-['Hanken_Grotesk'] font-semibold flex items-center gap-1.5 hover:underline text-sm active:scale-95 transition-all">
-                    View All <span className="material-symbols-outlined text-base">arrow_forward</span>
+                    View All <ArrowRight className="stroke-[3]" />
                   </Link>
                 </div>
               </div>
@@ -757,7 +747,7 @@ function Home() {
                         to={`/${selectedLocation.toLowerCase().replace(/\s+/g, '-')}/${categorySlug}`}
                         className="text-primary font-['Hanken_Grotesk'] font-semibold flex items-center gap-1.5 hover:underline text-sm active:scale-95 transition-all"
                       >
-                        View All <span className="material-symbols-outlined text-base">arrow_forward</span>
+                        View All <ArrowRight className="stroke-[3]" />
                       </Link>
                     </div>
                   </div>

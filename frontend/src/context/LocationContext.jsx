@@ -5,10 +5,16 @@ const LocationContext = createContext();
 
 export default LocationContext;
 
+const sanitizeInput = (str) => {
+  if (typeof str !== "string") return "";
+  // Strip out any characters that aren't letters, numbers, spaces, commas, periods, or hyphens
+  return str.replace(/[^a-zA-Z0-9\s,\.-]/g, "").trim();
+};
+
 export const LocationProvider = ({ children }) => {
   const [locations, setLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(
-    localStorage.getItem("selectedLocation") || "Kolkata"
+    sanitizeInput(localStorage.getItem("selectedLocation") || "Kolkata")
   );
   const [coords, setCoords] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(true);
@@ -36,8 +42,9 @@ export const LocationProvider = ({ children }) => {
 
       // Auto-select nearest city if not already set manually by user
       if (allCities.length > 0 && !localStorage.getItem("selectedLocation")) {
-        setSelectedLocation(allCities[0].name);
-        localStorage.setItem("selectedLocation", allCities[0].name);
+        const sanitized = sanitizeInput(allCities[0].name);
+        setSelectedLocation(sanitized);
+        localStorage.setItem("selectedLocation", sanitized);
       }
       return allCities;
     } catch (err) {
@@ -77,8 +84,9 @@ export const LocationProvider = ({ children }) => {
                   (loc) => loc.name.toLowerCase() === userCity.toLowerCase()
                 );
                 if (matched && !localStorage.getItem("selectedLocation")) {
-                  setSelectedLocation(matched.name);
-                  localStorage.setItem("selectedLocation", matched.name);
+                  const sanitized = sanitizeInput(matched.name);
+                  setSelectedLocation(sanitized);
+                  localStorage.setItem("selectedLocation", sanitized);
                 }
               }
             } catch (ipErr) {
@@ -98,8 +106,9 @@ export const LocationProvider = ({ children }) => {
   }, []);
 
   const changeLocation = (locName) => {
-    setSelectedLocation(locName);
-    localStorage.setItem("selectedLocation", locName);
+    const sanitized = sanitizeInput(locName);
+    setSelectedLocation(sanitized);
+    localStorage.setItem("selectedLocation", sanitized);
   };
 
   const selectedLocationObject = locations.find(

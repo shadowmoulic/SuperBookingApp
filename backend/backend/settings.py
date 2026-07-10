@@ -29,7 +29,9 @@ load_dotenv(BASE_DIR / ".env")
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-0xdp(15^7-ukijszqw3tn2!lf-j9d+*cp)%)#%!l8(awbh!vo9"
+SECRET_KEY = os.getenv(
+    "SECRET_KEY", "django-insecure-0xdp(15^7-ukijszqw3tn2!lf-j9d+*cp)%)#%!l8(awbh!vo9"
+)
 
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")

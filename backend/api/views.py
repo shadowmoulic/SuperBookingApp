@@ -12,12 +12,21 @@ from rest_framework.reverse import reverse
 from django.contrib.auth.models import User
 from django.db.models import Avg, Count, Q, Case, When, Value, F, FloatField, ExpressionWrapper
 from django.db.models.functions import Power
-from user.models import User_Data
+from user.models import User_Data, Enterprise, EnterpriseMember
 from booking.models import Booking
+from booking.throttles import (
+    BookingRateThrottle,
+    PaymentRateThrottle,
+    OtpRateThrottle,
+    BulkBookingRateThrottle,
+    TicketValidationRateThrottle,
+)
+from booking.services import BookingLimitService, BookingVerificationService, CaptchaService
 from django.conf import settings
 from django.shortcuts import render
 import datetime
 from django.utils import timezone
+from django.utils.text import slugify
 import json
 
 
@@ -40,8 +49,34 @@ class CategoryView(generics.RetrieveAPIView):
     permission_classes = [AllowAny]
     lookup_field = "id"
 
-    def get_queryset(self):
-        return ContentModel.Category.objects.filter(id=self.kwargs["id"])
+    def get_object(self):
+        lookup_val = self.kwargs.get("id")
+        if not lookup_val:
+            raise Http404("Category not found")
+
+        # 1. Try lookup by integer ID
+        if lookup_val.isdigit():
+            try:
+                return ContentModel.Category.objects.get(id=int(lookup_val))
+            except ContentModel.Category.DoesNotExist:
+                pass
+
+        # 2. Try lookup by slugified name
+        categories = ContentModel.Category.objects.all()
+        
+        # Exact match of slug
+        for category in categories:
+            if slugify(category.name) == lookup_val.lower() or category.name.lower() == lookup_val.lower():
+                return category
+
+        # Normal/singularized match (e.g. "museum" matches "Museums")
+        for category in categories:
+            norm_cat = slugify(category.name.lower().rstrip('s'))
+            norm_lookup = slugify(lookup_val.lower().rstrip('s'))
+            if norm_cat == norm_lookup:
+                return category
+
+        raise Http404("Category not found")
 
 
 class ExperienceView(generics.RetrieveAPIView):
@@ -76,7 +111,6 @@ class ExperienceView(generics.RetrieveAPIView):
         # Try to find by matching slug
         candidate_name = lookup_value_lower.replace("-", " ")
         candidates = queryset.filter(name__icontains=candidate_name)
-        from django.utils.text import slugify
         for cand in candidates:
             if slugify(cand.name) == lookup_value_lower:
                 return cand
@@ -177,7 +211,6 @@ class StateView(generics.RetrieveAPIView):
         # Try to find by matching slug
         candidate_name = lookup_value_lower.replace("-", " ")
         candidates = queryset.filter(name__icontains=candidate_name)
-        from django.utils.text import slugify
         for cand in candidates:
             if slugify(cand.name) == lookup_value_lower:
                 return cand
@@ -284,7 +317,6 @@ class CityView(generics.RetrieveAPIView):
         # Try to find by matching slug
         candidate_name = lookup_value_lower.replace("-", " ")
         candidates = queryset.filter(name__icontains=candidate_name)
-        from django.utils.text import slugify
         for cand in candidates:
             if slugify(cand.name) == lookup_value_lower:
                 return cand
@@ -307,8 +339,53 @@ class BookingView(generics.RetrieveAPIView):
 
 class CreateBookingView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [BookingRateThrottle]
 
     def post(self, request):
+        experience_id = request.data.get("experience")
+        quantity = request.data.get("total_tickets")
+
+        if not experience_id or not quantity:
+            return Response({"error": "experience and total_tickets are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            experience = ContentModel.Experience.objects.get(public_id=experience_id)
+        except ContentModel.Experience.DoesNotExist:
+            try:
+                experience = ContentModel.Experience.objects.get(id=experience_id)
+            except Exception:
+                return Response({"error": "Experience not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            quantity = int(quantity)
+        except ValueError:
+            return Response({"error": "total_tickets must be an integer."}, status=status.HTTP_400_BAD_REQUEST)
+
+        user_data = request.user.user_data
+
+        # 1. Check limits using the reusable BookingLimitService
+        try:
+            BookingLimitService.check_booking_allowed(quantity, user_data, experience)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. Check verification requirements using the BookingVerificationService
+        reqs = BookingVerificationService.determine_verification_requirements(quantity, user_data, experience)
+        if "captcha" in reqs:
+            captcha_token = request.data.get("captcha_token")
+            if not captcha_token or not CaptchaService.verify(captcha_token, request):
+                return Response({"error": "CAPTCHA verification required/failed."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if "email_otp" in reqs or "phone_otp" in reqs:
+            otp_token = request.data.get("otp_token")
+            if not otp_token:
+                return Response({
+                    "error": "OTP verification required.",
+                    "verification_required": reqs
+                }, status=status.HTTP_428_PRECONDITION_REQUIRED)
+            if otp_token != "123456":
+                return Response({"error": "Invalid OTP code."}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer_class = ContentSerializer.BookingCreateSerializer(
             data=request.data, context={"request": request}
         )
@@ -329,6 +406,7 @@ class CreateBookingView(APIView):
 
 class CreatePaymentView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [PaymentRateThrottle]
 
     def post(self, request):
         promo_code = request.data.get("promo_code")
@@ -338,6 +416,12 @@ class CreatePaymentView(APIView):
                 booking = BookingModel.Booking.objects.get(reference=booking_ref)
             except BookingModel.Booking.DoesNotExist:
                 return Response({"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            if booking.status == "confirmed" or booking.payments.filter(status="success").exists():
+                return Response(
+                    {"error": "This booking is already confirmed and paid."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             booking.total_amount = 0
             booking.status = "confirmed"
@@ -1478,5 +1562,224 @@ class OfficialCategoryView(APIView):
             return Response({"message": "Category created", "id": category.id}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class EnterpriseRegistrationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ContentSerializer.EnterpriseSerializer(data=request.data)
+        if serializer.is_valid():
+            enterprise = serializer.save()
+            user_data = request.user.user_data
+            EnterpriseMember.objects.create(
+                enterprise=enterprise,
+                user=user_data,
+                role="owner"
+            )
+            return Response({
+                "message": "Enterprise registered successfully and is pending verification.",
+                "enterprise": serializer.data
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class EnterpriseMemberInviteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        enterprise_id = request.data.get("enterprise_id")
+        target_user_id = request.data.get("user_id")
+        role = request.data.get("role", "viewer")
+
+        if not enterprise_id or not target_user_id:
+            return Response({"error": "enterprise_id and user_id are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            enterprise = Enterprise.objects.get(public_id=enterprise_id)
+        except Enterprise.DoesNotExist:
+            return Response({"error": "Enterprise not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        requester_member = EnterpriseMember.objects.filter(
+            enterprise=enterprise, user=request.user.user_data
+        ).first()
+
+        if not requester_member or requester_member.role not in ["owner", "admin"]:
+            return Response({"error": "Only enterprise owners or admins can invite members."}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            target_user_data = User_Data.objects.get(id=target_user_id)
+        except User_Data.DoesNotExist:
+            return Response({"error": "Target user not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        member, created = EnterpriseMember.objects.get_or_create(
+            enterprise=enterprise,
+            user=target_user_data,
+            defaults={"role": role}
+        )
+
+        if not created:
+            member.role = role
+            member.save()
+
+        serializer = ContentSerializer.EnterpriseMemberSerializer(member)
+        return Response({
+            "message": "Member added/updated successfully.",
+            "member": serializer.data
+        }, status=status.HTTP_200_OK)
+
+
+class BulkBookingRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [BulkBookingRateThrottle]
+
+    def get(self, request):
+        user_data = request.user.user_data
+        if user_data.role == "admin":
+            queryset = BookingModel.BulkBookingRequest.objects.all().order_by("-created_at")
+        else:
+            memberships = EnterpriseMember.objects.filter(user=user_data).select_related("enterprise")
+            enterprise_ids = [m.enterprise.id for m in memberships]
+            if enterprise_ids:
+                queryset = BookingModel.BulkBookingRequest.objects.filter(
+                    Q(user=user_data) | Q(enterprise_id__in=enterprise_ids)
+                ).order_by("-created_at")
+            else:
+                queryset = BookingModel.BulkBookingRequest.objects.filter(user=user_data).order_by("-created_at")
+
+        serializer = ContentSerializer.BulkBookingRequestSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        user_data = request.user.user_data
+        experience_id = request.data.get("experience")
+        ticket_type_id = request.data.get("ticket_type")
+        quantity = request.data.get("quantity")
+        booking_date = request.data.get("booking_date")
+        notes = request.data.get("notes", "")
+
+        if not all([experience_id, ticket_type_id, quantity, booking_date]):
+            return Response({"error": "experience, ticket_type, quantity, and booking_date are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            experience = ContentModel.Experience.objects.get(public_id=experience_id)
+        except ContentModel.Experience.DoesNotExist:
+            try:
+                experience = ContentModel.Experience.objects.get(id=experience_id)
+            except Exception:
+                return Response({"error": "Experience not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            ticket_type = ContentModel.TicketType.objects.get(public_id=ticket_type_id)
+        except ContentModel.TicketType.DoesNotExist:
+            try:
+                ticket_type = ContentModel.TicketType.objects.get(id=ticket_type_id)
+            except Exception:
+                return Response({"error": "Ticket Type not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            quantity = int(quantity)
+        except ValueError:
+            return Response({"error": "Quantity must be an integer."}, status=status.HTTP_400_BAD_REQUEST)
+
+        membership = EnterpriseMember.objects.filter(user=user_data).select_related("enterprise").first()
+        enterprise = membership.enterprise if membership else None
+
+        try:
+            BookingLimitService.check_booking_allowed(quantity, user_data, experience)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        reqs = BookingVerificationService.determine_verification_requirements(quantity, user_data, experience)
+        if "captcha" in reqs:
+            captcha_token = request.data.get("captcha_token")
+            if not captcha_token or not CaptchaService.verify(captcha_token, request):
+                return Response({"error": "CAPTCHA verification required/failed."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if "email_otp" in reqs or "phone_otp" in reqs:
+            otp_token = request.data.get("otp_token")
+            if not otp_token:
+                return Response({
+                    "error": "OTP verification required.",
+                    "verification_required": reqs
+                }, status=status.HTTP_428_PRECONDITION_REQUIRED)
+            if otp_token != "123456":
+                return Response({"error": "Invalid OTP code."}, status=status.HTTP_400_BAD_REQUEST)
+
+        bulk_request = BookingModel.BulkBookingRequest.objects.create(
+            enterprise=enterprise,
+            user=user_data,
+            experience=experience,
+            ticket_type=ticket_type,
+            booking_date=booking_date,
+            quantity=quantity,
+            notes=notes,
+            status="pending"
+        )
+
+        serializer = ContentSerializer.BulkBookingRequestSerializer(bulk_request)
+        return Response({
+            "message": "Bulk booking request created successfully and is pending provider approval.",
+            "data": serializer.data
+        }, status=status.HTTP_201_CREATED)
+
+
+class TicketValidationView(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [TicketValidationRateThrottle]
+
+    def post(self, request):
+        qr_code = request.data.get("qr_code")
+        if not qr_code:
+            return Response({"error": "qr_code is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            ticket = BookingModel.Ticket.objects.select_related("booking", "booking__experience").get(qr_code=qr_code)
+        except BookingModel.Ticket.DoesNotExist:
+            return Response({"error": "Invalid ticket QR code."}, status=status.HTTP_404_NOT_FOUND)
+
+        if not ticket.is_valid():
+            return Response({
+                "status": "invalid",
+                "message": "Ticket has already been used.",
+                "used_at": ticket.used_at
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        today = timezone.now().date()
+        if ticket.booking.booking_date != today:
+            return Response({
+                "status": "invalid",
+                "message": f"Ticket is valid for date {ticket.booking.booking_date}, but today is {today}."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        ticket.mark_as_used()
+
+        return Response({
+            "status": "valid",
+            "message": "Ticket validated successfully.",
+            "ticket_type": ticket.ticket_type,
+            "experience": ticket.booking.experience.name,
+            "visitor_name": ticket.booking.user.user.get_full_name() or ticket.booking.user.user.username,
+        }, status=status.HTTP_200_OK)
+
+
+class OtpRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [OtpRateThrottle]
+
+    def post(self, request):
+        medium = request.data.get("medium", "email")
+        destination = request.data.get("destination")
+
+        if not destination:
+            return Response({"error": "destination is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        logger.info(f"[OTP] Sending mock OTP code 123456 to {destination} via {medium}.")
+
+        return Response({
+            "message": f"Mock OTP code sent successfully to {destination}.",
+            "medium": medium,
+            "verification_token": "mock-otp-token"
+        }, status=status.HTTP_200_OK)
 
 

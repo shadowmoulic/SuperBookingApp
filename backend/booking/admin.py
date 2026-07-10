@@ -4,9 +4,12 @@ from .models import (
     Ticket,
     Payment,
     Inventory,
+    Schedule,
+    Seat,
+    BulkBookingRequest,
 )
 
-myModels = [Booking, Ticket, Payment, Inventory]
+myModels = [Booking, Ticket, Payment, Inventory, Schedule, Seat, BulkBookingRequest]
 
 admin.site.register(myModels)
 

@@ -4,7 +4,8 @@ import { createPortal } from "react-dom";
 import {
   ArrowLeft, Share2, MapPin, Star, Clock, Zap, Award, Gauge, Ticket,
   CheckCircle2, CreditCard, Shirt, CameraOff, Plus, Minus, ArrowRight, ShieldAlert,
-  Calendar, Flame, HelpCircle
+  Calendar, Flame, HelpCircle,
+  ChevronRight
 } from "lucide-react";
 import api from "../api/api";
 import AuthContext from "../context/AuthContext";
@@ -361,9 +362,9 @@ export function ExperienceDetails() {
             </ul>
           </section> */}
 
-          {experience.image_sunrise && (
+          {/* {experience.image_sunrise && (
             <>
-              {/* Why Sunrise Editorial */}
+              // Why Sunrise Editorial
               <section className="bg-surface-container -mx-4 sm:-mx-8 px-4 sm:px-8 py-8 rounded-3xl">
                 <h3 className="text-lg font-black text-on-surface mb-3">Why visit at Sunrise?</h3>
                 <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed font-semibold mb-6">
@@ -378,7 +379,7 @@ export function ExperienceDetails() {
                 </div>
               </section>
             </>
-          )}
+          )} */}
           {/* Bento Pro Tips */}
           <section className="space-y-4">
             <h3 className="text-lg font-black text-on-surface">Pro Tips</h3>
@@ -558,12 +559,12 @@ export function ExperienceDetails() {
         {/* Breadcrumb & Title Section */}
         <div className="mb-8">
           <nav className="flex gap-1.5 text-on-surface-variant font-semibold text-xs mb-2 uppercase tracking-wider">
-            <Link className="hover:text-primary transition-colors" to="/">India</Link>
-            <span>/</span>
+            <Link to="/" className="hover:text-primary transition-colors">Home</Link>
+            <ChevronRight size={13} />
             {experience.city && (
               <>
-                <Link className="hover:text-primary transition-colors" to={`/city/${experience.city.toLowerCase().replace(/\s+/g, '-')}`}>{experience.city}</Link>
-                <span>/</span>
+                <Link to={`/city/${experience.city.toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-primary transition-colors">{experience.city}</Link>
+                <ChevronRight size={13} />
               </>
             )}
             <span className="text-on-surface font-bold">{experience.name}</span>
@@ -632,6 +633,19 @@ export function ExperienceDetails() {
               </div>
             </section>
             <section className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-xs">
+              {experience.highlights && experience.highlights.length > 0 && (
+                <div className="flex flex-col justify-start mb-6 border-b border-outline-variant/30 pb-6">
+                  <h3 className="font-['Hanken_Grotesk'] text-lg font-bold text-on-surface mb-3">Highlights</h3>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {experience.highlights.map((highlight, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                        <span className="text-on-surface-variant font-['Inter'] text-sm font-semibold">{highlight.title}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <div className="lg:col-span-2 flex flex-col justify-start">
                 <h2 className="font-['Hanken_Grotesk'] text-2xl sm:text-3xl font-bold text-primary mb-4">
                   About {experience.name}
@@ -699,9 +713,9 @@ export function ExperienceDetails() {
               </ul>
             </section> */}
 
-            {experience.image_sunrise && (
+            {/* {experience.image_sunrise && (
               <>
-                {/* Why Visit at Sunrise */}
+                //  Why Visit at Sunrise
                 <section className="py-4">
                   <div className="flex flex-col md:flex-row gap-8 items-center">
                     <div className="md:w-1/2 space-y-4">
@@ -729,29 +743,40 @@ export function ExperienceDetails() {
                     </div>
                   </div>
                 </section>
-              </>
+              </>)} 
+            */}
+
+            {/* Experience Attributes */}
+            {experience.attributes && experience.attributes.length > 0 && (
+              <section className="space-y-6">
+                <h2 className="text-lg font-black text-on-surface">Pro Tips for Your Visit</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {experience.attributes.map((attr, idx) => {
+                    const getIcon = (key) => {
+                      const k = key.toLowerCase();
+                      if (k.includes("dress") || k.includes("clothing") || k.includes("wear")) {
+                        return <Shirt className="w-8 h-8 text-primary mb-3" />;
+                      }
+                      if (k.includes("photo") || k.includes("camera") || k.includes("video")) {
+                        return <CameraOff className="w-8 h-8 text-primary mb-3" />;
+                      }
+                      if (k.includes("id") || k.includes("passport") || k.includes("card") || k.includes("identity")) {
+                        return <CreditCard className="w-8 h-8 text-primary mb-3" />;
+                      }
+                      return <HelpCircle className="w-8 h-8 text-primary mb-3" />;
+                    };
+
+                    return (
+                      <div key={idx} className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all">
+                        {getIcon(attr.key)}
+                        <h3 className="text-sm font-extrabold text-on-surface mb-1.5">{attr.key}</h3>
+                        <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">{attr.value}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
             )}
-            {/* Pro Tips Section */}
-            <section className="space-y-6">
-              <h2 className="text-lg font-black text-on-surface">Pro Tips for Your Visit</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all">
-                  <CreditCard className="w-8 h-8 text-primary mb-3" />
-                  <h3 className="text-sm font-extrabold text-on-surface mb-1.5">Valid ID</h3>
-                  <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">All visitors must carry an original passport or government-issued ID card matching the booking name.</p>
-                </div>
-                <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all">
-                  <Shirt className="w-8 h-8 text-primary mb-3" />
-                  <h3 className="text-sm font-extrabold text-on-surface mb-1.5">Dress Code</h3>
-                  <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">Modest clothing is recommended. Shoe covers are provided and mandatory for entering the Mausoleum.</p>
-                </div>
-                <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all">
-                  <CameraOff className="w-8 h-8 text-primary mb-3" />
-                  <h3 className="text-sm font-extrabold text-on-surface mb-1.5">Camera Policy</h3>
-                  <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">Still photography is permitted on the grounds, but prohibited inside the main mausoleum chamber.</p>
-                </div>
-              </div>
-            </section>
 
             {/* Traveler Reviews */}
             {reviewsList.length > 0 && (
@@ -826,7 +851,7 @@ export function ExperienceDetails() {
                   </div>
                 </div>
                 {/* Foreigner */}
-                <div className="flex items-center justify-between px-4 py-3">
+                {/* <div className="flex items-center justify-between px-4 py-3">
                   <div>
                     <p className="text-xs font-black text-on-surface">Foreigner</p>
                     <p className="text-[10px] text-primary font-bold">₹{ticketPrices.foreigner} / person</p>
@@ -842,7 +867,7 @@ export function ExperienceDetails() {
                       className="w-7 h-7 rounded-full border border-primary text-primary flex items-center justify-center font-bold hover:bg-primary/5 cursor-pointer active:scale-90 text-sm"
                     >+</button>
                   </div>
-                </div>
+                </div> */}
               </div>
 
               {/* Date & Time */}
