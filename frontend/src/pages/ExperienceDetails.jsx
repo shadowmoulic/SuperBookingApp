@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState, useContext } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { createPortal } from "react-dom";
 import {
   ArrowLeft, Share2, MapPin, Star, Clock, Zap, Award, Gauge, Ticket,
   CheckCircle2, CreditCard, Shirt, CameraOff, Plus, Minus, ArrowRight, ShieldAlert,
@@ -22,8 +21,19 @@ export function ExperienceDetails() {
   const [experience, setExperience] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedNationality, setSelectedNationality] = useState("indian");
+  const [indianCount, setIndianCount] = useState(1);
+  const [foreignerCount, setForeignerCount] = useState(0);
 
-  // Date Generator for next 7 days (used in mobile Picker)
+  const handleIndianCountChange = (delta) => {
+    setIndianCount((current) => Math.max(0, current + delta));
+  };
+
+  const handleForeignerCountChange = (delta) => {
+    setForeignerCount((current) => Math.max(0, current + delta));
+  };
+
+  // Date Generator for next 7 days (used in the booking flow)
   const dates = useMemo(() => {
     const baseDate = new Date();
     return Array.from({ length: 7 }, (_, index) => {
@@ -39,33 +49,6 @@ export function ExperienceDetails() {
       };
     });
   }, []);
-
-  // Booking states
-  const [selectedDateIndex, setSelectedDateIndex] = useState(0);
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
-  });
-  const [timeSlot, setTimeSlot] = useState("06:00 AM - 09:00 AM (Sunrise)");
-
-  useEffect(() => {
-    if (dates[selectedDateIndex]) {
-      setSelectedDate(dates[selectedDateIndex].iso);
-    }
-  }, [selectedDateIndex, dates]);
-
-  // Separate traveler counts (also supports desktop selected base ticket price switcher)
-  const [indianCount, setIndianCount] = useState(1);
-  const [foreignerCount, setForeignerCount] = useState(0);
-
-  // Nationality toggle for desktop (so you can click to select standard/foreigner)
-  const [selectedNationality, setSelectedNationality] = useState("indian");
-
-  // Mobile Bottom sheet Picker and scroll states
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showStickyBar, setShowStickyBar] = useState(false);
-
-  const normalizedId = id ? id.toLowerCase() : "";
 
   useEffect(() => {
     if (id) {
@@ -104,22 +87,7 @@ export function ExperienceDetails() {
       });
   };
 
-  // Mobile Sticky Scroll Listener
-  useEffect(() => {
-    const handleScroll = () => {
-      const pricingSection = document.getElementById("pricing-cards-section");
-      if (pricingSection) {
-        const rect = pricingSection.getBoundingClientRect();
-        if (rect.bottom < 64) {
-          setShowStickyBar(true);
-        } else {
-          setShowStickyBar(false);
-        }
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  // Mobile sticky scroll listener removed because booking metadata now lives on BookingPage.
 
   const images = useMemo(() => {
     return String(experience?.image_url || "")
@@ -179,44 +147,11 @@ export function ExperienceDetails() {
   const totalTickets = indianCount + foreignerCount;
   const totalPrice = (indianCount * ticketPrices.indian) + (foreignerCount * ticketPrices.foreigner);
 
-  const handleIndianCountChange = (delta) => {
-    setIndianCount((current) => Math.max(0, current + delta));
+  const handleBuyNow = () => {
+    navigate(`/attraction/${id}/booking`);
   };
 
-  const handleForeignerCountChange = (delta) => {
-    setForeignerCount((current) => Math.max(0, current + delta));
-  };
-
-  const handleBuyNow = async () => {
-    if (!isAuthenticated) {
-      openLoginModal();
-      return;
-    }
-
-    if (totalTickets === 0) {
-      alert("Please select at least 1 traveler before booking.");
-      return;
-    }
-
-    const bookingData = {
-      experience: experience.public_id,
-      booking_date: selectedDate,
-      total_tickets: parseInt(totalTickets, 10),
-      slot_time: timeSlot.includes("Sunrise") ? "06:00" : "10:00",
-    };
-
-    try {
-      const response = await api.post("/api/booking/create/", bookingData);
-      navigate(`/payment/${response.data.booking_reference}`);
-    } catch (error) {
-      console.error("Booking creation failed:", error);
-      alert(error.response?.data?.message || "Failed to create booking. Please try again.");
-    }
-  };
-
-  const togglePicker = () => {
-    setShowDatePicker(prev => !prev);
-  };
+  
 
   if (loading || !experience) {
     return (
@@ -447,7 +382,7 @@ export function ExperienceDetails() {
             <span className="text-xl font-extrabold text-primary">₹{ticketPrices.indian}</span>
           </div>
           <button
-            onClick={togglePicker}
+            onClick={handleBuyNow}
             disabled={!experience.is_open}
             className="bg-primary hover:brightness-110 text-on-primary px-10 py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all cursor-pointer disabled:bg-outline-variant/40 disabled:text-on-surface-variant/40 disabled:cursor-not-allowed"
           >
@@ -455,107 +390,7 @@ export function ExperienceDetails() {
           </button>
         </footer>
 
-        {/* Mobile Bottom Sheet Date & Guest Picker Modal */}
-        <div
-          onClick={togglePicker}
-          className={`fixed inset-0 bg-black/40 z-50 transition-opacity duration-300 ${showDatePicker ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-            }`}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className={`absolute bottom-0 left-0 w-full bg-surface-container-lowest rounded-t-[32px] p-6 sm:p-8 transition-transform duration-300 shadow-2xl ${showDatePicker ? "translate-y-0" : "translate-y-full"
-              }`}
-          >
-            <div className="w-12 h-1.5 bg-surface-container rounded-full mx-auto mb-6"></div>
-            <h4 className="text-lg font-black text-center mb-6 text-on-surface">Plan your visit</h4>
-
-            <div className="space-y-6">
-
-              {/* Date selection inside sheet */}
-              <div className="space-y-3">
-                <p className="text-xs font-bold text-on-surface-variant">Select Date</p>
-                <div className="flex gap-2.5 overflow-x-auto hide-scrollbar pb-2">
-                  {dates.map((date, index) => {
-                    const isSelected = dates[selectedDateIndex]?.iso === date.iso;
-                    return (
-                      <button
-                        key={date.iso}
-                        onClick={() => setSelectedDateIndex(index)}
-                        className={`flex flex-col items-center justify-center min-w-[70px] h-20 rounded-2xl border transition-colors cursor-pointer ${isSelected
-                          ? "border-primary bg-primary/5 text-primary font-bold"
-                          : "border-outline-variant/30 hover:border-primary"
-                          }`}
-                      >
-                        <span className="text-[8px] font-black">{date.month}</span>
-                        <span className="text-xl font-extrabold my-0.5">{date.day}</span>
-                        <span className="text-[8px] opacity-80">{date.isToday ? "Today" : date.weekday}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Guest adjusters inside sheet */}
-              <div className="space-y-3">
-                <p className="text-xs font-bold text-on-surface-variant">Guests</p>
-
-                <div className="p-4 border border-outline-variant/30 rounded-2xl flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-xs sm:text-sm text-on-surface">Indian National</p>
-                    <p className="text-[10px] text-on-surface-variant/70 font-semibold">Adults (15+ years) • ₹{ticketPrices.indian}</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => handleIndianCountChange(-1)}
-                      className="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center text-on-surface-variant/70 hover:bg-surface-container-low cursor-pointer active:scale-90"
-                    >
-                      -
-                    </button>
-                    <span className="font-extrabold text-sm text-on-surface w-3 text-center">{indianCount}</span>
-                    <button
-                      onClick={() => handleIndianCountChange(1)}
-                      className="w-8 h-8 rounded-full border border-primary text-primary flex items-center justify-center hover:bg-primary/5 cursor-pointer active:scale-90"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <div className="p-4 border border-outline-variant/30 rounded-2xl flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-xs sm:text-sm text-on-surface">Foreigner</p>
-                    <p className="text-[10px] text-on-surface-variant/70 font-semibold">Adults (15+ years) • ₹{ticketPrices.foreigner}</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => handleForeignerCountChange(-1)}
-                      className="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center text-on-surface-variant/70 hover:bg-surface-container-low cursor-pointer active:scale-90"
-                    >
-                      -
-                    </button>
-                    <span className="font-extrabold text-sm text-on-surface w-3 text-center">{foreignerCount}</span>
-                    <button
-                      onClick={() => handleForeignerCountChange(1)}
-                      className="w-8 h-8 rounded-full border border-primary text-primary flex items-center justify-center hover:bg-primary/5 cursor-pointer active:scale-90"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-
-              <button
-                onClick={handleBuyNow}
-                disabled={!experience.is_open}
-                className="w-full bg-primary hover:brightness-110 text-on-primary py-4 rounded-xl font-bold text-sm mt-4 shadow-md active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:bg-outline-variant/40 disabled:text-on-surface-variant/40 disabled:cursor-not-allowed"
-              >
-                {experience.is_open ? `Proceed to Payment • ₹${totalPrice}` : "Coming Soon"}
-              </button>
-
-            </div>
-          </div>
-        </div>
+        
       </div>
 
       {/* -------------------- DESKTOP LAYOUT (attr-desc.txt) -------------------- */}
@@ -791,89 +626,23 @@ export function ExperienceDetails() {
                 <span className="text-xs text-on-surface-variant font-semibold">/{totalTickets > 0 ? `${totalTickets} traveler${totalTickets > 1 ? 's' : ''}` : 'person'}</span>
               </div>
 
-              {/* Nationality rows with inline counters */}
-              <div className="space-y-2 border border-outline-variant/30 rounded-xl overflow-hidden">
-                {/* Indian National */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant/30">
-                  <div>
-                    <p className="text-xs font-black text-on-surface">Indian National</p>
-                    <p className="text-[10px] text-primary font-bold">₹{ticketPrices.indian} / person</p>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <button
-                      onClick={() => handleIndianCountChange(-1)}
-                      className="w-7 h-7 rounded-full border border-outline-variant flex items-center justify-center font-bold text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-90 text-sm"
-                    >−</button>
-                    <span className="font-black text-sm w-4 text-center text-on-surface">{indianCount}</span>
-                    <button
-                      onClick={() => handleIndianCountChange(1)}
-                      className="w-7 h-7 rounded-full border border-primary text-primary flex items-center justify-center font-bold hover:bg-primary/5 cursor-pointer active:scale-90 text-sm"
-                    >+</button>
-                  </div>
+              <div className="space-y-4">
+                <div className="rounded-3xl bg-surface-container p-5 border border-outline-variant/30">
+                  <p className="text-xs uppercase font-bold tracking-[0.24em] text-on-surface-variant">Ready to book?</p>
+                  <p className="mt-3 text-sm text-on-surface-variant leading-relaxed">
+                    Select nationality and visit details on the booking page. Date, guests, and payment are completed there.
+                  </p>
                 </div>
-                {/* Foreigner */}
-                <div className="flex items-center justify-between px-4 py-3">
-                  <div>
-                    <p className="text-xs font-black text-on-surface">Foreigner</p>
-                    <p className="text-[10px] text-primary font-bold">₹{ticketPrices.foreigner} / person</p>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <button
-                      onClick={() => handleForeignerCountChange(-1)}
-                      className="w-7 h-7 rounded-full border border-outline-variant flex items-center justify-center font-bold text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-90 text-sm"
-                    >−</button>
-                    <span className="font-black text-sm w-4 text-center text-on-surface">{foreignerCount}</span>
-                    <button
-                      onClick={() => handleForeignerCountChange(1)}
-                      className="w-7 h-7 rounded-full border border-primary text-primary flex items-center justify-center font-bold hover:bg-primary/5 cursor-pointer active:scale-90 text-sm"
-                    >+</button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Date & Time */}
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Date</label>
-                  <input
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    min={new Date().toISOString().split("T")[0]}
-                    className="w-full h-10 px-3 border border-outline-variant/30 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none transition-all text-xs font-semibold bg-surface-container-lowest text-on-surface"
-                    type="date"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="experience-details-time-slot" className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Time Slot</label>
-                  <select
-                    id="experience-details-time-slot"
-                    value={timeSlot}
-                    onChange={(e) => setTimeSlot(e.target.value)}
-                    className="w-full h-10 px-3 border border-outline-variant/30 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none transition-all text-xs font-semibold bg-surface-container-lowest text-on-surface appearance-none"
-                  >
-                    <option>06:00 AM - 09:00 AM (Sunrise)</option>
-                    <option>09:00 AM - 12:00 PM</option>
-                    <option>12:00 PM - 03:00 PM</option>
-                    <option>03:00 PM - 06:00 PM (Sunset)</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Book Now CTA */}
-              <button
-                onClick={handleBuyNow}
-                disabled={!experience.is_open}
-                className="w-full py-3.5 bg-primary hover:brightness-110 text-on-primary font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:bg-outline-variant/40 disabled:text-on-surface-variant/40 disabled:cursor-not-allowed"
-              >
-                {experience.is_open ? (
+                <button
+                  onClick={handleBuyNow}
+                  className="w-full py-3.5 bg-primary hover:brightness-110 text-on-primary font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
+                >
                   <>
                     Book Now
                     <ArrowRight className="w-4 h-4" />
                   </>
-                ) : (
-                  "Coming Soon"
-                )}
-              </button>
+                </button>
+              </div>
             </div>
           </div>
         </div>
