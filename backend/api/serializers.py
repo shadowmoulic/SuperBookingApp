@@ -630,8 +630,6 @@ class BookingSerializer(serializers.ModelSerializer):
 
 
 class BookingCreateSerializer(serializers.ModelSerializer):
-    """For POST requests - minimal required fields"""
-
     experience = serializers.SlugRelatedField(
         slug_field="public_id", queryset=ContentModel.Experience.objects.all()
     )

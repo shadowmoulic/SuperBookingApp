@@ -32,7 +32,6 @@ import json
 
 import razorpay
 from . import serializers as ContentSerializer
-from .serializers import UserDataRegisterSerializer
 from .paginations import StandardResultsSetPagination
 from content import models as ContentModel
 from booking import models as BookingModel
