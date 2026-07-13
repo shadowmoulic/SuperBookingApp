@@ -272,7 +272,12 @@ function Navbar() {
               >
                 <span className="material-symbols-outlined text-primary text-base leading-none">location_on</span>
                 <span>{selectedLocation}</span>
-                <span className="material-symbols-outlined text-[10px] text-outline-variant ml-0.5 select-none leading-none" style={{ transform: isNavbarLocOpen ? "rotate(180deg)" : "none", fontSize: "10px", transition: "transform 0.2s ease" }}>keyboard_arrow_down</span>
+                <span
+                  className="material-symbols-outlined text-[10px] text-on-surface-variant ml-0.5 select-none leading-none"
+                  style={{ transform: isNavbarLocOpen ? "rotate(180deg)" : "none", fontSize: "10px", transition: "transform 0.2s ease" }}
+                >
+                  keyboard_arrow_down
+                </span>
               </button>
 
               {isNavbarLocOpen && (
@@ -288,7 +293,7 @@ function Navbar() {
             </div>
             <button onClick={() => openSearch()} className="flex-1 flex items-center justify-between text-left text-xs text-outline-variant pl-3 pr-2 py-0.5 focus:outline-none cursor-pointer" style={{ transform: "none", boxShadow: "none" }}>
               <span>Search experiences...</span>
-              <span className="material-symbols-outlined text-outline-variant text-lg">search</span>
+              <span className="material-symbols-outlined text-on-surface-variant text-lg">search</span>
             </button>
           </div>
 
@@ -365,14 +370,14 @@ function Navbar() {
               >
                 <span className="material-symbols-outlined text-xl">arrow_back</span>
               </button>
-              <span className="material-symbols-outlined text-outline-variant hidden sm:block">search</span>
+              <span className="material-symbols-outlined text-on-surface-variant hidden sm:block">search</span>
               <input
                 type="text"
                 autoFocus
                 placeholder="Search destinations or experiences..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent border-none text-on-surface placeholder-outline-variant focus:outline-none focus:ring-0 text-sm font-['Inter']"
+                className="flex-1 bg-transparent border-none text-on-surface placeholder-on-surface-variant/60 focus:outline-none focus:ring-0 text-sm font-['Inter']"
               />
 
               {/* Custom Location Selector in Search Overlay */}
@@ -405,7 +410,7 @@ function Navbar() {
 
               <button
                 onClick={() => closeSearch()}
-                className="text-outline-variant hover:text-on-surface-variant cursor-pointer hidden sm:block"
+                className="text-on-surface-variant hover:text-on-surface cursor-pointer hidden sm:block"
               >
                 <span className="material-symbols-outlined text-xl">close</span>
               </button>
@@ -414,13 +419,13 @@ function Navbar() {
             {/* Results Section */}
             <div className="flex-1 overflow-y-auto p-4 min-h-[200px] no-scrollbar">
               {searching ? (
-                <div className="flex items-center justify-center py-10 text-outline-variant font-['Inter'] gap-2 text-xs">
+                <div className="flex items-center justify-center py-10 text-on-surface-variant font-['Inter'] gap-2 text-xs">
                   <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
                   Searching...
                 </div>
               ) : searchResults.length === 0 ? (
-                <div className="text-center py-12 text-outline-variant text-sm font-['Inter']">
-                  <span className="material-symbols-outlined text-3xl mb-1 text-outline-variant block">search_off</span>
+                <div className="text-center py-12 text-on-surface-variant text-sm font-['Inter']">
+                  <span className="material-symbols-outlined text-3xl mb-1 text-on-surface-variant block">search_off</span>
                   No experiences found
                 </div>
               ) : (

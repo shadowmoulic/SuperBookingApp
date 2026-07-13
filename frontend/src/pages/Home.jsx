@@ -224,6 +224,7 @@ function SmallExperienceCard({ experience }) {
             src={coverImage}
             alt={experience.name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
           />
           {/* Absolute Price Tag */}
           <div className="absolute top-4 right-4 bg-surface-container-lowest/95 backdrop-blur-xs px-3 py-1.5 rounded-lg shadow-sm border border-outline-variant/30">
@@ -237,7 +238,7 @@ function SmallExperienceCard({ experience }) {
         <div className="p-5 flex-1 flex flex-col justify-between">
           <div>
             {/* City Tag */}
-            <span className="text-xs font-semibold tracking-wider uppercase text-outline-variant font-['Inter'] block mb-1">
+            <span className="text-xs font-semibold tracking-wider uppercase text-on-surface-variant font-['Inter'] block mb-1">
               {experience.city}
             </span>
             {/* Name Title */}
@@ -483,19 +484,27 @@ function Home() {
           {/* Background slides */}
           {HERO_SLIDES.map((slide, i) => (
             <div key={i} className={`absolute inset-0 transition-opacity duration-700 ${i === currentSlide ? "opacity-100" : "opacity-0"}`}>
-              <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+              <img
+                src={slide.image}
+                alt={slide.title || "Hero Slide Banner"}
+                className="w-full h-full object-cover"
+                fetchpriority={i === 0 ? "high" : "low"}
+                loading="eager"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-slate-900/20" />
             </div>
           ))}
 
           {/* Slide nav dots */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1">
             {HERO_SLIDES.map((_, i) => (
               <button
                 key={i} onClick={() => setCurrentSlide(i)}
-                className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? "w-7 bg-amber-400" : "w-2 bg-white/40 hover:bg-white/70"}`}
+                className="h-12 w-8 flex items-center justify-center cursor-pointer group"
                 aria-label={`Slide ${i + 1}`}
-              />
+              >
+                <span className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? "w-7 bg-amber-400" : "w-2 bg-white/40 group-hover:bg-white/70"}`} />
+              </button>
             ))}
           </div>
 
@@ -842,8 +851,9 @@ function Home() {
                 <div className="space-y-5">
                   {/* City */}
                   <div>
-                    <label className="block font-['Inter'] text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Destination</label>
+                    <label htmlFor="home-planner-city" className="block font-['Inter'] text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Destination</label>
                     <select
+                      id="home-planner-city"
                       value={plannerCity}
                       onChange={(e) => { const c = e.target.value; setPlannerCity(c); setItinerary(FALLBACK_ITINERARIES[c]); }}
                       className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary font-['Inter'] cursor-pointer"
@@ -913,6 +923,7 @@ function Home() {
                         {itinerary.duration}
                       </span>
                     </div>
+
 
                     {itinerary.days.map((dayData, di) => (
                       <div key={di} className="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-xs">

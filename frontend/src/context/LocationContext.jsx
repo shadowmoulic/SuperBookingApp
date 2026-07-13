@@ -54,6 +54,7 @@ export const LocationProvider = ({ children }) => {
   };
 
   useEffect(() => {
+
     const initializeLocation = async () => {
       setLoadingLocation(true);
 

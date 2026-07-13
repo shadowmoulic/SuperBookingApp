@@ -1,0 +1,85 @@
+ZEQUE PROJECT - UI/UX CHANGE LOG & STATUS
+========================================
+
+Below is the summary of UI/UX improvements completed based on user feedback. All changes have been implemented in the codebase and verified.
+
+1. Chatbot Improvements
+   - Feedback: "dialog box ka roundness is a bit too much and also when the chat bot opens, it should give me a few default options to choose instead of me typing the whole request, and the reply its giving is a long paragraph which is again a bad UX, response should be shown more clean"
+   - Status: [FIXED]
+   - Component: frontend/src/components/Chatbot.jsx
+   - Changes Made:
+     * Reduced dialog box rounding from rounded-3xl to rounded-2xl.
+     * Introduced Suggestion Chips ("2-day trip to Jaipur", "Top sights in Hampi", "How to book tickets?") at the opening of the chat to allow users to trigger quick default queries.
+     * Adjusted the LLM system instructions so that the travel assistant provides extremely brief, clean, structured bullet-point responses (under 4 sentences) without verbose paragraphs or emojis.
+
+2. Visual Hierarchy & Itinerary Highlight (Royal Jaipur Architectural Tour)
+   - Feedback: "royal jaipur architecutre ko thoda highlighted dikhna padega else it will look like any other box on the page... like put a background image or reposition the box to ensure hierarchy"
+   - Status: [FIXED]
+   - Files: 
+     * frontend/src/pages/Home.jsx
+     * frontend/src/pages/ItineraryIndex.jsx
+   - Changes Made:
+     * Upgraded the plain text header of the AI Planner's default itinerary into a visually stunning, responsive banner card.
+     * Features high-resolution background images that dynamically change based on the selected city (e.g. Amer Fort for Jaipur, Qutub Minar for Delhi, Taj Mahal for Agra).
+     * Added elegant gradient overlays (from-slate-950 via-slate-900/40 to-transparent) and high-contrast typography to highlight the title and make it stand out immediately.
+
+3. India Region Filter & Planner Box Green Styling
+   - Feedback: "there is clear filter option here... lekin ek h cheez h idhar, add another filter option like, north, south, east or west india" and "state directory box ko green colour karo..."
+   - Status: [FIXED]
+   - Component: frontend/src/pages/StateIndex.jsx
+   - Changes Made:
+     * Added a "Filter by Region" panel underneath the existing monthly calendar filter.
+     * Created a mapping utility that categorizes all Indian states into North, South, East, West, and Central India.
+     * Rendered region filter buttons (North India, South India, East India, West India, Central India, All Regions) that let users narrow down the state directory instantly.
+     * Upgraded the Monthly Travel Planner wrapper container background from grey (bg-surface-container-low) to light emerald green (bg-primary/5 border border-primary/10 rounded-3xl) to align with brand colors.
+
+4. Attractions Booking Sidebar Design & Pro Tips Highlights
+   - Feedback: "add that background to our main color or something a little lighter and add that padding thing up in that main page for /attraction/[attraction-name] types" and "pro tips thoda highlighted lagna chahiye in ExperienceDetails.jsx ... so that they dont miss it... like use negative space colour or centre align the icons and make them negative colour"
+   - Status: [FIXED]
+   - Component: frontend/src/pages/ExperienceDetails.jsx
+   - Changes Made:
+     * Applied the light primary brand background (bg-primary/5) and custom padding (p-4) to the entire right column layout wrapper (lg:col-span-1) on the desktop view.
+     * Restructured the sticky behavior so that the white booking card remains sticky inside this styled container as the user scrolls through the attraction description.
+     * Highlighted the "Pro Tips for Your Visit" card layout: Centered all icons inside a circular container with solid negative primary-colored background (bg-primary) and white icons, center-aligning all headers/texts to draw immediate attention.
+
+5. Search Bar Shape Styling
+   - Feedback: "also search bar looks quite odd, simple rounded rectangle rakho... its going against most of the other designs on the page"
+   - Status: [FIXED]
+   - Files:
+     * frontend/src/pages/StateIndex.jsx
+     * frontend/src/pages/CityIndex.jsx
+   - Changes Made:
+     * Replaced the pill-shaped (rounded-full) search input containers with a modern, simple rounded rectangle styling (rounded-2xl) that matches the structural aesthetic of all other cards and panels across the app.
+
+6. Robust Image Fallbacks
+   - Feedback: "pangong lake ka image mein issue h so can we have a custom made fallback image or something please / it's not just pangong but a lot of images aren't working"
+   - Status: [FIXED]
+   - Files:
+     * frontend/src/components/ExperienceCard.jsx
+     * frontend/src/pages/StateIndex.jsx
+     * frontend/src/pages/CityIndex.jsx
+     * frontend/src/pages/ExperienceDetails.jsx
+     * frontend/src/pages/Home.jsx
+   - Changes Made:
+     * Implemented standard fallback image definitions.
+     * Integrated onError handlers on image tags across all major cards (state card, city card, experience card, details hero/sunrise/gallery images, and homepage experience cards) to gracefully replace broken or hotlinked image URLs with a fallback Indian heritage cover image.
+
+7. Active Footer Social Links
+   - Feedback: "arent these buttons active?"
+   - Status: [FIXED]
+   - Component: frontend/src/components/Footer.jsx
+   - Changes Made:
+     * Activated all social media footer links (Facebook, Twitter/X, Instagram, and YouTube) by replacing placeholder '#' tags with active target links that open safely in new window tabs (target="_blank" rel="noopener noreferrer").
+
+8. Isolated Center Dashboard Box & Scroll Options
+   - Feedback: "this centre green box looks too isolated, you can add two more boxes mentioning say, previous trips, pending trips ya completed trips" and "a scroll option is required here, there is an issue scrolling it"
+   - Status: [FIXED]
+   - Component: frontend/src/pages/UserDashboard.jsx
+   - Changes Made:
+     * Replaced the single, centered green "Upcoming Trips" box with a complete 3-card grid (Pending Orders, Upcoming Trips, Completed Trips).
+     * Connected each card to dynamic booking data from the backend APIs (filtering tickets in the past for completed, future for upcoming, and incomplete orders for pending).
+     * Added a scrolling option to the sticky dashboard sidebar container (max-h-[calc(100vh-160px)] overflow-y-auto no-scrollbar) to ensure it remains scrollable on laptops and smaller screen viewports.
+
+========================================
+Report updated on: 2026-06-22
+Status: ALL CHECKS PASSED & DEPLOYMENT-READY

@@ -132,8 +132,9 @@ export default function ItineraryIndex() {
               
               {/* Destination Select */}
               <div>
-                <label className="block text-[10px] font-bold text-[#3e4945] uppercase tracking-widest mb-2.5">Destination</label>
+                <label htmlFor="itinerary-planner-city" className="block text-[10px] font-bold text-[#3e4945] uppercase tracking-widest mb-2.5">Destination</label>
                 <select
+                  id="itinerary-planner-city"
                   value={plannerCity}
                   onChange={(e) => setPlannerCity(e.target.value)}
                   className="w-full bg-[#f0edee] border border-[#bdc9c3] rounded-xl px-4 py-3 text-[#1b1b1c] text-sm outline-none cursor-pointer focus:ring-2 focus:ring-[#006955]/20 focus:border-[#006955] font-semibold"
@@ -198,18 +199,43 @@ export default function ItineraryIndex() {
               <div className="space-y-6">
                 
                 {/* Info Card */}
-                <div className="bg-white border border-[#E8ECEB] rounded-[24px] p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <span className="text-[10px] font-bold text-[#006955] uppercase tracking-widest bg-[#006955]/10 px-3 py-1 rounded-full">
-                      Curated Tour
-                    </span>
-                    <h3 className="text-[#1b1b1c] font-extrabold text-2xl mt-3">{itinerary.title}</h3>
-                    <p className="text-xs text-[#3e4945] mt-1.5 leading-relaxed">{itinerary.tagline}</p>
+                <div className="relative overflow-hidden rounded-[24px] bg-slate-900 text-white p-6 sm:p-8 shadow-sm border border-[#E8ECEB]">
+                  {/* Background Image with overlay */}
+                  <div className="absolute inset-0 z-0">
+                    <img 
+                      src={
+                        plannerCity === "jaipur" 
+                          ? "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=800&q=80" 
+                          : plannerCity === "delhi"
+                          ? "https://images.unsplash.com/photo-1587135941948-670b381f08ec?auto=format&fit=crop&w=800&q=80"
+                          : plannerCity === "agra"
+                          ? "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=800&q=80"
+                          : "https://images.unsplash.com/photo-1600100397608-f010e42ed98e?auto=format&fit=crop&w=800&q=80"
+                      } 
+                      alt={itinerary.title}
+                      className="w-full h-full object-cover brightness-40 transition-all duration-500" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/40 to-transparent" />
                   </div>
-                  <span className="self-start sm:self-auto bg-[#006955] text-white text-xs font-bold px-4 py-2 rounded-full shadow-xs">
-                    {itinerary.duration}
-                  </span>
+                  
+                  <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-widest bg-amber-400/20 px-3 py-1 rounded-full border border-amber-400/30">
+                        Curated Tour
+                      </span>
+                      <h3 className="text-white font-extrabold text-2xl sm:text-3xl mt-3 tracking-tight drop-shadow-md">
+                        {itinerary.title}
+                      </h3>
+                      <p className="text-slate-200 text-xs sm:text-sm mt-2 max-w-xl leading-relaxed">
+                        {itinerary.tagline}
+                      </p>
+                    </div>
+                    <span className="self-start sm:self-auto bg-amber-400 text-slate-950 text-xs font-bold px-4 py-2 rounded-full shadow-md shrink-0">
+                      {itinerary.duration}
+                    </span>
+                  </div>
                 </div>
+
 
                 {/* Day-by-Day Timeline */}
                 {itinerary.days.map((dayData, di) => (

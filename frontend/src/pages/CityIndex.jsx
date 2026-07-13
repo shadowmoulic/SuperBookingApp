@@ -268,8 +268,8 @@ const CityIndex = () => {
             </p>
 
             {/* Search Input */}
-            <div className="mt-8 max-w-2xl mx-auto rounded-full bg-surface-container-low border border-outline-variant p-2 shadow-md focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-              <div className="flex items-center gap-3 bg-surface-container-lowest px-5 py-3.5 rounded-full">
+            <div className="mt-8 max-w-2xl mx-auto rounded-2xl bg-surface-container-low border border-outline-variant p-2 shadow-md focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+              <div className="flex items-center gap-3 bg-surface-container-lowest px-5 py-3.5 rounded-2xl">
                 <Search className="h-5 w-5 text-on-surface-variant/60" />
                 <input
                   type="text"
@@ -379,6 +379,7 @@ const CityIndex = () => {
                         src={city.image_url || city.icon_url || FALLBACK_IMAGE}
                         alt={city.name}
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        onError={(e) => { e.target.src = FALLBACK_IMAGE; }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
                       <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 shadow-sm backdrop-blur-md">

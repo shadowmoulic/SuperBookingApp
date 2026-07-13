@@ -287,8 +287,9 @@ const ExploreNearMe = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Total Days</label>
+                  <label htmlFor="trip-days" className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Total Days</label>
                   <select
+                    id="trip-days"
                     value={tripModalData.days}
                     onChange={e => setTripModalData({ ...tripModalData, days: parseInt(e.target.value) })}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#136b55]/30"
@@ -297,14 +298,15 @@ const ExploreNearMe = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Add to Day</label>
+                  <label htmlFor="trip-current-day" className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Add to Day</label>
                   <select
+                    id="trip-current-day"
                     value={tripModalData.currentDay}
                     onChange={e => setTripModalData({ ...tripModalData, currentDay: parseInt(e.target.value) })}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#136b55]/30"
                   >
                     {Array.from({ length: tripModalData.days }, (_, i) => i + 1).map(d => (
-                      <option key={d} value={d}>Day {d}</option>
+                       <option key={d} value={d}>Day {d}</option>
                     ))}
                   </select>
                 </div>

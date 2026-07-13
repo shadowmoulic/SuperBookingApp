@@ -102,8 +102,58 @@ const STATE_FAQS = [
   }
 ];
 
+const REGION_MAP = {
+  // North
+  "delhi": "North",
+  "jammu and kashmir": "North",
+  "jammu & kashmir": "North",
+  "himachal pradesh": "North",
+  "punjab": "North",
+  "uttarakhand": "North",
+  "haryana": "North",
+  "rajasthan": "North",
+  "uttar pradesh": "North",
+  
+  // South
+  "andhra pradesh": "South",
+  "karnataka": "South",
+  "kerala": "South",
+  "tamil nadu": "South",
+  "telangana": "South",
+  "goa": "South",
+  
+  // East
+  "west bengal": "East",
+  "bihar": "East",
+  "jharkhand": "East",
+  "odisha": "East",
+  "sikkim": "East",
+  "assam": "East",
+  "arunachal pradesh": "East",
+  "manipur": "East",
+  "meghalaya": "East",
+  "mizoram": "East",
+  "nagaland": "East",
+  "tripura": "East",
+  
+  // West
+  "gujarat": "West",
+  "maharashtra": "West",
+  
+  // Central
+  "madhya pradesh": "Central",
+  "chhattisgarh": "Central"
+};
+
+function getStateRegion(stateName) {
+  if (!stateName) return "North";
+  const normalized = stateName.toLowerCase().trim();
+  return REGION_MAP[normalized] || "North"; 
+}
+
 const StateIndex = () => {
   const [states, setStates] = useState([]);
+  const [selectedRegion, setSelectedRegion] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
@@ -167,6 +217,14 @@ const StateIndex = () => {
       });
     }
 
+    // Filter by selected region
+    if (selectedRegion && selectedRegion !== "All") {
+      result = result.filter((state) => {
+        const region = getStateRegion(state.name);
+        return region === selectedRegion;
+      });
+    }
+
     // Filter by search query
     const query = searchQuery.trim().toLowerCase();
     if (query) {
@@ -184,7 +242,7 @@ const StateIndex = () => {
     }
 
     return result;
-  }, [searchQuery, states, selectedMonth]);
+  }, [searchQuery, states, selectedMonth, selectedRegion]);
 
   // Structured Data Schema
   const structuredData = useMemo(() => {
@@ -265,8 +323,8 @@ const StateIndex = () => {
             </p>
 
             {/* Search Input */}
-            <div className="mt-8 max-w-2xl mx-auto rounded-full bg-surface-container-low border border-outline-variant p-2 shadow-md focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-              <div className="flex items-center gap-3 bg-surface-container-lowest px-5 py-3.5 rounded-full">
+            <div className="mt-8 max-w-2xl mx-auto rounded-2xl bg-surface-container-low border border-outline-variant p-2 shadow-md focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+              <div className="flex items-center gap-3 bg-surface-container-lowest px-5 py-3.5 rounded-2xl">
                 <Search className="h-5 w-5 text-on-surface-variant/60" />
                 <input
                   type="text"
@@ -286,7 +344,7 @@ const StateIndex = () => {
 
       {/* Month Filter Selector */}
       <section className="mx-auto max-w-7xl px-4 mb-12 sm:px-6 lg:px-8">
-        <div className="bg-surface-container-low border border-outline-variant/40 rounded-3xl p-6 sm:p-8">
+        <div className="bg-primary/5 border border-primary/10 rounded-3xl p-6 sm:p-8 shadow-xs">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
               <h2 className="font-['Hanken_Grotesk'] text-xl sm:text-2xl font-bold text-primary flex items-center gap-2">
@@ -331,6 +389,45 @@ const StateIndex = () => {
                 {month}
               </button>
             ))}
+          </div>
+
+          {/* Region Filter */}
+          <div className="mt-6 pt-6 border-t border-outline-variant/35">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+              <div>
+                <h3 className="font-['Hanken_Grotesk'] text-lg font-bold text-primary flex items-center gap-2">
+                  <Compass className="text-emerald-500 h-5 w-5" />
+                  Filter by Region
+                </h3>
+                <p className="text-xs text-on-surface-variant font-['Inter'] mt-0.5">
+                  Browse destinations across North, South, East, West, or Central India
+                </p>
+              </div>
+              {selectedRegion !== "All" && (
+                <button
+                  onClick={() => setSelectedRegion("All")}
+                  className="text-xs font-bold text-primary hover:underline self-start md:self-auto cursor-pointer"
+                >
+                  Clear Region Filter
+                </button>
+              )}
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              {["All", "North", "South", "East", "West", "Central"].map((region) => (
+                <button
+                  key={region}
+                  onClick={() => { setSelectedRegion(region); setVisibleCount(6); }}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold font-['Hanken_Grotesk'] transition-all cursor-pointer ${
+                    selectedRegion === region
+                      ? "bg-primary text-on-primary shadow-xs"
+                      : "bg-surface-container-lowest border border-outline-variant/40 text-on-surface-variant hover:border-primary/40 hover:text-primary"
+                  }`}
+                >
+                  {region === "All" ? "All Regions" : `${region} India`}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -379,6 +476,7 @@ const StateIndex = () => {
                         src={state.image_url || FALLBACK_IMAGE}
                         alt={state.name}
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        onError={(e) => { e.target.src = FALLBACK_IMAGE; }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
                       <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 shadow-sm backdrop-blur-md">
