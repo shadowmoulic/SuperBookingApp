@@ -2,7 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import api from "../api/api";
 import LocationCard from "../components/LocationCard";
-import { ChevronRight, MapPin, Clock, Globe, Star, Building2, Compass, ArrowRight } from "lucide-react";
+import { ChevronRight, MapPin, Clock, Globe, Star, Building2, Compass, ArrowRight, ChevronDown } from "lucide-react";
 import { DetailSkeleton } from "../components/SkeletonLoaders";
 import { ErrorScreen } from "../components/ErrorScreen";
 
@@ -24,6 +24,7 @@ export default function StateDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCity, setSelectedCity] = useState('All Cities');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("rating");
   const [favorites, setFavorites] = useState({});
@@ -362,10 +363,10 @@ export default function StateDetails() {
                 <select
                   value={selectedCity}
                   onChange={(e) => setSelectedCity(e.target.value)}
-                  className="appearance-none bg-[#f0edee] border border-[#bdc9c3] rounded-xl pl-4 pr-10 py-1.5 text-xs font-semibold text-[#1b1b1c] outline-none cursor-pointer focus:ring-2 focus:ring-[#006955]/20 focus:border-[#006955]"
+                  className="appearance-none bg-surface-container-low border border-outline-variant/50 hover:border-primary/40 rounded-xl pl-4 pr-10 py-1.5 text-xs font-semibold text-on-surface outline-none cursor-pointer focus:ring-2 focus:ring-[#006955]/20 focus:border-[#006955]"
                 >
                   <option value="All Cities">All Cities</option>
-                  {stateInfo.cities.map(c => (
+                  {stateData.cities.results?.map(c => (
                     <option key={c.name} value={c.name}>{c.name}</option>
                   ))}
                 </select>
@@ -387,135 +388,136 @@ export default function StateDetails() {
                 </select>
               </div>
             </div>
+          </div>
 
-            {/* Experiences Grid */}
-            {paginatedExperiences.length === 0 ? (
-              <div className="text-center py-20 bg-surface-container-low rounded-2xl border border-dashed border-outline-variant animate-fade-in">
-                <span className="material-symbols-outlined text-5xl text-on-surface-variant/30 block mb-4">explore</span>
-                <h3 className="font-['Hanken_Grotesk'] text-lg font-bold text-on-surface mb-2">No experiences found.</h3>
-                <p className="text-on-surface-variant font-['Inter'] text-sm">Try a different category or check back soon.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12 animate-fade-in">
-                {paginatedExperiences.map((experience) => {
-                  const expId = experience.public_id || experience.id;
-                  const images = String(experience.image_url || "")
-                    .split(",")
-                    .map((url) => url.trim())
-                    .filter(Boolean);
-                  const coverImage = images[0] || experience.image_url;
-                  const isFavorite = !!favorites[expId];
+          {/* Experiences Grid */}
+          {paginatedExperiences.length === 0 ? (
+            <div className="text-center py-20 bg-surface-container-low rounded-2xl border border-dashed border-outline-variant animate-fade-in">
+              <span className="material-symbols-outlined text-5xl text-on-surface-variant/30 block mb-4">explore</span>
+              <h3 className="font-['Hanken_Grotesk'] text-lg font-bold text-on-surface mb-2">No experiences found.</h3>
+              <p className="text-on-surface-variant font-['Inter'] text-sm">Try a different category or check back soon.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12 animate-fade-in">
+              {paginatedExperiences.map((experience) => {
+                const expId = experience.public_id || experience.id;
+                const images = String(experience.image_url || "")
+                  .split(",")
+                  .map((url) => url.trim())
+                  .filter(Boolean);
+                const coverImage = images[0] || experience.image_url;
+                const isFavorite = !!favorites[expId];
 
-                  return (
-                    <Link
-                      to={`/attraction/${experience.slug}`}
-                      key={expId}
-                      className="group bg-surface-container-lowest border border-outline-variant/40 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-outline-variant flex flex-col h-full relative cursor-pointer"
-                    >
-                      <div className="relative h-56 overflow-hidden flex-shrink-0">
-                        <img
-                          src={coverImage}
-                          alt={experience.name}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                        <button
-                          onClick={(e) => toggleFavorite(e, expId)}
-                          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white backdrop-blur-xs flex items-center justify-center shadow-sm transition-all active:scale-90 cursor-pointer"
-                          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                return (
+                  <Link
+                    to={`/attraction/${experience.slug}`}
+                    key={expId}
+                    className="group bg-surface-container-lowest border border-outline-variant/40 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-outline-variant flex flex-col h-full relative cursor-pointer"
+                  >
+                    <div className="relative h-56 overflow-hidden flex-shrink-0">
+                      <img
+                        src={coverImage}
+                        alt={experience.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <button
+                        onClick={(e) => toggleFavorite(e, expId)}
+                        className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 hover:bg-white backdrop-blur-xs flex items-center justify-center shadow-sm transition-all active:scale-90 cursor-pointer"
+                        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill={isFavorite ? "#006b55" : "none"}
+                          stroke={isFavorite ? "#006b55" : "currentColor"}
+                          strokeWidth="2"
+                          className="transition-colors text-gray-500"
                         >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill={isFavorite ? "#006b55" : "none"}
-                            stroke={isFavorite ? "#006b55" : "currentColor"}
-                            strokeWidth="2"
-                            className="transition-colors text-gray-500"
-                          >
-                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                          </svg>
-                        </button>
-                        {experience.average_rating && (
-                          <div className="absolute top-3 left-3 bg-surface-container-lowest/95 backdrop-blur-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-sm border border-outline-variant/30 text-xs font-bold text-on-surface">
-                            <span className="text-amber-400 text-xs leading-none">★</span>
-                            <span className="font-['JetBrains_Mono'] leading-none">
-                              {Number(experience.average_rating).toFixed(1)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="p-5 flex-1 flex flex-col justify-between">
-                        <div>
-                          <span className="text-[10px] font-bold text-primary uppercase font-['Inter'] tracking-wider mb-1.5 block">
-                            {experience.category}
+                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                        </svg>
+                      </button>
+                      {experience.average_rating && (
+                        <div className="absolute top-3 left-3 bg-surface-container-lowest/95 backdrop-blur-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-sm border border-outline-variant/30 text-xs font-bold text-on-surface">
+                          <span className="text-amber-400 text-xs leading-none">★</span>
+                          <span className="font-['JetBrains_Mono'] leading-none">
+                            {Number(experience.average_rating).toFixed(1)}
                           </span>
-                          <h3 className="font-['Hanken_Grotesk'] font-bold text-on-surface text-base leading-snug mb-2 group-hover:text-primary transition-colors line-clamp-2 h-10">
-                            {experience.name}
-                          </h3>
-                          <div className="flex items-center gap-1 text-on-surface-variant text-xs font-['Inter'] mb-4">
-                            <span className="material-symbols-outlined text-xs leading-none">location_on</span>
-                            <span>{experience.location || experience.city}</span>
-                          </div>
                         </div>
+                      )}
+                    </div>
 
-                        <div className="flex justify-between items-end border-t border-outline-variant/30 pt-4 mt-auto">
-                          <div>
-                            <span className="text-[10px] text-on-surface-variant block font-['Inter'] uppercase tracking-wider mb-0.5">Starts from</span>
-                            <span className="font-['JetBrains_Mono'] text-sm font-bold text-on-surface">
-                              ₹{Number(experience.entry_fee_base).toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="w-8 h-8 rounded-full bg-surface-container group-hover:bg-primary group-hover:text-on-primary transition-all duration-300 flex items-center justify-center text-on-surface-variant">
-                            <ArrowRight className="stroke-[3]" />
-                          </div>
+                    <div className="p-5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[10px] font-bold text-primary uppercase font-['Inter'] tracking-wider mb-1.5 block">
+                          {experience.category}
+                        </span>
+                        <h3 className="font-['Hanken_Grotesk'] font-bold text-on-surface text-base leading-snug mb-2 group-hover:text-primary transition-colors line-clamp-2 h-10">
+                          {experience.name}
+                        </h3>
+                        <div className="flex items-center gap-1 text-on-surface-variant text-xs font-['Inter'] mb-4">
+                          <span className="material-symbols-outlined text-xs leading-none">location_on</span>
+                          <span>{experience.location || experience.city}</span>
                         </div>
                       </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 pt-8 border-t border-outline-variant/30 mb-6">
-                <button
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                  className="w-9 h-9 border border-outline-variant rounded-lg hover:bg-surface-container hover:border-primary/40 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center text-on-surface-variant cursor-pointer"
-                  aria-label="Previous page"
-                >
-                  <span className="material-symbols-outlined text-base">chevron_left</span>
-                </button>
+                      <div className="flex justify-between items-end border-t border-outline-variant/30 pt-4 mt-auto">
+                        <div>
+                          <span className="text-[10px] text-on-surface-variant block font-['Inter'] uppercase tracking-wider mb-0.5">Starts from</span>
+                          <span className="font-['JetBrains_Mono'] text-sm font-bold text-on-surface">
+                            ₹{Number(experience.entry_fee_base).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-surface-container group-hover:bg-primary group-hover:text-on-primary transition-all duration-300 flex items-center justify-center text-on-surface-variant">
+                          <ArrowRight className="stroke-[3]" />
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
 
-                {Array.from({ length: totalPages }, (_, idx) => {
-                  const pageNum = idx + 1;
-                  const isActive = currentPage === pageNum;
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`w-9 h-9 rounded-lg font-['Hanken_Grotesk'] text-sm font-semibold flex items-center justify-center transition-all cursor-pointer ${isActive
-                        ? "bg-primary text-on-primary shadow-sm"
-                        : "border border-outline-variant text-on-surface-variant hover:bg-surface-container hover:border-primary/40"
-                        }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-8 border-t border-outline-variant/30 mb-6">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="w-9 h-9 border border-outline-variant rounded-lg hover:bg-surface-container hover:border-primary/40 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center text-on-surface-variant cursor-pointer"
+                aria-label="Previous page"
+              >
+                <span className="material-symbols-outlined text-base">chevron_left</span>
+              </button>
 
-                <button
-                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                  className="w-9 h-9 border border-outline-variant rounded-lg hover:bg-surface-container hover:border-primary/40 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center text-on-surface-variant cursor-pointer"
-                  aria-label="Next page"
-                >
-                  <span className="material-symbols-outlined text-base">chevron_right</span>
-                </button>
-              </div>
-            )}
+              {Array.from({ length: totalPages }, (_, idx) => {
+                const pageNum = idx + 1;
+                const isActive = currentPage === pageNum;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-9 h-9 rounded-lg font-['Hanken_Grotesk'] text-sm font-semibold flex items-center justify-center transition-all cursor-pointer ${isActive
+                      ? "bg-primary text-on-primary shadow-sm"
+                      : "border border-outline-variant text-on-surface-variant hover:bg-surface-container hover:border-primary/40"
+                      }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="w-9 h-9 border border-outline-variant rounded-lg hover:bg-surface-container hover:border-primary/40 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center text-on-surface-variant cursor-pointer"
+                aria-label="Next page"
+              >
+                <span className="material-symbols-outlined text-base">chevron_right</span>
+              </button>
+            </div>
+          )}
         </section>
 
         {/* ── POPULAR CITIES ──────────────────────────────── */}
