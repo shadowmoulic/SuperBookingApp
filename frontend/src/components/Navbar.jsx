@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Menu, X, Search, User } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import ModalContext from "../context/ModalContext";
 import LocationContext from "../context/LocationContext";
@@ -101,7 +102,7 @@ function LocationDropdown({ locations, selectedLocation, onSelect, align = "left
 }
 
 function Navbar() {
-  const { user, logout } = useContext(AuthContext);
+  const { user} = useContext(AuthContext);
   const { openLoginModal } = useContext(ModalContext);
   const { locations, selectedLocation, changeLocation } = useContext(LocationContext);
   const navigate = useNavigate();
@@ -318,24 +319,18 @@ function Navbar() {
               <span className="material-symbols-outlined text-xl">shopping_bag</span>
             </Link>
 
-            {user ? (
-              <>
-                <button
-                  onClick={logout}
-                  className="sm:flex hidden bg-primary text-on-primary hover:brightness-110 px-5 py-2 rounded-full text-xs sm:text-sm font-bold font-['Hanken_Grotesk'] tracking-wide transition-all cursor-pointer flex items-center gap-1.5 shadow-sm hover:shadow active:scale-95"
-                >
-                  <span className="material-symbols-outlined text-base leading-none">logout</span>
-                  Logout
-                </button>
-                <button
-                  onClick={logout}
-                  className="sm:hidden flex w-10 h-10 rounded-full bg-primary text-on-primary items-center justify-center hover:brightness-110 transition-all cursor-pointer shadow-sm active:scale-95"
-                  aria-label="Logout"
-                >
-                  <span className="material-symbols-outlined text-lg leading-none">logout</span>
-                </button>
-              </>
-            ) : (
+           {user ? (
+  <Link
+    to="/dashboard"
+    className="bg-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary)] hover:text-[var(--md-sys-color-on-primary-container)] px-4 py-2 rounded-full flex items-center gap-2 transition-all"
+  >
+    <User className="w-4 h-4" />
+
+    <span>
+      Hi, {user.first_name || user.username || "User"}
+    </span>
+  </Link>
+) : (
               <>
                 <button
                   onClick={openLoginModal}
