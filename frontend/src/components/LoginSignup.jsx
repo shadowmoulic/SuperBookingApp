@@ -390,8 +390,7 @@ export default function LoginSignup() {
                     <img
                       src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
                       alt="Google logo"
-                      className="w-4 h-4"
-                    />
+                      className="w-4 h-4" />
                     Google
                   </button>
                   <button
@@ -440,14 +439,9 @@ export default function LoginSignup() {
                 </p>
                 <p className="font-['Inter'] text-[11px] text-gray-400 px-4 leading-relaxed">
                   By signing up, you agree to our{" "}
-                  <a href="#terms" className="underline hover:text-gray-600 transition-colors">
-                    Terms of Service
-                  </a>{" "}
-                  and{" "}
-                  <a href="#privacy" className="underline hover:text-gray-600 transition-colors">
-                    Privacy Policy
-                  </a>
-                  .
+                  <a href="#terms" className="underline hover:text-gray-600 transition-colors">Terms of Service</a>
+                  {" "}and{" "}
+                  <a href="#privacy" className="underline hover:text-gray-600 transition-colors">Privacy Policy</a>.
                 </p>
               </div>
             )}

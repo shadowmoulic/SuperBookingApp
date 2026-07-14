@@ -1,12 +1,108 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Menu, X, Search, User } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import ModalContext from "../context/ModalContext";
 import LocationContext from "../context/LocationContext";
 import api from "../api/api";
 
+function LocationDropdown({ locations, selectedLocation, onSelect, align = "left" }) {
+  const scrollRef = useRef(null);
+  const [thumb, setThumb] = useState({ height: 0, top: 0, visible: false });
+
+  useEffect(() => {
+    const updateThumb = () => {
+      const element = scrollRef.current;
+      if (!element) return;
+
+      const { scrollTop, scrollHeight, clientHeight } = element;
+      const hasOverflow = scrollHeight > clientHeight + 1;
+
+      if (!hasOverflow) {
+        setThumb({ height: 0, top: 0, visible: false });
+        return;
+      }
+
+      const minThumbHeight = 36;
+      const thumbHeight = Math.max((clientHeight / scrollHeight) * clientHeight, minThumbHeight);
+      const maxThumbTop = clientHeight - thumbHeight;
+      const thumbTop = scrollHeight > clientHeight
+        ? (scrollTop / (scrollHeight - clientHeight)) * maxThumbTop
+        : 0;
+
+      setThumb({ height: thumbHeight, top: thumbTop, visible: true });
+    };
+
+    updateThumb();
+    window.addEventListener("resize", updateThumb);
+
+    return () => window.removeEventListener("resize", updateThumb);
+  }, [locations]);
+
+  return (
+    <div
+      className={`absolute top-full mt-2 w-40 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-lg overflow-hidden animate-scale-in ${align === "right" ? "right-0 z-[110]" : "left-0 z-[70]"
+        }`}
+    >
+      <div className="relative">
+        <div
+          ref={scrollRef}
+          onScroll={() => {
+            const element = scrollRef.current;
+            if (!element) return;
+
+            const { scrollTop, scrollHeight, clientHeight } = element;
+            const minThumbHeight = 36;
+            const thumbHeight = Math.max((clientHeight / scrollHeight) * clientHeight, minThumbHeight);
+            const maxThumbTop = clientHeight - thumbHeight;
+            const thumbTop = scrollHeight > clientHeight
+              ? (scrollTop / (scrollHeight - clientHeight)) * maxThumbTop
+              : 0;
+
+            setThumb((prev) => ({ ...prev, top: thumbTop }));
+          }}
+          className="max-h-80 overflow-y-auto py-1 pr-4 scroll-smooth"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {locations.map((loc) => {
+            const isSelected = loc.name === selectedLocation;
+            return (
+              <button
+                key={loc.public_id}
+                type="button"
+                onClick={() => onSelect(loc.name)}
+                className="w-full flex items-center justify-between text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors border-none bg-transparent hover:bg-primary/5"
+                style={{ transform: "none", boxShadow: "none" }}
+              >
+                <span className={isSelected ? "text-primary" : "text-on-surface-variant"}>{loc.name}</span>
+                {isSelected && (
+                  <span className="material-symbols-outlined text-primary text-xs leading-none">check</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {thumb.visible && (
+          <div className="pointer-events-none absolute top-3 bottom-3 right-2 flex w-2 justify-center">
+            <div className="relative h-full w-1 rounded-full bg-surface-container-high">
+              <div
+                className="absolute left-0 w-1 rounded-full bg-primary/60"
+                style={{
+                  height: `${thumb.height}px`,
+                  transform: `translateY(${thumb.top}px)`,
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function Navbar() {
-  const { user, logout } = useContext(AuthContext);
+  const { user} = useContext(AuthContext);
   const { openLoginModal } = useContext(ModalContext);
   const { locations, selectedLocation, changeLocation } = useContext(LocationContext);
   const navigate = useNavigate();
@@ -186,35 +282,17 @@ function Navbar() {
               </button>
 
               {isNavbarLocOpen && (
-                <div className="absolute left-0 top-full mt-2 w-40 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg z-[70] py-1 animate-scale-in">
-                  {locations.map((loc) => {
-                    const isSelected = loc.name === selectedLocation;
-                    return (
-                      <button
-                        key={loc.public_id}
-                        type="button"
-                        onClick={() => {
-                          handleLocationSelect(loc.name);
-                          setIsNavbarLocOpen(false);
-                        }}
-                        className="w-full flex items-center justify-between text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors border-none bg-transparent"
-                        style={{ transform: "none", boxShadow: "none" }}
-                      >
-                        <span className={isSelected ? "text-primary" : "text-on-surface-variant"}>{loc.name}</span>
-                        {isSelected && (
-                          <span className="material-symbols-outlined text-primary text-xs leading-none">check</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
+                <LocationDropdown
+                  locations={locations}
+                  selectedLocation={selectedLocation}
+                  onSelect={(locName) => {
+                    handleLocationSelect(locName);
+                    setIsNavbarLocOpen(false);
+                  }}
+                />
               )}
             </div>
-            <button
-              onClick={() => openSearch()}
-              className="flex-1 flex items-center justify-between text-left text-xs text-on-surface-variant pl-3 pr-2 py-0.5 focus:outline-none cursor-pointer"
-              style={{ transform: "none", boxShadow: "none" }}
-            >
+            <button onClick={() => openSearch()} className="flex-1 flex items-center justify-between text-left text-xs text-outline-variant pl-3 pr-2 py-0.5 focus:outline-none cursor-pointer" style={{ transform: "none", boxShadow: "none" }}>
               <span>Search experiences...</span>
               <span className="material-symbols-outlined text-on-surface-variant text-lg">search</span>
             </button>
@@ -222,11 +300,7 @@ function Navbar() {
 
           {/* Right-aligned User Actions */}
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => openSearch()}
-              className="sm:hidden flex w-10 h-10 rounded-full border border-outline-variant text-on-surface items-center justify-center hover:text-primary hover:border-primary transition-all shadow-xs cursor-pointer bg-surface-container-lowest"
-              aria-label="Search"
-            >
+            <button onClick={() => openSearch()} className="sm:hidden flex w-10 h-10 rounded-full border border-outline-variant text-on-surface items-center justify-center hover:text-primary hover:border-primary transition-all shadow-xs cursor-pointer bg-surface-container-lowest" aria-label="Search">
               <span className="material-symbols-outlined text-xl">search</span>
             </button>
 
@@ -245,24 +319,18 @@ function Navbar() {
               <span className="material-symbols-outlined text-xl">shopping_bag</span>
             </Link>
 
-            {user ? (
-              <>
-                <button
-                  onClick={logout}
-                  className="sm:flex hidden bg-primary text-on-primary hover:brightness-110 px-5 py-2 rounded-full text-xs sm:text-sm font-bold font-['Hanken_Grotesk'] tracking-wide transition-all cursor-pointer flex items-center gap-1.5 shadow-sm hover:shadow active:scale-95"
-                >
-                  <span className="material-symbols-outlined text-base leading-none">logout</span>
-                  Logout
-                </button>
-                <button
-                  onClick={logout}
-                  className="sm:hidden flex w-10 h-10 rounded-full bg-primary text-on-primary items-center justify-center hover:brightness-110 transition-all cursor-pointer shadow-sm active:scale-95"
-                  aria-label="Logout"
-                >
-                  <span className="material-symbols-outlined text-lg leading-none">logout</span>
-                </button>
-              </>
-            ) : (
+           {user ? (
+  <Link
+    to="/dashboard"
+    className="bg-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary)] hover:text-[var(--md-sys-color-on-primary-container)] px-4 py-2 rounded-full flex items-center gap-2 transition-all"
+  >
+    <User className="w-4 h-4" />
+
+    <span>
+      Hi, {user.first_name || user.username || "User"}
+    </span>
+  </Link>
+) : (
               <>
                 <button
                   onClick={openLoginModal}
@@ -317,37 +385,21 @@ function Navbar() {
                 >
                   <span className="material-symbols-outlined text-primary text-xs leading-none">location_on</span>
                   <span>{selectedLocation}</span>
-                  <span
-                    className="material-symbols-outlined text-[10px] text-on-surface-variant select-none ml-0.5 leading-none"
-                    style={{ transform: isSearchLocOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s ease" }}
-                  >
+                  <span className="material-symbols-outlined text-[10px] text-outline-variant select-none ml-0.5 leading-none" style={{ transform: isSearchLocOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s ease" }}>
                     keyboard_arrow_down
                   </span>
                 </button>
 
                 {isSearchLocOpen && (
-                  <div className="absolute right-0 mt-1.5 w-40 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-lg z-[110] py-1 animate-scale-in">
-                    {locations.map((loc) => {
-                      const isSelected = loc.name === selectedLocation;
-                      return (
-                        <button
-                          key={loc.public_id}
-                          type="button"
-                          onClick={() => {
-                            handleLocationSelect(loc.name);
-                            setIsSearchLocOpen(false);
-                          }}
-                          className="w-full flex items-center justify-between text-left px-3 py-2 text-xs font-semibold cursor-pointer transition-colors border-none bg-transparent"
-                          style={{ transform: "none", boxShadow: "none" }}
-                        >
-                          <span className={isSelected ? "text-primary" : "text-on-surface-variant"}>{loc.name}</span>
-                          {isSelected && (
-                            <span className="material-symbols-outlined text-primary text-xs leading-none">check</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <LocationDropdown
+                    align="right"
+                    locations={locations}
+                    selectedLocation={selectedLocation}
+                    onSelect={(locName) => {
+                      handleLocationSelect(locName);
+                      setIsSearchLocOpen(false);
+                    }}
+                  />
                 )}
               </div>
 

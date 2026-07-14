@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, MapPin, Search, ChevronDown, ChevronUp, Compass } from "lucide-react";
+import { ErrorBlock } from "../components/ErrorScreen";
 import api from "../api/api";
 
 const FALLBACK_IMAGE =
@@ -434,20 +435,26 @@ const StateIndex = () => {
       {/* States List Section */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {loading ? (
-          <div className="rounded-3xl border border-outline-variant/40 bg-surface-container-low px-6 py-20 text-center shadow-xs">
-            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-emerald-100 border-t-primary" />
-            <p className="mt-4 text-sm font-semibold text-on-surface-variant animate-pulse font-['Inter']">Retrieving Indian states...</p>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div key={idx} className="border border-outline-variant/20 rounded-3xl overflow-hidden bg-surface-container-lowest h-96 flex flex-col animate-pulse">
+                <div className="bg-surface-container h-56 w-full" />
+                <div className="p-6 flex-grow flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="bg-surface-container h-6 w-1/3 rounded-lg" />
+                    <div className="bg-surface-container h-4 w-full rounded-lg" />
+                    <div className="bg-surface-container h-4 w-2/3 rounded-lg" />
+                  </div>
+                  <div className="flex justify-between items-center mt-6 border-t border-outline-variant/10 pt-4">
+                    <div className="bg-surface-container h-4 w-20 rounded-lg" />
+                    <div className="bg-surface-container h-4 w-20 rounded-lg" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
-          <div className="rounded-3xl border border-red-200 bg-red-50/20 px-6 py-16 text-center shadow-xs">
-            <p className="text-sm font-semibold text-red-600 font-['Inter']">Failed to load states: {error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 rounded-full bg-primary px-6 py-2.5 text-xs font-bold text-on-primary transition-all shadow-xs hover:brightness-105"
-            >
-              Retry Loading
-            </button>
-          </div>
+          <ErrorBlock message={`Failed to load states: ${error}`} onRetry={() => window.location.reload()} />
         ) : (
           <>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">

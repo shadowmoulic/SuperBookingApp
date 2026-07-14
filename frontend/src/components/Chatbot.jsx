@@ -5,13 +5,14 @@ import { useLocation } from "react-router-dom";
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: "assistant", content: "Hello. I am the ZeQue travel assistant. How may I help you plan your itinerary today?" }
+    { role: "assistant", content: "👋 Welcome to ZeQue Assistant.\n\nChoose an option below or ask me about places, itineraries, food, hotels, and attractions." }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const location = useLocation();
 
+  const quickOptions = ["Places to visit in Hyderabad", "Best restaurants in Hyderabad", "Best hotels in Hyderabad", "Best time to visit Hyderabad", "Top attractions in Hyderabad"];
 
 
   const SUGGESTION_CHIPS = [
@@ -103,9 +104,9 @@ export default function Chatbot() {
   return (
     <div className={`fixed right-6 z-50 ${isDetailsPage ? "bottom-24 lg:bottom-6" : "bottom-6"}`}>
       {isOpen ? (
-        <div className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-gray-150 w-80 h-[400px] flex flex-col overflow-hidden transition-all duration-300">
+        <div className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-surface w-[380px] h-[500px] flex flex-col overflow-hidden transition-all duration-300">
           {/* Header */}
-          <div className="bg-primary text-on-primary p-4 flex items-center justify-between">
+          <div className="bg-primary-container text-on-primary p-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                 <MessageCircle className="w-4 h-4 text-white" />
@@ -119,9 +120,25 @@ export default function Chatbot() {
 
           {/* Chat area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-surface-container-low">
+            {messages.length === 1 && (
+              <div className="grid grid-cols-1 gap-2 mb-4">
+                {quickOptions.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => setInput(option)}
+                    className="text-xs bg-surface-container-highest border rounded-xl p-3 hover:border-primary text-left"
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${msg.role === 'user' ? 'bg-primary text-on-primary rounded-br-sm' : 'bg-surface-container-lowest border border-gray-200 text-gray-700 rounded-bl-sm shadow-sm'}`}>
+                <div className={`max-w-[85%] px-4 py-2 text-sm ${msg.role === "user"
+                  ? "bg-primary text-on-primary rounded-2xl rounded-br-md"
+                  : "bg-surface-container-highest border border-gray-200 rounded-2xl rounded-bl-md shadow-sm"
+                  }`}>
                   {msg.content}
                 </div>
               </div>
@@ -163,7 +180,7 @@ export default function Chatbot() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask a question..."
-              className="flex-1 bg-surface-container rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 text-gray-700"
+              className="flex-1 bg-surface-container-highest rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
             <button type="submit" disabled={isLoading || !input.trim()} className="w-9 h-9 bg-primary hover:brightness-95 disabled:bg-gray-300 text-on-primary rounded-full flex items-center justify-center transition-colors shrink-0">
               <Send className="w-4 h-4" />
@@ -179,7 +196,7 @@ export default function Chatbot() {
           <span className="absolute -top-1 -right-1 w-4 h-4 bg-error rounded-full border-2 border-surface-container-lowest animate-pulse"></span>
 
           {/* Tooltip */}
-          <div className="absolute right-full mr-4 bg-surface-container-lowest text-gray-800 text-sm font-bold px-4 py-2 rounded-xl shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300">
+          <div className="absolute right-full mr-4 bg-surface-container-lowest text-on-surface text-sm font-bold px-4 py-2 rounded-xl shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-300">
             Assistance Available
             {/* Arrow */}
             <div className="absolute top-1/2 -right-2 -translate-y-1/2 w-4 h-4 bg-surface-container-lowest rotate-45"></div>

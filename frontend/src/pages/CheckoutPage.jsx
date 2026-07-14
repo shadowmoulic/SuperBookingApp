@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/api";
 import Loading from "../components/Loading";
+import { ArrowRight } from "lucide-react";
 
 function formatDate(value) {
   if (!value) return "-";
@@ -400,7 +401,7 @@ export default function CheckoutPage() {
                 ) : (
                   <>
                     Pay Now
-                    <span className="material-symbols-outlined text-lg leading-none">arrow_forward</span>
+                    <ArrowRight className="stroke-[3]" />
                   </>
                 )}
               </button>

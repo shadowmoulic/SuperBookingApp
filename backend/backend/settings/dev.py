@@ -63,6 +63,15 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 20,
     # Add verbose error messages in development
     "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
+    "DEFAULT_THROTTLE_RATES": {
+        "login": "5/min",
+        "signup": "5/min",
+        "otp": "3/10min",
+        "payment": "5/min",
+        "booking": "10/min",
+        "bulk_booking": "2/min",
+        "ticket_validation": "10/min",
+    }
 }
 
 # Disable WhiteNoise for development (cleaner logging)

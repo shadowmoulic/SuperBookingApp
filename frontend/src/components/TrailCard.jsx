@@ -1,7 +1,17 @@
 import { Link } from "react-router-dom";
 import { CheckCircle, ChevronRight } from "lucide-react";
 
+const FALLBACK_IMAGE = "https://media.istockphoto.com/id/2257224237/vector/flat-design-nature-landscape-with-winding-path.jpg?s=612x612&w=0&k=20&c=izv6B-Ndq-hQNBgiBwguMxC1IfjbsrxFsfxo1vpeZzo=";
+
 export default function TrailCard({ trail }) {
+  const imageUrl = trail.image_url || trail.image || FALLBACK_IMAGE;
+  const name = trail.name || trail.title || "Heritage Trail";
+  const description = trail.description || trail.desc || "";
+
+  const handleImageError = (e) => {
+    e.target.src = FALLBACK_IMAGE;
+  };
+
   return (
     <Link
       to="/trails"
@@ -9,8 +19,9 @@ export default function TrailCard({ trail }) {
     >
       <div className="h-48 relative overflow-hidden">
         <img
-          src={trail.image_url}
-          alt={trail.name}
+          src={imageUrl}
+          alt={name}
+          onError={handleImageError}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
@@ -20,13 +31,13 @@ export default function TrailCard({ trail }) {
       </div>
       <div className="p-5 sm:p-6 flex-1 flex flex-col">
         <h3 className="font-['Hanken_Grotesk'] font-bold text-base sm:text-lg text-on-surface group-hover:text-primary transition-colors">
-          {trail.name}
+          {name}
         </h3>
         <p className="font-['Inter'] text-xs font-bold text-primary uppercase tracking-wider mt-1">
           {trail.route}
         </p>
         <p className="font-['Inter'] text-on-surface-variant text-xs sm:text-sm mt-3 leading-relaxed flex-1">
-          {trail.description}
+          {description}
         </p>
 
         {/* Highlights */}

@@ -10,7 +10,7 @@ export default function Footer() {
   const locSlug = selectedLocation ? selectedLocation.toLowerCase().replace(/\s+/g, "-") : "all";
 
   return (
-    <footer className="mt-16 relative overflow-hidden bg-surface-container-low border-t border-outline-variant/20">
+    <footer className="mt-16 relative overflow-hidden bg-surface-container-low border-t border-outline-variant/20 font-['Hanken_Grotesk']">
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 py-16 relative z-10">
         {/* Branding Section */}
@@ -92,7 +92,7 @@ export default function Footer() {
 
 
           <nav className="col-span-1">
-            <h3 className="text-lg font-semibold text-on-surface mb-4">Discover</h3>
+            <h3 className="font-semibold text-on-surface mb-4 font-['Hanken_Grotesk']">Discover</h3>
             <ul className="space-y-3">
               <li>
                 <Link
@@ -131,7 +131,7 @@ export default function Footer() {
 
           {/* Help & Support */}
           <nav className="col-span-1">
-            <h3 className="text-lg font-semibold text-on-surface mb-4">
+            <h3 className="font-semibold text-on-surface mb-4 font-['Hanken_Grotesk']">
               Help & Support
             </h3>
             <ul className="space-y-3">
@@ -172,7 +172,7 @@ export default function Footer() {
 
           {/* Legal & Privacy */}
           <nav className="col-span-1">
-            <h3 className="text-lg font-semibold text-on-surface mb-4">
+            <h3 className="font-semibold text-on-surface mb-4 font-['Hanken_Grotesk']">
               Legal & Privacy
             </h3>
             <ul className="space-y-3">

@@ -251,7 +251,25 @@ export default function TrailDetails() {
       <section className="max-w-[1280px] mx-auto px-4 sm:px-6 py-8 border-t border-[#E8ECEB] mt-8">
         <h2 className="text-2xl font-bold text-[#1b1b1c] mb-8">Monuments & Attractions on this Route</h2>
         {loading ? (
-          <div className="text-center py-10">Loading Route Attractions...</div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 animate-pulse">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <div key={idx} className="border border-outline-variant/20 rounded-2xl p-4 flex flex-col gap-4 bg-surface-container-lowest h-full">
+                <div className="bg-surface-container h-32 sm:h-48 md:h-64 w-full rounded-xl" />
+                <div className="space-y-2">
+                  <div className="bg-surface-container h-4 w-1/3 rounded-lg" />
+                  <div className="bg-surface-container h-5 w-3/4 rounded-lg" />
+                  <div className="bg-surface-container h-4 w-1/2 rounded-lg" />
+                </div>
+                <div className="flex justify-between items-center mt-auto border-t border-outline-variant/10 pt-3">
+                  <div className="space-y-1">
+                    <div className="bg-surface-container h-3 w-12 rounded-lg" />
+                    <div className="bg-surface-container h-4 w-16 rounded-lg" />
+                  </div>
+                  <div className="bg-surface-container w-8 h-8 rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : allExperiences.length === 0 ? (
           <div className="text-center py-16 bg-[#F7F9F9] rounded-2xl border border-dashed border-[#bdc9c3]">
             <Compass className="w-12 h-12 text-[#bdc9c3] mx-auto mb-4" />

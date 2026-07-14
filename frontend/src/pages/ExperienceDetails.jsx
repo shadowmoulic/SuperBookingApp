@@ -3,20 +3,23 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Share2, MapPin, Star, Clock, Zap, Award, Gauge, Ticket,
   CheckCircle2, CreditCard, Shirt, CameraOff, Plus, Minus, ArrowRight, ShieldAlert,
-  Calendar, Flame, HelpCircle
+  Calendar, Flame, HelpCircle,
+  ChevronRight
 } from "lucide-react";
 import api from "../api/api";
 import AuthContext from "../context/AuthContext";
 import ModalContext from "../context/ModalContext";
 import Loading from "../components/Loading";
 
-const FALLBACK_EXP_IMAGE = "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&q=80&w=800";
+const FALLBACK_IMAGE =
+  "https://static.vecteezy.com/system/resources/thumbnails/000/140/923/small/india-gate-free-vector.jpg";
 
 export function ExperienceDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useContext(AuthContext);
   const { openLoginModal } = useContext(ModalContext);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const [experience, setExperience] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -63,7 +66,7 @@ export function ExperienceDetails() {
       .get(`/api/experience/${id}`)
       .then((res) => {
         setExperience(res.data);
-        
+
         // Add to recently explored
         const item = {
           type: "attraction",
@@ -77,7 +80,7 @@ export function ExperienceDetails() {
           const filtered = list.filter(x => x.url !== item.url);
           filtered.unshift(item);
           localStorage.setItem("recently_explored", JSON.stringify(filtered.slice(0, 4)));
-        } catch (e) {}
+        } catch (e) { }
       })
       .catch((err) => {
         setError("Unable to load experience details.");
@@ -90,7 +93,7 @@ export function ExperienceDetails() {
   // Mobile sticky scroll listener removed because booking metadata now lives on BookingPage.
 
   const images = useMemo(() => {
-    return String(experience?.image_url || "")
+    return String(experience?.image_url || FALLBACK_IMAGE)
       .split(",")
       .map((url) => url.trim())
       .filter(Boolean);
@@ -151,7 +154,7 @@ export function ExperienceDetails() {
     navigate(`/attraction/${id}/booking`);
   };
 
-  
+
 
   if (loading || !experience) {
     return (
@@ -181,10 +184,7 @@ export function ExperienceDetails() {
           <img
             alt={experience?.name || "Experience Banner"}
             className="w-full h-full object-cover"
-            src={images[0] || experience.image_url || FALLBACK_EXP_IMAGE}
-            onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
-            fetchpriority="high"
-            loading="eager"
+            src={images[0] || experience.image_url || FALLBACK_IMAGE}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
 
@@ -279,7 +279,7 @@ export function ExperienceDetails() {
           </section>
 
           {/* What's Included */}
-          <section className="space-y-4">
+          {/* <section className="space-y-4">
             <h3 className="text-lg font-black text-on-surface">What's Included</h3>
             <ul className="space-y-3 font-semibold text-xs sm:text-sm text-on-surface-variant">
               <li className="flex items-start gap-3">
@@ -295,11 +295,11 @@ export function ExperienceDetails() {
                 <span>Access to Mosque and Museum</span>
               </li>
             </ul>
-          </section>
+          </section> */}
 
-          {experience.image_sunrise && (
+          {/* {experience.image_sunrise && (
             <>
-              {/* Why Sunrise Editorial */}
+              // Why Sunrise Editorial
               <section className="bg-surface-container -mx-4 sm:-mx-8 px-4 sm:px-8 py-8 rounded-3xl">
                 <h3 className="text-lg font-black text-on-surface mb-3">Why visit at Sunrise?</h3>
                 <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed font-semibold mb-6">
@@ -315,7 +315,7 @@ export function ExperienceDetails() {
                 </div>
               </section>
             </>
-          )}
+          )} */}
           {/* Bento Pro Tips */}
           <section className="space-y-4">
             <h3 className="text-lg font-black text-on-surface">Pro Tips</h3>
@@ -390,7 +390,7 @@ export function ExperienceDetails() {
           </button>
         </footer>
 
-        
+
       </div>
 
       {/* -------------------- DESKTOP LAYOUT (attr-desc.txt) -------------------- */}
@@ -399,12 +399,12 @@ export function ExperienceDetails() {
         {/* Breadcrumb & Title Section */}
         <div className="mb-8">
           <nav className="flex gap-1.5 text-on-surface-variant font-semibold text-xs mb-2 uppercase tracking-wider">
-            <Link className="hover:text-primary transition-colors" to="/">India</Link>
-            <span>/</span>
+            <Link to="/" className="hover:text-primary transition-colors">Home</Link>
+            <ChevronRight size={13} />
             {experience.city && (
               <>
-                <Link className="hover:text-primary transition-colors" to={`/city/${experience.city.toLowerCase().replace(/\s+/g, '-')}`}>{experience.city}</Link>
-                <span>/</span>
+                <Link to={`/city/${experience.city.toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-primary transition-colors">{experience.city}</Link>
+                <ChevronRight size={13} />
               </>
             )}
             <span className="text-on-surface font-bold">{experience.name}</span>
@@ -477,9 +477,54 @@ export function ExperienceDetails() {
                 </div>
               </div>
             </section>
+            <section className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-xs">
+              {experience.highlights && experience.highlights.length > 0 && (
+                <div className="flex flex-col justify-start mb-6 border-b border-outline-variant/30 pb-6">
+                  <h3 className="font-['Hanken_Grotesk'] text-lg font-bold text-on-surface mb-3">Highlights</h3>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {experience.highlights.map((highlight, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                        <span className="text-on-surface-variant font-['Inter'] text-sm font-semibold">{highlight.title}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <div className="lg:col-span-2 flex flex-col justify-start">
+                <h2 className="font-['Hanken_Grotesk'] text-2xl sm:text-3xl font-bold text-primary mb-4">
+                  About {experience.name}
+                </h2>
+                {experience.description ? (
+                  <div className="relative">
+                    <div
+                      className={`text-on-surface-variant font-['Inter'] text-base leading-relaxed text-justify transition-all duration-300 overflow-hidden ${isExpanded || experience.description.length <= 250 ? "max-h-none" : "max-h-[120px] relative pb-6"
+                        }`}
+                    >
+                      <p className="whitespace-pre-line">{experience.description}</p>
+                      {!isExpanded && experience.description.length > 250 && (
+                        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/80 to-transparent pointer-events-none" />
+                      )}
+                    </div>
+                    {experience.description.length > 250 && (
+                      <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="mt-2 text-primary hover:text-primary/85 font-bold font-['Hanken_Grotesk'] text-sm transition-all focus:outline-none cursor-pointer flex items-center gap-1"
+                      >
+                        {isExpanded ? "Show Less" : "Read More"}
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-on-surface-variant/70 font-['Inter'] text-base italic">
+                    No description available for {experience.name} yet.
+                  </p>
+                )}
+              </div>
+            </section>
 
             {/* What's Included */}
-            <section className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-xs">
+            {/* <section className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-xs">
               <h2 className="text-lg font-black text-on-surface mb-6">What's Included</h2>
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <li className="flex items-start gap-4 font-semibold">
@@ -511,11 +556,11 @@ export function ExperienceDetails() {
                   </div>
                 </li>
               </ul>
-            </section>
+            </section> */}
 
-            {experience.image_sunrise && (
+            {/* {experience.image_sunrise && (
               <>
-                {/* Why Visit at Sunrise */}
+                //  Why Visit at Sunrise
                 <section className="py-4">
                   <div className="flex flex-col md:flex-row gap-8 items-center">
                     <div className="md:w-1/2 space-y-4">
@@ -544,74 +589,81 @@ export function ExperienceDetails() {
                     </div>
                   </div>
                 </section>
-              </>
-            )}
-            {/* Pro Tips Section */}
-            <section className="space-y-6">
-              <h2 className="text-lg font-black text-on-surface">Pro Tips for Your Visit</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all flex flex-col items-center text-center shadow-2xs">
-                  <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-on-primary mb-4 shadow-sm">
-                    <CreditCard className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-sm font-extrabold text-on-surface mb-2">Valid ID</h3>
-                  <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">All visitors must carry an original passport or government-issued ID card matching the booking name.</p>
-                </div>
-                <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all flex flex-col items-center text-center shadow-2xs">
-                  <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-on-primary mb-4 shadow-sm">
-                    <Shirt className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-sm font-extrabold text-on-surface mb-2">Dress Code</h3>
-                  <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">Modest clothing is recommended. Shoe covers are provided and mandatory for entering the Mausoleum.</p>
-                </div>
-                <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all flex flex-col items-center text-center shadow-2xs">
-                  <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-on-primary mb-4 shadow-sm">
-                    <CameraOff className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-sm font-extrabold text-on-surface mb-2">Camera Policy</h3>
-                  <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">Still photography is permitted on the grounds, but prohibited inside the main mausoleum chamber.</p>
-                </div>
-              </div>
-            </section>
+              </>)} 
+            */}
 
-            {/* Traveler Reviews */}
-            {reviewsList.length > 0 && (
-              <section className="border-t border-outline-variant/30 pt-8 space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-black text-on-surface">Traveler Reviews</h2>
-                </div>
-                <div className="space-y-4">
-                  {reviewsList.map((review) => (
-                    <div key={review.id} className="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/30">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary-container/40 flex items-center justify-center font-black text-xs text-on-primary-container">
-                            {review.user_name ? review.user_name.slice(0, 2).toUpperCase() : "US"}
-                          </div>
-                          <div>
-                            <p className="text-xs font-black text-on-surface">{review.user_name}</p>
-                            <p className="text-[10px] text-on-surface-variant font-bold">
-                              {review.created_at ? new Date(review.created_at).toLocaleDateString("en-US", { month: 'long', year: 'numeric' }) : "Verified Guest"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex text-tertiary-container">
-                          {"★".repeat(review.rating || 5)}
-                        </div>
+            {/* Experience Attributes */}
+            {experience.attributes && experience.attributes.length > 0 && (
+              <section className="space-y-6">
+                <h2 className="text-lg font-black text-on-surface">Pro Tips for Your Visit</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {experience.attributes.map((attr, idx) => {
+                    const getIcon = (key) => {
+                      const k = key.toLowerCase();
+                      if (k.includes("dress") || k.includes("clothing") || k.includes("wear")) {
+                        return <Shirt className="w-8 h-8 text-primary mb-3" />;
+                      }
+                      if (k.includes("photo") || k.includes("camera") || k.includes("video")) {
+                        return <CameraOff className="w-8 h-8 text-primary mb-3" />;
+                      }
+                      if (k.includes("id") || k.includes("passport") || k.includes("card") || k.includes("identity")) {
+                        return <CreditCard className="w-8 h-8 text-primary mb-3" />;
+                      }
+                      return <HelpCircle className="w-8 h-8 text-primary mb-3" />;
+                    };
+
+                    return (
+                      <div key={idx} className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all">
+                        {getIcon(attr.key)}
+                        <h3 className="text-sm font-extrabold text-on-surface mb-1.5">{attr.key}</h3>
+                        <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">{attr.value}</p>
                       </div>
-                      <p className="text-xs sm:text-sm text-on-surface font-semibold italic leading-relaxed">
-                        "{review.review_text}"
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             )}
 
-          </div>
+            {/* Traveler Reviews */}
+            {
+              reviewsList.length > 0 && (
+                <section className="border-t border-outline-variant/30 pt-8 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-black text-on-surface">Traveler Reviews</h2>
+                  </div>
+                  <div className="space-y-4">
+                    {reviewsList.map((review) => (
+                      <div key={review.id} className="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/30">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary-container/40 flex items-center justify-center font-black text-xs text-on-primary-container">
+                              {review.user_name ? review.user_name.slice(0, 2).toUpperCase() : "US"}
+                            </div>
+                            <div>
+                              <p className="text-xs font-black text-on-surface">{review.user_name}</p>
+                              <p className="text-[10px] text-on-surface-variant font-bold">
+                                {review.created_at ? new Date(review.created_at).toLocaleDateString("en-US", { month: 'long', year: 'numeric' }) : "Verified Guest"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex text-tertiary-container">
+                            {"★".repeat(review.rating || 5)}
+                          </div>
+                        </div>
+                        <p className="text-xs sm:text-sm text-on-surface font-semibold italic leading-relaxed">
+                          "{review.review_text}"
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )
+            }
+
+          </div >
 
           {/* Right Column: Sticky Booking Widget */}
-          <div className="lg:col-span-1 bg-primary/5 rounded-[24px] p-4">
+          < div className="lg:col-span-1 bg-primary/5 rounded-[24px] p-4" >
             <div className="sticky top-28 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-sm space-y-4">
 
               {/* Urgency Banner */}
@@ -633,20 +685,72 @@ export function ExperienceDetails() {
                     Select nationality and visit details on the booking page. Date, guests, and payment are completed there.
                   </p>
                 </div>
-                <button
-                  onClick={handleBuyNow}
-                  className="w-full py-3.5 bg-primary hover:brightness-110 text-on-primary font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
-                >
+                {/* Foreigner */}
+                {/* <div className="flex items-center justify-between px-4 py-3">
+                  <div>
+                    <p className="text-xs font-black text-on-surface">Foreigner</p>
+                    <p className="text-[10px] text-primary font-bold">₹{ticketPrices.foreigner} / person</p>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      onClick={() => handleForeignerCountChange(-1)}
+                      className="w-7 h-7 rounded-full border border-outline-variant flex items-center justify-center font-bold text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-90 text-sm"
+                    >−</button>
+                    <span className="font-black text-sm w-4 text-center text-on-surface">{foreignerCount}</span>
+                    <button
+                      onClick={() => handleForeignerCountChange(1)}
+                      className="w-7 h-7 rounded-full border border-primary text-primary flex items-center justify-center font-bold hover:bg-primary/5 cursor-pointer active:scale-90 text-sm"
+                    >+</button>
+                  </div>
+                </div> */}
+              </div >
+
+              {/* Date & Time */}
+              < div className="space-y-3" >
+                <div>
+                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Date</label>
+                  <input
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full h-10 px-3 border border-outline-variant/30 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none transition-all text-xs font-semibold bg-surface-container-lowest text-on-surface"
+                    type="date"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Time Slot</label>
+                  <select
+                    value={timeSlot}
+                    onChange={(e) => setTimeSlot(e.target.value)}
+                    className="w-full h-10 px-3 border border-outline-variant/30 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none transition-all text-xs font-semibold bg-surface-container-lowest text-on-surface appearance-none"
+                  >
+                    <option>06:00 AM - 09:00 AM (Sunrise)</option>
+                    <option>09:00 AM - 12:00 PM</option>
+                    <option>12:00 PM - 03:00 PM</option>
+                    <option>03:00 PM - 06:00 PM (Sunset)</option>
+                  </select>
+                </div>
+              </div >
+
+              {/* Book Now CTA */}
+              <button
+                onClick={handleBuyNow}
+                disabled={!experience.is_open}
+                className="w-full py-3.5 bg-primary hover:brightness-110 text-on-primary font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:bg-outline-variant/40 disabled:text-on-surface-variant/40 disabled:cursor-not-allowed"
+              >
+                {experience.is_open ? (
                   <>
                     Book Now
                     <ArrowRight className="w-4 h-4" />
                   </>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+                ) : (
+                  "Coming Soon"
+                )}
+              </button>
+            </div >
+          </div >
+        </div >
+      </div >
+    </div >
   );
 }

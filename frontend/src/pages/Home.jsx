@@ -7,6 +7,8 @@ import {
 import api from "../api/api";
 import BookingCard from "../components/BookingCard";
 import Loading from "../components/Loading";
+import { HomeSkeleton } from "../components/SkeletonLoaders";
+import { ErrorScreen } from "../components/ErrorScreen";
 import LocationContext from "../context/LocationContext";
 import ModalContext from "../context/ModalContext";
 import TrailCard from "../components/TrailCard";
@@ -197,18 +199,20 @@ const WHY_ZEQUE = [
 
 const INTERESTS = ["History", "Architecture", "Photography", "Spiritual", "Family", "Adventure"];
 
-
-
-
-const FALLBACK_EXP_IMAGE = "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&q=80&w=800";
+const FALLBACK_IMAGE_EXP =
+  "https://static.vecteezy.com/system/resources/thumbnails/000/140/923/small/india-gate-free-vector.jpg";
+const FALLBACK_IMAGE_CITY =
+  "https://img.magnific.com/free-vector/modern-skyline-building-background-design-with-reflection-effect_1017-50620.jpg?semt=ais_hybrid&w=740&q=80";
+const FALLBACK_IMAGE_TRAIL =
+  "https://media.istockphoto.com/id/2257224237/vector/flat-design-nature-landscape-with-winding-path.jpg?s=612x612&w=0&k=20&c=izv6B-Ndq-hQNBgiBwguMxC1IfjbsrxFsfxo1vpeZzo="
 
 function SmallExperienceCard({ experience }) {
   const slug = experience.name ? experience.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : experience.public_id;
-  const images = String(experience.image_url || "")
+  const images = String(experience.image_url || FALLBACK_IMAGE_EXP)
     .split(",")
     .map((url) => url.trim())
     .filter(Boolean);
-  const coverImage = images[0] || experience.image_url || FALLBACK_EXP_IMAGE;
+  const coverImage = images[0] || FALLBACK_IMAGE_EXP;
 
   return (
     <Link to={`/attraction/${slug}`} className="block h-full group">
@@ -247,7 +251,7 @@ function SmallExperienceCard({ experience }) {
           <div className="mt-auto w-full">
             <div className="w-full py-2.5 rounded-lg border-2 border-primary text-primary font-['Hanken_Grotesk'] font-semibold text-sm transition-all duration-300 group-hover:bg-primary group-hover:text-on-primary flex items-center justify-center gap-1.5 active:scale-98">
               Book Tickets
-              <span className="material-symbols-outlined text-base">arrow_forward</span>
+              <ArrowRight className="stroke-[3]" />
             </div>
           </div>
         </div>
@@ -257,10 +261,9 @@ function SmallExperienceCard({ experience }) {
 }
 
 function CategoryGridCard({ category }) {
-  const { selectedLocation } = useContext(LocationContext);
   const catSlug = category.name.toLowerCase().replace(/s$/, '').replace(/\s+/g, '-');
   return (
-    <Link to={`/${selectedLocation.toLowerCase().replace(/\s+/g, '-')}/${catSlug}`} className="block group">
+    <Link to={`/category/${catSlug}`} className="block group">
       <div className="bg-surface-container-lowest rounded-xl p-5 flex flex-col items-center justify-center border border-outline-variant/30 hover:shadow-lg hover:border-primary/20 transition-all duration-300 cursor-pointer h-36">
         <div className="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center mb-3 group-hover:bg-primary/5 transition-all">
           {category.icon_url ? (
@@ -285,7 +288,7 @@ function CategoryGridCard({ category }) {
 
 function Home() {
   const navigate = useNavigate();
-  const { selectedLocation } = useContext(LocationContext);
+  const { selectedLocation, coords } = useContext(LocationContext);
   const { openSearch } = useContext(ModalContext);
 
   // Hero Carousel (from DemoHome Section 1)
@@ -403,12 +406,16 @@ function Home() {
 
   useEffect(() => {
     fetchHomeData();
-  }, [currentPage]);
+  }, [currentPage, coords]);
 
   const fetchHomeData = () => {
     setLoading(true);
+    let url = `/api/home/?${currentPage}`;
+    if (coords) {
+      url += `&latitude=${coords.latitude}&longitude=${coords.longitude}`;
+    }
     api
-      .get(`/api/home/?${currentPage}`)
+      .get(url)
       .then((res) => {
         setHomeData(res.data);
         setError(null);
@@ -420,20 +427,9 @@ function Home() {
       .finally(() => setLoading(false));
   };
 
-  if (loading) return <Loading />;
+  if (loading) return <HomeSkeleton />;
   if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-red-500 font-['Inter'] text-center px-6">
-        <span className="material-symbols-outlined text-4xl mb-3 select-none">error</span>
-        <p className="text-sm font-semibold">Failed to load content: {error}</p>
-        <button
-          onClick={fetchHomeData}
-          className="mt-4 px-5 py-2 bg-primary text-white rounded-lg text-xs font-semibold hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-sm"
-        >
-          Retry Loading
-        </button>
-      </div>
-    );
+    return <ErrorScreen message={error} onRetry={fetchHomeData} />;
   }
   if (!homeData) {
     return (
@@ -528,7 +524,7 @@ function Home() {
             </h1>
 
             <p className="text-slate-300 text-base sm:text-xl font-light mb-10 max-w-xl leading-relaxed">
-              Explore 1500+ monuments, heritage trails and historic cities.
+              Explore 100+ monuments, heritage trails and historic cities.
             </p>
 
             {/* Search bar */}
@@ -572,7 +568,7 @@ function Home() {
         <section className="bg-surface-container-lowest border-b border-outline-variant/30 py-6">
           <div className="max-w-[1280px] mx-auto px-6 md:px-16">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 text-center">
-              {[["1500+", "Heritage Sites"], ["500+", "Cities Mapped"], ["42", "UNESCO Landmarks"], ["5", "Curated Trails"]].map(([num, label]) => (
+              {[["100+", "Heritage Sites"], ["100+", "Cities Mapped"], ["20+", "UNESCO Landmarks"], ["5", "Curated Trails"]].map(([num, label]) => (
                 <div key={label} className="py-4 px-3 rounded-2xl bg-surface-container-low border border-outline-variant/50">
                   <p className="text-2xl sm:text-3xl font-black text-primary">{num}</p>
                   <p className="text-[10px] sm:text-xs font-bold text-on-surface-variant uppercase tracking-wider mt-1">{label}</p>
@@ -704,14 +700,14 @@ function Home() {
                     </button>
                   </div>
                   <Link to="/cities" className="text-primary font-['Hanken_Grotesk'] font-semibold flex items-center gap-1.5 hover:underline text-sm active:scale-95 transition-all">
-                    View All <span className="material-symbols-outlined text-base">arrow_forward</span>
+                    View All <ArrowRight className="stroke-[3]" />
                   </Link>
                 </div>
               </div>
               <div className="relative">
                 <div ref={locationsRef} className="flex overflow-x-auto pb-4 gap-6 scroll-smooth snap-x snap-mandatory no-scrollbar">
                   {homeData.explore_locations.data.map((location) => (
-                    <div key={location.id} className="w-[280px] sm:w-[450px] shrink-0 snap-start">
+                    <div key={location.public_id} className="w-[280px] sm:w-[450px] shrink-0 snap-start">
                       <LocationBentoCard location={location} />
                     </div>
                   ))}
@@ -760,7 +756,7 @@ function Home() {
                         to={`/${selectedLocation.toLowerCase().replace(/\s+/g, '-')}/${categorySlug}`}
                         className="text-primary font-['Hanken_Grotesk'] font-semibold flex items-center gap-1.5 hover:underline text-sm active:scale-95 transition-all"
                       >
-                        View All <span className="material-symbols-outlined text-base">arrow_forward</span>
+                        View All <ArrowRight className="stroke-[3]" />
                       </Link>
                     </div>
                   </div>
@@ -811,7 +807,7 @@ function Home() {
             <div className="relative">
               <div ref={circuitsRef} className="flex overflow-x-auto pb-4 gap-6 scroll-smooth snap-x snap-mandatory no-scrollbar">
                 {(homeData.featured_trails && homeData.featured_trails.length > 0 ? homeData.featured_trails : CIRCUITS).map((c) => (
-                  <div key={c.name} className="w-[280px] sm:w-[360px] shrink-0 snap-start">
+                  <div key={c.name || c.title} className="w-[280px] sm:w-[360px] shrink-0 snap-start">
                     <TrailCard trail={c} />
                   </div>
                 ))}
@@ -918,47 +914,14 @@ function Home() {
               <div className="lg:col-span-8">
                 {itinerary && (
                   <div className="space-y-6">
-                    <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-6 sm:p-8 shadow-md border border-outline-variant/30">
-                      {/* Background Image with overlay */}
-                      <div className="absolute inset-0 z-0">
-                        <img 
-                          src={
-                            plannerCity === "jaipur" 
-                              ? "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=800&q=80" 
-                              : plannerCity === "delhi"
-                              ? "https://images.unsplash.com/photo-1587135941948-670b381f08ec?auto=format&fit=crop&w=800&q=80"
-                              : plannerCity === "agra"
-                              ? "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=800&q=80"
-                              : plannerCity === "kolkata"
-                              ? "https://images.unsplash.com/photo-1605649487212-47bdab064df7?auto=format&fit=crop&w=800&q=80"
-                              : plannerCity === "hyderabad"
-                              ? "https://images.unsplash.com/photo-1627471900135-e110757d54b5?auto=format&fit=crop&w=800&q=80"
-                              : plannerCity === "hampi"
-                              ? "https://images.unsplash.com/photo-1600100397608-f010e42ed98e?auto=format&fit=crop&w=800&q=80"
-                              : "https://images.unsplash.com/photo-1561361062-8567535fde36?auto=format&fit=crop&w=800&q=80"
-                          } 
-                          alt={itinerary.title}
-                          className="w-full h-full object-cover brightness-40 transition-all duration-500" 
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/40 to-transparent" />
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-tertiary/20 bg-tertiary/10 px-4 py-4 shadow-sm">
+                      <div>
+                        <p className="font-['Hanken_Grotesk'] text-xs font-bold text-tertiary uppercase tracking-widest">Your Itinerary</p>
+                        <h3 className="font-['Hanken_Grotesk'] text-tertiary font-extrabold text-2xl mt-1">{itinerary.title}</h3>
                       </div>
-                      
-                      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                          <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-widest bg-amber-400/20 px-3 py-1 rounded-full border border-amber-400/30">
-                            Curated AI Tour
-                          </span>
-                          <h3 className="font-['Hanken_Grotesk'] text-white font-extrabold text-2xl sm:text-3xl mt-3 tracking-tight drop-shadow-md">
-                            {itinerary.title}
-                          </h3>
-                          <p className="font-['Inter'] text-slate-200 text-xs sm:text-sm mt-2 max-w-xl leading-relaxed">
-                            A custom heritage route built for you. Discover the best landmarks, cultural significance, and timing plans.
-                          </p>
-                        </div>
-                        <span className="self-start sm:self-auto bg-amber-400 text-slate-950 text-xs font-['Hanken_Grotesk'] font-black px-4 py-2 rounded-full shadow-md shrink-0">
-                          {itinerary.duration}
-                        </span>
-                      </div>
+                      <span className="self-start bg-tertiary text-on-tertiary text-xs font-['Hanken_Grotesk'] font-bold px-3.5 py-1.5 rounded-full shadow-xs">
+                        {itinerary.duration}
+                      </span>
                     </div>
 
 
