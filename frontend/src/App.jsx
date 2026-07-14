@@ -36,16 +36,11 @@ import ItineraryIndex from "./pages/ItineraryIndex";
 import UserDashboard from "./pages/UserDashboard";
 
 import BookingPage from "./pages/BookingPage";
-import StatePage from "./pages/StatePage";
-import CityPage from "./pages/CityPage";
 import { AttractionDetailsTemp } from "./pages/AttractionDetailsTemp";
 import { BookingTemp } from "./pages/BookingTemp";
 import SuccessPage from "./pages/SuccessPage";
 import FailedPage from "./pages/FailedPage";
 import CheckoutPage from "./pages/CheckoutPage";
-import MyBookings from "./pages/MyBookings";
-import AttractionIndex from "./pages/AttractionIndex";
-import SingleCategoryPage from "./pages/SingleCategoryPage";
 
 import Loading from "./components/Loading";
 import LocationContext from "./context/LocationContext";
@@ -71,19 +66,6 @@ function AppContent() {
           <Route path="/attraction/:id/booking" element={<BookingPage />} />
           <Route path="/attraction-temp/:slug" element={<AttractionDetailsTemp />} />
           <Route path="/attraction-temp/:slug/booking" element={<BookingTemp />} />
-          <Route path="/state/:id/old" element={<StatePage />} />
-          <Route path="/city/:id/old" element={<CityPage />} />
-          <Route path="/category/:id/old" element={<SingleCategoryPage />} />
-          <Route path="/attraction" element={<AttractionIndex />} />
-          <Route path="/attractions" element={<AttractionIndex />} />
-          <Route
-            path="/my-bookings"
-            element={
-              <ProtectedRoute>
-                <MyBookings />
-              </ProtectedRoute>
-            }
-          />
           {/* <Route path="/unesco-sites" element={<UnescoSites />} /> */}
           {/* <Route path="/top-places" element={<TopPlaces />} /> */}
           {/* <Route path="/explore-near-me" element={<ExploreNearMe />} /> */}
@@ -133,3 +115,5 @@ function App() {
 }
 
 export default App;
+
+
