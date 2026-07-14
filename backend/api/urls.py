@@ -1,7 +1,11 @@
+from .seo_views import SitemapView, LLMsView
 from . import views
 from django.urls import path
 
 urlpatterns = [
+    path('sitemap.xml', SitemapView.as_view(), name='sitemap'),
+    path('llms.txt', LLMsView.as_view(), name='llms'),
+
     path("experiences/", views.ExperienceListView.as_view(), name="experience_list"),
     path("experience/<str:public_id>", views.ExperienceView.as_view(), name="experience"),
     path("cities/", views.CityListView.as_view(), name="city_list"),
@@ -46,5 +50,6 @@ urlpatterns = [
     path("official/states/", views.OfficialStateView.as_view(), name="official_states"),
     path("official/categories/", views.OfficialCategoryView.as_view(), name="official_categories"),
 ]
+
 
 
