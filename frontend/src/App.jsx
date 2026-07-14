@@ -38,6 +38,8 @@ import ExploreNearMe from "./pages/ExploreNearMe";
 import BookingPage from "./pages/BookingPage";
 import StatePage from "./pages/StatePage";
 import CityPage from "./pages/CityPage";
+import { AttractionDetailsTemp } from "./pages/AttractionDetailsTemp";
+import { BookingTemp } from "./pages/BookingTemp";
 
 function LocationRouteWrapper() {
   const { locationName } = useParams();
@@ -75,6 +77,9 @@ function AppContent() {
           {/* <Route path="/old-home" element={<Home />} /> */}
           {/* <Route path="/demo-home" element={<Home />} /> */}
           <Route path="/attraction/:id" element={<ExperienceDetails />} />
+          <Route path="/attraction/:id/booking" element={<BookingPage />} />
+          <Route path="/attraction-temp/:slug" element={<AttractionDetailsTemp />} />
+          <Route path="/attraction-temp/:slug/booking" element={<BookingTemp />} />
           <Route path="/state/:id" element={<StatePage />} />
           <Route path="/city/:id" element={<CityPage />} />
           {/* <Route path="/attraction-demo" element={<ExperienceDemo />} /> */}
