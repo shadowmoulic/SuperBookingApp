@@ -1,18 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { ArrowLeft, CalendarDays, Users, BadgeCheck, Sparkles } from "lucide-react";
 import api from "../api/api";
-import "../styles/BookingPage.css";
 import Loading from "../components/Loading";
 
 function BookingPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const [experience, setExperience] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedDateIndex, setSelectedDateIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
-  const [ticketCount, setTicketCount] = useState(1);
+  const [adultCount, setAdultCount] = useState(1);
+  const [childCount, setChildCount] = useState(0);
+  const nationality = useMemo(() => {
+    const query = searchParams.get("nationality");
+    return query === "foreigner" ? "foreigner" : "indian";
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -28,7 +34,7 @@ function BookingPage() {
       }
     };
 
-    fetchData();
+    if (id) fetchData();
   }, [id]);
 
   const dates = useMemo(() => {
@@ -37,315 +43,274 @@ function BookingPage() {
       const date = new Date(baseDate);
       date.setDate(baseDate.getDate() + index);
       return {
-        label: date.toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        }),
+        label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         weekday: date.toLocaleDateString("en-US", { weekday: "short" }),
+        month: date.toLocaleDateString("en-US", { month: "long" }),
         iso: date.toISOString().slice(0, 10),
       };
     });
   }, []);
 
-  const categorySlug = experience?.category?.toLowerCase() || "tour";
-
-  const tourOptions = [
-    {
-      id: "slot-1",
-      title: "Slot A",
-      time: "10:00 hrs",
-      details: "Guided entry and audio support.",
-      price: experience?.entry_fee_base ?? 20,
-    },
-    {
-      id: "slot-2",
-      title: "Slot B",
-      time: "12:00 hrs",
-      details: "Small group tour with museum highlights.",
-      price: experience?.entry_fee_base ?? 20,
-    },
-    {
-      id: "slot-3",
-      title: "Slot C",
-      time: "14:00 hrs",
-      details: "Exclusive late afternoon entry.",
-      price: experience?.entry_fee_base ?? 20,
-    },
-    {
-      id: "slot-4",
-      title: "Slot D",
-      time: "16:00 hrs",
-      details: "Family-friendly tour with priority seating.",
-      price: experience?.entry_fee_base ?? 20,
-    },
-  ];
-
-  const concertOptions = [
-    {
-      id: "seat-vip",
-      title: "VIP Box",
-      details: "Front row, best sound.",
-      price: (experience?.entry_fee_base ?? 20) + 45,
-    },
-    {
-      id: "seat-floor",
-      title: "Floor",
-      details: "Close to stage, limited availability.",
-      price: (experience?.entry_fee_base ?? 20) + 25,
-    },
-    {
-      id: "seat-balcony",
-      title: "Balcony",
-      details: "Elevated view, comfortable seating.",
-      price: (experience?.entry_fee_base ?? 20) + 10,
-    },
-    {
-      id: "seat-general",
-      title: "General Admission",
-      details: "Great value with open seating.",
-      price: experience?.entry_fee_base ?? 20,
-    },
-  ];
-
-  const museumOptions = [
-    {
-      id: "access-general",
-      title: "General Entry",
-      details: "Access to main galleries and regular exhibitions.",
-      price: experience?.entry_fee_base ?? 20,
-    },
-    {
-      id: "access-premium",
-      title: "Premium Access",
-      details: "Includes priority entry and special exhibits.",
-      price: (experience?.entry_fee_base ?? 20) + 18,
-    },
-    {
-      id: "access-guided",
-      title: "Guided Tour",
-      details: "Curator-led tour with expert commentary.",
-      price: (experience?.entry_fee_base ?? 20) + 32,
-    },
-  ];
-
-  const activeOptions = categorySlug.includes("concert")
-    ? concertOptions
-    : categorySlug.includes("museum")
-      ? museumOptions
-      : tourOptions;
-
   useEffect(() => {
-    if (!selectedOption && activeOptions.length) {
-      setSelectedOption(activeOptions[0]);
+    if (!selectedOption && experience) {
+      const ticketTypes = experience.ticket_types || [];
+      let fallback = null;
+      if (ticketTypes.length) {
+        const matcher = nationality === "foreigner"
+          ? (ticket) => ticket.name.toLowerCase().includes("foreign") || ticket.name.toLowerCase().includes("intl") || ticket.name.toLowerCase().includes("international")
+          : (ticket) => ticket.name.toLowerCase().includes("india") || ticket.name.toLowerCase().includes("local");
+        fallback = ticketTypes.find(matcher) || ticketTypes.find((ticket) => ticket.is_active) || ticketTypes[0];
+      }
+
+      if (fallback) {
+        setSelectedOption({
+          id: fallback.public_id || fallback.name,
+          title: fallback.name,
+          description: fallback.description || "Entry access",
+          price: Number(fallback.pricing_rules?.[0]?.final_price || experience.entry_fee_base || 20),
+        });
+      } else {
+        setSelectedOption({
+          id: "general",
+          title: "General Admission",
+          description: "Main entry access",
+          price: Number(experience.entry_fee_base || 20),
+        });
+      }
     }
-  }, [activeOptions, selectedOption]);
+  }, [experience, selectedOption, nationality]);
 
-  const selectedPrice =
-    selectedOption?.price ?? experience?.entry_fee_base ?? 0;
-  const totalPrice = selectedPrice * ticketCount;
+  const selectedPrice = Number(selectedOption?.price || experience?.entry_fee_base || 0);
+  const totalPrice = adultCount * selectedPrice + childCount * 0;
+  const totalTickets = adultCount + childCount;
 
-  const handleTicketCountChange = (delta) => {
-    setTicketCount((current) => Math.max(1, current + delta));
+  const handleContinue = () => {
+    alert("Payment is not enabled yet. The booking experience will be live soon.");
   };
 
-  const handleBuyNow = async () => {
-    if (!selectedOption || !experience) {
-      alert("Please select an option before booking");
-      return;
-    }
-
-    const slotTime = selectedOption.time
-      ? selectedOption.time.replace(" hrs", "")
-      : null;
-
-    const bookingData = {
-      experience: experience.public_id,
-      booking_date: dates[selectedDateIndex].iso,
-      total_tickets: parseInt(ticketCount, 10),
-      slot_time: slotTime,
-    };
-
-    try {
-      const response = await api.post("/api/booking/create/", bookingData);
-      console.log("Booking created successfully:", response.data);
-      alert("Booking created successfully! Redirecting to payment...");
-      navigate(`/payment/${response.data.booking_reference}`);
-    } catch (error) {
-      console.error("Booking creation failed:", error);
-      alert(
-        error.response?.data?.message ||
-          "Failed to create booking. Please try again.",
-      );
-    }
-  };
-
-  const optionLabel = categorySlug.includes("concert")
-    ? "Seat"
-    : categorySlug.includes("museum")
-      ? "Access"
-      : "Slot";
-
-  const bookingSubtitle = experience
-    ? `${experience.location || "Location"} • ${experience.category || "Tour"}`
-    : "Loading booking details";
-
-  if (loading) {
-    return <Loading />;
-  }
-
-  if (error) {
-    return <div className="booking-page">{error}</div>;
-  }
+  if (loading) return <Loading />;
+  if (error) return <div className="min-h-screen bg-background flex items-center justify-center p-6">{error}</div>;
 
   return (
-    <div className="booking-page">
-      <div className="booking-card">
-        <div className="booking-details">
-          <div className="booking-hero">
-            <h1>{experience.name || "Experience Booking"}</h1>
-            <p>
-              {experience.description ||
-                "Choose the right booking option for this experience."}
-            </p>
-          </div>
+    <div className="min-h-screen bg-background text-on-surface">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-6 inline-flex items-center gap-2 rounded-full border border-outline-variant/70 bg-surface-container-lowest px-4 py-2 text-sm font-semibold text-on-surface shadow-sm"
+        >
+          <ArrowLeft size={16} />
+          Back
+        </button>
 
-          <div className="booking-section">
-            <div className="section-title">
-              <h2>Other Details</h2>
-              <span>{bookingSubtitle}</span>
-            </div>
-            <div className="booking-dates">
-              {dates.map((date, index) => (
-                <button
-                  key={date.iso}
-                  type="button"
-                  className={`date-chip ${selectedDateIndex === index ? "date-chip-active" : ""}`}
-                  onClick={() => setSelectedDateIndex(index)}
-                >
-                  <small>{date.weekday}</small>
-                  <strong>{date.label}</strong>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="booking-section booking-dynamic">
-            <div className="section-title">
-              <h2>
-                {categorySlug.includes("concert")
-                  ? "Seat Selection"
-                  : categorySlug.includes("museum")
-                    ? "Access Levels"
-                    : "Available Slots"}
-              </h2>
-              <span>Select the best fit for your visit</span>
+        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.45fr]">
+          <section className="rounded-[28px] border border-outline-variant/50 bg-surface-container-lowest p-5 shadow-[0_20px_60px_rgba(0,0,0,0.06)] sm:p-8">
+            <div className="flex flex-col gap-4 border-b border-outline-variant/50 pb-6">
+              <div className="inline-flex w-fit items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-primary">
+                <Sparkles size={14} />
+                Dynamic booking flow
+              </div>
+              <div>
+                <h1 className="text-3xl font-black tracking-tight sm:text-4xl">{experience?.name || "Experience Booking"}</h1>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-on-surface-variant sm:text-base">
+                  {experience?.description || "Choose a visit date and the right ticket type for your trip."}
+                </p>
+              </div>
             </div>
 
-            {categorySlug.includes("concert") ? (
-              <div className="seat-grid">
-                {concertOptions.map((seat) => (
-                  <button
-                    key={seat.id}
-                    type="button"
-                    className={`seat-card ${selectedOption?.id === seat.id ? "selected-card" : ""}`}
-                    onClick={() => setSelectedOption(seat)}
-                  >
-                    <p className="seat-title">{seat.title}</p>
-                    <p className="seat-text">{seat.details}</p>
-                    <p className="seat-price">₹{seat.price}</p>
-                  </button>
-                ))}
+            <div className="mt-6 space-y-6">
+              <div>
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-lg font-bold">Select date</h2>
+                  <span className="text-sm text-on-surface-variant">{dates[selectedDateIndex]?.month}</span>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-4">
+                  {dates.map((date, index) => {
+                    const isSelected = selectedDateIndex === index;
+                    return (
+                      <button
+                        key={date.iso}
+                        onClick={() => setSelectedDateIndex(index)}
+                        className={`rounded-2xl border px-3 py-3 text-left transition-all ${
+                          isSelected
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-outline-variant/50 bg-surface-container-low hover:border-primary/50"
+                        }`}
+                      >
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-on-surface-variant">{date.weekday}</div>
+                        <div className="mt-1 text-xl font-black">{date.label.split(" ")[1]}</div>
+                        <div className="text-xs font-medium">{date.label.split(" ")[0]}</div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            ) : categorySlug.includes("museum") ? (
-              <div className="access-list">
-                {museumOptions.map((access) => (
-                  <button
-                    key={access.id}
-                    type="button"
-                    className={`access-card ${selectedOption?.id === access.id ? "selected-card" : ""}`}
-                    onClick={() => setSelectedOption(access)}
-                  >
-                    <p className="access-title">{access.title}</p>
-                    <p className="access-text">{access.details}</p>
-                    <p className="access-price">₹{access.price}</p>
-                  </button>
-                ))}
+
+              <div>
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-lg font-bold">Choose ticket type</h2>
+                  <span className="text-sm text-on-surface-variant">Base pricing from backend</span>
+                </div>
+                <div className="space-y-3">
+                  {experience?.ticket_types?.length ? (
+                    experience.ticket_types
+                      .filter((ticket) => ticket.is_active)
+                      .map((ticket, index) => {
+                        const price = Number(ticket.pricing_rules?.[0]?.final_price || experience?.entry_fee_base || 20);
+                        return (
+                          <button
+                            key={ticket.public_id || ticket.name}
+                            onClick={() => {
+                              setSelectedOption({
+                                id: ticket.public_id || ticket.name,
+                                title: ticket.name,
+                                description: ticket.description || "Entry access",
+                                price,
+                              });
+                              setAdultCount(1);
+                              setChildCount(0);
+                            }}
+                            className={`flex w-full items-start justify-between rounded-2xl border p-4 text-left transition-all ${
+                              selectedOption?.id === (ticket.public_id || ticket.name)
+                                ? "border-primary bg-primary/10"
+                                : "border-outline-variant/50 bg-surface-container-low"
+                            }`}
+                          >
+                            <div>
+                              <div className="font-semibold text-on-surface">{ticket.name}</div>
+                              <div className="mt-1 text-sm text-on-surface-variant">{ticket.description || "Entry access"}</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-black text-primary">₹{price}</div>
+                              <div className="text-xs text-on-surface-variant">per adult</div>
+                            </div>
+                          </button>
+                        );
+                      })
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setSelectedOption({
+                          id: "general",
+                          title: "General Admission",
+                          description: "Main entry access",
+                          price: Number(experience?.entry_fee_base || 20),
+                        });
+                      }}
+                      className={`flex w-full items-start justify-between rounded-2xl border p-4 text-left transition-all ${
+                        selectedOption?.id === "general"
+                          ? "border-primary bg-primary/10"
+                          : "border-outline-variant/50 bg-surface-container-low"
+                      }`}
+                    >
+                      <div>
+                        <div className="font-semibold text-on-surface">General Admission</div>
+                        <div className="mt-1 text-sm text-on-surface-variant">Main entry access</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-black text-primary">₹{Number(experience?.entry_fee_base || 20)}</div>
+                        <div className="text-xs text-on-surface-variant">per adult</div>
+                      </div>
+                    </button>
+                  )}
+
+                  <div className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-on-surface">Child ticket</div>
+                        <div className="mt-1 text-sm text-on-surface-variant">Children under 12 can join free</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-black text-primary">Free</div>
+                        <div className="text-xs text-on-surface-variant">with adult</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="slot-list">
-                {tourOptions.map((slot) => (
-                  <button
-                    key={slot.id}
-                    type="button"
-                    className={`slot-card ${selectedOption?.id === slot.id ? "selected-card" : ""}`}
-                    onClick={() => setSelectedOption(slot)}
-                  >
-                    <p className="slot-title">{slot.title}</p>
-                    <p className="slot-text">Entry Time: {slot.time}</p>
-                    <p className="slot-text">{slot.details}</p>
-                    <p className="slot-price">₹{slot.price}</p>
-                  </button>
-                ))}
+            </div>
+          </section>
+
+          <aside className="space-y-4">
+            <div className="rounded-[28px] border border-outline-variant/50 bg-surface-container-lowest p-5 shadow-[0_20px_60px_rgba(0,0,0,0.06)] sm:p-6">
+              <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                <BadgeCheck size={16} />
+                Booking summary
               </div>
-            )}
-          </div>
+              <div className="mt-5 space-y-4">
+                <div className="rounded-2xl bg-surface-container p-4">
+                  <div className="flex items-center justify-between text-sm text-on-surface-variant">
+                    <span>Selected option</span>
+                    <span className="font-semibold text-on-surface">{selectedOption?.title || "General Admission"}</span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between text-sm text-on-surface-variant">
+                    <span>Date</span>
+                    <span className="font-semibold text-on-surface">{dates[selectedDateIndex]?.label}</span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between text-sm text-on-surface-variant">
+                    <span>Nationality</span>
+                    <span className="font-semibold text-on-surface">{nationality === "foreigner" ? "Foreigner" : "Indian"}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3 rounded-2xl border border-outline-variant/40 p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold text-on-surface">Adults</div>
+                      <div className="text-sm text-on-surface-variant">₹{selectedPrice} each</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setAdultCount((c) => Math.max(1, c - 1))} className="h-8 w-8 rounded-full border border-outline-variant bg-surface-container-lowest text-lg">−</button>
+                      <span className="min-w-6 text-center font-bold">{adultCount}</span>
+                      <button onClick={() => setAdultCount((c) => c + 1)} className="h-8 w-8 rounded-full border border-primary bg-primary/10 text-lg text-primary">+</button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold text-on-surface">Children</div>
+                      <div className="text-sm text-on-surface-variant">Free</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setChildCount((c) => Math.max(0, c - 1))} className="h-8 w-8 rounded-full border border-outline-variant bg-surface-container-lowest text-lg">−</button>
+                      <span className="min-w-6 text-center font-bold">{childCount}</span>
+                      <button onClick={() => setChildCount((c) => c + 1)} className="h-8 w-8 rounded-full border border-primary bg-primary/10 text-lg text-primary">+</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-surface-container p-4">
+                  <div className="flex items-center justify-between text-sm text-on-surface-variant">
+                    <span>Tickets</span>
+                    <span className="font-semibold text-on-surface">{totalTickets}</span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between text-sm text-on-surface-variant">
+                    <span>Adults</span>
+                    <span className="font-semibold text-on-surface">₹{adultCount * selectedPrice}</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-sm text-on-surface-variant">
+                    <span>Children</span>
+                    <span className="font-semibold text-on-surface">₹0</span>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between border-t border-outline-variant/60 pt-3 text-lg font-black text-on-surface">
+                    <span>Total</span>
+                    <span>₹{totalPrice}</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleContinue}
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-on-primary shadow-md disabled:cursor-not-allowed disabled:bg-outline-variant/50"
+              >
+                <Users size={16} />
+                Payment coming soon
+              </button>
+              <p className="mt-3 text-center text-sm text-on-surface-variant">
+                Payment setup is not live yet. Booking details are ready for the next step.
+              </p>
+            </div>
+          </aside>
         </div>
-
-        <aside className="booking-sidebar">
-          <div className="summary-card">
-            <div className="summary-row">
-              <p>{optionLabel}</p>
-              <strong>{selectedOption?.title ?? "No option selected"}</strong>
-            </div>
-            <div className="summary-row">
-              <p>Price</p>
-              <strong>₹{selectedPrice}</strong>
-            </div>
-            <div className="summary-row">
-              <p>Date</p>
-              <strong>{dates[selectedDateIndex]?.label}</strong>
-            </div>
-            <div className="summary-total">
-              <span>Total</span>
-              <strong>₹{totalPrice}</strong>
-            </div>
-          </div>
-
-          <div className="booking-ticket-card">
-            <p className="section-title">
-              <span>Tickets</span>
-            </p>
-            <div className="quantity-control">
-              <button type="button" onClick={() => handleTicketCountChange(-1)}>
-                -
-              </button>
-              <span>{ticketCount}</span>
-              <button type="button" onClick={() => handleTicketCountChange(1)}>
-                +
-              </button>
-            </div>
-            <p className="booking-note">
-              Adjust ticket quantity to update your total automatically.
-            </p>
-          </div>
-
-          <div className="action-buttons">
-            {/* <button
-              type="button"
-              className="button-primary"
-              onClick={() => console.log("Add to cart")}
-            >
-              Add to Cart
-            </button> */}
-            <button
-              type="button"
-              className="button-secondary"
-              onClick={handleBuyNow}
-            >
-              Buy Now
-            </button>
-          </div>
-        </aside>
       </div>
     </div>
   );

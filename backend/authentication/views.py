@@ -9,12 +9,14 @@ from firebase_admin import auth
 import firebase_admin
 from user.models import User_Data
 import logging
+from booking.throttles import LoginRateThrottle, SignupRateThrottle
 
 logger = logging.getLogger(__name__)
 
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [LoginRateThrottle]
 
     def _get_or_create_firebase_user(self, decoded_token):
         email = decoded_token.get("email")
@@ -65,16 +67,14 @@ class LoginView(APIView):
                 user = self._get_or_create_firebase_user(decoded_token)
             except ValueError as e:
                 # Token format is invalid or malformed
-                logger.error(f"[Firebase] Token format error: {str(e)}")
+                logger.exception("[Firebase] Token format error")
                 return Response(
                     {"detail": "Invalid Firebase token format", "error": str(e)},
                     status=400,
                 )
             except Exception as e:
                 # Other Firebase errors (expired, wrong project, etc)
-                logger.error(
-                    f"[Firebase] Token verification failed: {type(e).__name__}: {str(e)}"
-                )
+                logger.exception("[Firebase] Token verification failed")
                 return Response(
                     {"detail": "Firebase authentication failed", "error": str(e)},
                     status=400,
@@ -195,6 +195,7 @@ class MeView(APIView):
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [SignupRateThrottle]
 
     def post(self, request):
         # Import here to avoid circular imports

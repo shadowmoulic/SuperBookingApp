@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 
 function formatCurrency(amount) {
@@ -71,7 +72,7 @@ export default function BookingCard({ booking }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2.5">
             <span className="text-[10px] text-white font-medium flex items-center gap-1 font-['Inter']">
               View details
-              <span className="material-symbols-outlined text-xs">arrow_forward</span>
+              <ArrowRight className="stroke-[3]" />
             </span>
           </div>
         </Link>
@@ -119,7 +120,7 @@ export default function BookingCard({ booking }) {
         className="w-full py-2.5 bg-primary text-white rounded-lg font-['Hanken_Grotesk'] font-semibold text-xs hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
       >
         Continue Booking
-        <span className="material-symbols-outlined text-sm leading-none">arrow_forward</span>
+        <ArrowRight className="stroke-[3]" />
       </button>
     </div>
   );

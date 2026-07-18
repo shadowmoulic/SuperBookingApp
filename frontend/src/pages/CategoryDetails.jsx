@@ -1,12 +1,11 @@
-import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
 import api from "../api/api";
-import { ChevronRight, Compass, MapPin, Clock, Globe, Star } from "lucide-react";
+import { ChevronRight, MapPin, Clock, Globe, Star, Compass, Award, HelpCircle, ArrowRight } from "lucide-react";
+import { DetailSkeleton } from "../components/SkeletonLoaders";
+import { ErrorScreen } from "../components/ErrorScreen";
 
-const FALLBACK_IMAGE =
-  "https://img.magnific.com/free-vector/modern-skyline-building-background-design-with-reflection-effect_1017-50620.jpg?semt=ais_hybrid&w=740&q=80";
-
-export default function CityPage() {
+export default function CategoryDetails() {
   const { id } = useParams();
 
   // Newsletter state
@@ -20,35 +19,37 @@ export default function CityPage() {
     setEmail("");
   };
 
-  const [cityData, setCityData] = useState(null);
+  const [categoryData, setCategoryData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [error, setError] = useState(null);
+  const [selectedCity, setSelectedCity] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("rating");
   const [favorites, setFavorites] = useState({});
   const [isExpanded, setIsExpanded] = useState(false);
   const itemsPerPage = 8;
 
+  const FALLBACK_BANNER = "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80";
+
   useEffect(() => {
-    loadCity();
+    loadCategory();
   }, [id]);
 
-  const loadCity = () => {
+  const loadCategory = () => {
     setLoading(true);
     api
-      .get(`/api/city/${id}`)
+      .get(`/api/category/${id}`)
       .then((res) => {
-        setCityData(res.data);
+        setCategoryData(res.data);
         setError(null);
 
         // Add to recently explored
         const item = {
-          type: "city",
+          type: "category",
           name: res.data.name,
-          image: res.data.image_url || res.data.icon_url,
-          url: `/city/${id}`,
-          subtitle: `City in ${res.data.state || "India"}`
+          image: res.data.image_url,
+          url: `/category/${id}`,
+          subtitle: "Category Catalog"
         };
         try {
           const list = JSON.parse(localStorage.getItem("recently_explored") || "[]");
@@ -59,61 +60,53 @@ export default function CityPage() {
       })
       .catch((err) => {
         setError(err.message);
-        console.error("Error fetching city data:", err);
+        console.error("Error fetching category data:", err);
       })
       .finally(() => setLoading(false));
   };
 
+  // SEO
   useEffect(() => {
-    if (cityData?.name) {
-      document.title = cityData["SEO-title"] || `Explore ${cityData.name} | Tourism, Attractions & Tickets | ZeQue`;
-    }
-  }, [cityData]);
-
-  useEffect(() => {
-    if (!cityData) return;
+    if (!categoryData) return;
+    document.title = categoryData["SEO-title"] || `Explore ${categoryData.name} | Tours & Tickets | ZeQue`;
     const meta = document.querySelector('meta[name="description"]');
     if (meta) {
       meta.setAttribute(
         "content",
-        cityData["SEO-description"] || `Discover the best experiences, popular attractions, and historical monuments in ${cityData.name}. Find best time to visit and book entry tickets online on ZeQue.`
+        categoryData["SEO-description"] || `Discover top monuments, tourist attractions, and curated tours for ${categoryData.name}. Find best time to visit and book entry tickets on ZeQue.`
       );
     }
-  }, [cityData]);
+  }, [categoryData]);
 
-  // Inject tourist destination structured data for SEO
+  // Inject structured data
   const structuredData = useMemo(() => {
-    if (!cityData) return null;
+    if (!categoryData) return null;
     return {
       "@context": "https://schema.org",
       "@type": "TouristDestination",
-      "name": cityData.name,
-      "description": cityData.description || "",
-      "image": cityData.image_url || "",
-      "containedInPlace": cityData.state ? {
-        "@type": "AdministrativeArea",
-        "name": cityData.state
-      } : undefined,
-      "touristType": ["Culture", "History", "Sightseeing"]
+      "name": categoryData.name,
+      "description": categoryData.description || "",
+      "image": categoryData.image_url || "",
+      "touristType": ["Sightseeing", "History", "Culture"]
     };
-  }, [cityData]);
+  }, [categoryData]);
 
   useEffect(() => {
     if (!structuredData) return;
 
-    const existingScript = document.getElementById("city-structured-data");
+    const existingScript = document.getElementById("category-structured-data");
     if (existingScript) {
       existingScript.remove();
     }
 
     const script = document.createElement("script");
-    script.id = "city-structured-data";
+    script.id = "category-structured-data";
     script.type = "application/ld+json";
     script.innerHTML = JSON.stringify(structuredData);
     document.head.appendChild(script);
 
     return () => {
-      const scriptToRemove = document.getElementById("city-structured-data");
+      const scriptToRemove = document.getElementById("category-structured-data");
       if (scriptToRemove) {
         scriptToRemove.remove();
       }
@@ -122,7 +115,7 @@ export default function CityPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory]);
+  }, [selectedCity]);
 
   const toggleFavorite = (e, expId) => {
     e.preventDefault();
@@ -133,22 +126,35 @@ export default function CityPage() {
     }));
   };
 
-  const experiencesList = cityData
-    ? (Array.isArray(cityData.experiences)
-      ? cityData.experiences
-      : Array.isArray(cityData.experiences?.results)
-        ? cityData.experiences.results
+  const experiencesList = categoryData
+    ? (Array.isArray(categoryData.experiences)
+      ? categoryData.experiences
+      : Array.isArray(categoryData.experiences?.results)
+        ? categoryData.experiences.results
         : [])
     : [];
 
-  const categories = [
-    "All",
-    ...new Set(experiencesList.flatMap((exp) => exp.category || [])),
-  ];
+  const citiesList = useMemo(() => {
+    const set = new Set();
+    experiencesList.forEach((exp) => {
+      if (exp.city) set.add(exp.city);
+    });
+    return ["All", ...Array.from(set)];
+  }, [experiencesList]);
 
-  const filteredExperiences = selectedCategory === "All"
+  const uniqueCitiesList = useMemo(() => {
+    const map = new Map();
+    experiencesList.forEach(exp => {
+      if (exp.city && !map.has(exp.city)) {
+        map.set(exp.city, { name: exp.city });
+      }
+    });
+    return Array.from(map.values());
+  }, [experiencesList]);
+
+  const filteredExperiences = selectedCity === "All"
     ? experiencesList
-    : experiencesList.filter((exp) => exp.category?.includes(selectedCategory));
+    : experiencesList.filter((exp) => exp.city === selectedCity);
 
   const sortedExperiences = useMemo(() => {
     const list = [...filteredExperiences];
@@ -169,32 +175,13 @@ export default function CityPage() {
 
   const totalPages = Math.ceil(sortedExperiences.length / itemsPerPage) || 1;
 
-  // Loading State
   if (loading) {
-    return (
-      <div className="bg-surface-container-lowest min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          <p className="text-on-surface-variant font-['Inter'] text-sm animate-pulse">Loading city data…</p>
-        </div>
-      </div>
-    );
+    return <DetailSkeleton />;
   }
 
-  // Error State
-  if (error || !cityData) {
-    return (
-      <div className="bg-surface-container-lowest min-h-screen flex flex-col items-center justify-center gap-4">
-        <span className="material-symbols-outlined text-5xl text-error">error</span>
-        <p className="text-on-surface font-['Inter'] text-sm font-semibold">{error || "City data not found"}</p>
-        <button
-          onClick={loadCity}
-          className="mt-2 px-5 py-2 bg-primary text-on-primary rounded-lg text-sm font-semibold hover:brightness-110 active:scale-95 transition-all cursor-pointer"
-        >
-          Retry
-        </button>
-      </div>
-    );
+  // Error
+  if (error || !categoryData) {
+    return <ErrorScreen message={error || "Category data not found"} onRetry={loadCategory} />;
   }
 
   return (
@@ -203,8 +190,8 @@ export default function CityPage() {
       {/* ── HERO ───────────────────────────────────────────── */}
       <div className="relative h-[45vh] min-h-[320px] w-full overflow-hidden">
         <img
-          src={cityData.image_url || FALLBACK_IMAGE}
-          alt={cityData.name}
+          src={categoryData.image_url || FALLBACK_BANNER}
+          alt={categoryData.name}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-slate-900/10" />
@@ -216,35 +203,26 @@ export default function CityPage() {
             <div className="flex items-center gap-1.5 text-xs text-slate-300 mb-3">
               <Link to="/" className="hover:text-white transition-colors">Home</Link>
               <ChevronRight size={13} />
-              {cityData.state && (
-                <>
-                  <span className="hover:text-white transition-colors">{cityData.state}</span>
-                  <ChevronRight size={13} />
-                </>
-              )}
-              <span className="text-white font-semibold">{cityData.name}</span>
+              <Link to="/categories" className="hover:text-white transition-colors">Categories</Link>
+              <ChevronRight size={13} />
+              <span className="text-white font-semibold">{categoryData.name}</span>
             </div>
 
-            {/* City Name */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight">
-              {cityData.name}
+            {/* Category Name */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight capitalize">
+              {categoryData.name}
             </h1>
 
-            {/* Stats Summary */}
+            {/* Stats row */}
             <div className="mt-4 flex flex-wrap items-center gap-6">
               <div>
-                <span className="text-2xl font-black text-primary">{cityData.experience_count ?? 0}</span>
-                <span className="text-[10px] text-slate-400 uppercase tracking-widest font-['Inter'] ml-1.5">Experiences</span>
+                <span className="text-2xl font-black text-primary">{experiencesList.length}</span>
+                <span className="text-[10px] text-slate-400 uppercase tracking-widest font-['Inter'] ml-1.5">Attractions</span>
               </div>
-              {cityData.average_rating && (
-                <div className="flex items-center gap-1">
-                  <Star size={16} className="fill-amber-400 text-amber-400" />
-                  <span className="text-2xl font-black text-amber-400">
-                    {Number(cityData.average_rating).toFixed(1)}
-                  </span>
-                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-['Inter'] ml-1">Rating</span>
-                </div>
-              )}
+              <div>
+                <span className="text-2xl font-black text-primary">{uniqueCitiesList.length}</span>
+                <span className="text-[10px] text-slate-400 uppercase tracking-widest font-['Inter'] ml-1.5">Cities</span>
+              </div>
             </div>
           </div>
         </div>
@@ -253,121 +231,16 @@ export default function CityPage() {
       {/* ── MAIN CONTENT ────────────────────────────────────── */}
       <div className="max-w-[1280px] mx-auto px-6 md:px-12 py-12">
 
-        {/* ── ABOUT & QUICK FACTS ───────────────────────────── */}
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 mb-16">
-          <div className="lg:col-span-2 flex flex-col justify-start">
-            <h2 className="font-['Hanken_Grotesk'] text-2xl sm:text-3xl font-bold text-primary mb-4">
-              About {cityData.name}
-            </h2>
-            {cityData.description ? (
-              <div className="relative">
-                <div
-                  className={`text-on-surface-variant font-['Inter'] text-base leading-relaxed text-justify transition-all duration-300 overflow-hidden ${isExpanded || cityData.description.length <= 250 ? "max-h-none" : "max-h-[120px] relative pb-6"
-                    }`}
-                >
-                  <p className="whitespace-pre-line">{cityData.description}</p>
-                  {!isExpanded && cityData.description.length > 250 && (
-                    <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest/80 to-transparent pointer-events-none" />
-                  )}
-                </div>
-                {cityData.description.length > 250 && (
-                  <button
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="mt-2 text-primary hover:text-primary/85 font-bold font-['Hanken_Grotesk'] text-sm transition-all focus:outline-none cursor-pointer flex items-center gap-1"
-                  >
-                    {isExpanded ? "Show Less" : "Read More"}
-                  </button>
-                )}
-              </div>
-            ) : (
-              <p className="text-on-surface-variant/70 font-['Inter'] text-base italic">
-                No description available for {cityData.name} yet.
-              </p>
-            )}
-          </div>
-
-          {/* Quick Facts Sidebar */}
-          <div className="bg-surface-container-low border border-outline-variant/40 rounded-2xl p-6 sm:p-8 flex flex-col gap-6 shadow-xs h-fit">
-            <h3 className="font-['Hanken_Grotesk'] text-lg font-bold text-primary pb-3 border-b border-outline-variant/30">
-              Quick Facts
-            </h3>
-
-            <div className="flex flex-col gap-4">
-              {cityData.state && (
-                <div className="flex items-start gap-3">
-                  <MapPin size={18} className="text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">State</p>
-                    <p className="text-sm font-semibold text-on-surface">{cityData.state}</p>
-                  </div>
-                </div>
-              )}
-
-              {cityData["best-time"] && (
-                <div className="flex items-start gap-3">
-                  <Clock size={18} className="text-amber-500 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">Best Time to Visit</p>
-                    <p className="text-sm font-semibold text-on-surface">{cityData["best-time"]}</p>
-                  </div>
-                </div>
-              )}
-
-              {cityData.language && (
-                <div className="flex items-start gap-3">
-                  <Globe size={18} className="text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">Local Language</p>
-                    <p className="text-sm font-semibold text-on-surface">{cityData.language}</p>
-                  </div>
-                </div>
-              )}
-
-              {cityData.timezone && (
-                <div className="flex items-start gap-3">
-                  <Clock size={18} className="text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">Timezone</p>
-                    <p className="text-sm font-semibold text-on-surface">{cityData.timezone}</p>
-                  </div>
-                </div>
-              )}
-
-              {cityData.known_for && (
-                <div className="flex items-start gap-3">
-                  <Compass size={18} className="text-primary shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">Known For</p>
-                    <p className="text-sm font-semibold text-on-surface">{cityData.known_for}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {cityData.website && (
-              <a
-                href={cityData.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 w-full text-center inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary font-['Hanken_Grotesk'] font-semibold text-sm hover:brightness-110 transition-all shadow-sm"
-              >
-                <Globe size={16} />
-                Official Tourism Site
-              </a>
-            )}
-          </div>
-        </section>
-
         {/* ── EXPERIENCES SECTION ─────────────────────────── */}
         <section className="mb-16">
           {/* Section heading */}
           <div className="flex justify-between items-end mb-8">
             <div>
               <h2 className="font-['Hanken_Grotesk'] text-[32px] font-semibold leading-[40px] text-primary mb-2">
-                Explore Attractions
+                Explore {categoryData.name}
               </h2>
               <p className="text-on-surface-variant font-['Inter'] text-sm sm:text-base">
-                Discover attractions, monuments and experiences in {cityData.name}.
+                Discover local monuments and top tours cataloged under {categoryData.name}.
               </p>
             </div>
             <span className="text-on-surface-variant font-['Inter'] text-sm hidden sm:block">
@@ -378,25 +251,26 @@ export default function CityPage() {
           {/* Filter & Sort bar */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 py-5 border-y border-outline-variant/30">
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide flex-wrap">
-              {categories.map((cat) => (
+              {citiesList.map((city) => (
                 <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-5 py-2 rounded-full font-['Hanken_Grotesk'] font-semibold text-sm whitespace-nowrap transition-all duration-200 cursor-pointer ${selectedCategory === cat
+                  key={city}
+                  onClick={() => setSelectedCity(city)}
+                  className={`px-5 py-2 rounded-full font-['Hanken_Grotesk'] font-semibold text-sm whitespace-nowrap transition-all duration-200 cursor-pointer ${selectedCity === city
                     ? "bg-primary text-on-primary shadow-md"
                     : "bg-surface-container-low border border-outline-variant/50 hover:border-primary/40 hover:text-primary text-on-surface-variant"
                     }`}
                 >
-                  {cat}
+                  {city}
                 </button>
               ))}
             </div>
 
             <div className="flex items-center gap-3 w-full md:w-auto justify-end shrink-0">
-              <span className="text-[10px] font-bold text-on-surface-variant uppercase font-['Inter'] tracking-wider">
+              <label htmlFor="city-sort-by" className="text-[10px] font-bold text-on-surface-variant uppercase font-['Inter'] tracking-wider">
                 Sort By:
-              </span>
+              </label>
               <select
+                id="city-sort-by"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="bg-surface-container-low border border-outline-variant/50 text-on-surface font-['Hanken_Grotesk'] font-semibold text-sm focus:ring-0 cursor-pointer py-1.5 px-3 rounded-xl hover:border-primary/40 transition-colors focus:outline-none"
@@ -411,12 +285,12 @@ export default function CityPage() {
           {/* Experiences Grid */}
           {paginatedExperiences.length === 0 ? (
             <div className="text-center py-20 bg-surface-container-low rounded-2xl border border-dashed border-outline-variant animate-fade-in">
-              <Compass className="mx-auto w-14 h-14 text-on-surface-variant/30 mb-4" />
-              <h3 className="font-['Hanken_Grotesk'] text-lg font-bold text-on-surface mb-2">We're adding more experiences soon.</h3>
-              <p className="text-on-surface-variant font-['Inter'] text-sm">Check back later for newly added attractions.</p>
+              <span className="material-symbols-outlined text-5xl text-on-surface-variant/30 block mb-4">explore</span>
+              <h3 className="font-['Hanken_Grotesk'] text-lg font-bold text-on-surface mb-2">No experiences found.</h3>
+              <p className="text-on-surface-variant font-['Inter'] text-sm">Try a different filter or check back soon.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12 animate-fade-in">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12 animate-fade-in">
               {paginatedExperiences.map((experience) => {
                 const expId = experience.public_id || experience.id;
                 const images = String(experience.image_url || "")
@@ -475,7 +349,7 @@ export default function CityPage() {
                         </h3>
                         <div className="flex items-center gap-1 text-on-surface-variant text-xs font-['Inter'] mb-4">
                           <span className="material-symbols-outlined text-xs leading-none">location_on</span>
-                          <span>{experience.city || experience.location}</span>
+                          <span>{experience.location || experience.city}</span>
                         </div>
                       </div>
 
@@ -487,7 +361,7 @@ export default function CityPage() {
                           </span>
                         </div>
                         <div className="w-8 h-8 rounded-full bg-surface-container group-hover:bg-primary group-hover:text-on-primary transition-all duration-300 flex items-center justify-center text-on-surface-variant">
-                          <span className="material-symbols-outlined text-base">arrow_forward</span>
+                          <ArrowRight className="stroke-[3]" />
                         </div>
                       </div>
                     </div>
@@ -537,6 +411,31 @@ export default function CityPage() {
             </div>
           )}
         </section>
+
+        {/* ── FEATURED DESTINATIONS / CITIES ────────────────── */}
+        {/* {uniqueCitiesList.length > 0 && (
+          <section className="mb-16">
+            <div className="flex justify-between items-end mb-8">
+              <div>
+                <h2 className="font-['Hanken_Grotesk'] text-[32px] font-semibold leading-[40px] text-primary mb-2">
+                  Featured Destinations
+                </h2>
+                <p className="text-on-surface-variant font-['Inter'] text-sm sm:text-base">
+                  Explore {categoryData.name} across these cities
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-4">
+              {uniqueCitiesList.map((c, index) => (
+                <div key={index} className="bg-surface-container-low border border-outline-variant/40 rounded-xl px-5 py-3 flex items-center gap-3">
+                  <MapPin size={16} className="text-primary" />
+                  <span className="text-sm font-semibold text-on-surface font-['Hanken_Grotesk']">{c.name}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )} */}
 
         {/* ── NEWSLETTER BANNER ───────────────────────────── */}
         <section className="bg-primary/5 rounded-2xl p-8 sm:p-10 flex flex-col lg:flex-row items-center justify-between gap-8 mb-10 border border-primary/15">

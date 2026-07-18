@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap');
+/* Sora font loaded non-blocking via <link rel=preload> in index.html */
 @import "tailwindcss";
 @import "./styles/light.css";
 
@@ -83,17 +83,18 @@ a {
 
 html {
   overflow-x: clip;
+  min-height: 100vh; /* Prevent body CLS=1.000 from layout shift on hydration */
 }
 
 body {
   width: 100%;
-  min-height: 100%;
+  min-height: 100vh; /* Ensure body fills viewport before React renders */
   overflow-x: clip;
 }
 
 #root {
   width: 100%;
-  min-height: 100%;
+  min-height: 100vh;
 }
 
 body {
@@ -145,7 +146,7 @@ div::-webkit-scrollbar {
 }
 
 .nq {
-  color: var(--teal);
+  color: var(--md-sys-color-primary);
 }
 
 .ndot {

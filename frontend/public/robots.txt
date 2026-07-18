@@ -4,4 +4,4 @@ Disallow: /admin
 Disallow: /dashboard
 Disallow: /my-bookings
 
-Sitemap: https://zeque.com/sitemap.xml
+Sitemap: https://zeque.in/sitemap.xml

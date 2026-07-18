@@ -1,25 +1,13 @@
-# ZeQue 
+Zeque is a premier booking and travel platform.
 
-ZeQue is India's premier heritage discovery and ticketing platform. We help travelers explore over 1,500 monuments, heritage trails, and historic cities with context, AI-powered itineraries, and seamless booking.
+Site Structure:
+- Home: https://zeque.in/
+- States: https://zeque.in/states
+- Cities: https://zeque.in/cities
+- Categories: https://zeque.in/categories
+- Attractions: https://zeque.in/attractions
 
-## Core Features
-- **Heritage Context**: Deep historical backgrounds, visiting rules, and timings for every monument.
-- **AI Itinerary Planner**: Generate customized day-by-day itineraries based on your duration and interests (e.g., History, Photography, Family).
-- **Curated Trails**: Expertly designed routes like the Golden Triangle, Rajasthan Royal Trail, and Buddhist Circuit.
-- **Location Awareness**: Discover hidden gems and top attractions near you.
-
-## Main Routes
-- `/`: The main landing page featuring our AI planner and top cities.
-- `/explore-near-me`: Location-based discovery of nearby attractions.
-- `/itineraries`: Ready-made expert travel plans (1 Day Jaipur, etc.).
-- `/top-places`: Curated rankings (Top 100 Attractions, Most Visited).
-- `/unesco-sites`: A dedicated showcase of India's 42 World Heritage Sites.
-- `/trails`: Historic pathways and cultural circuits.
-- `/categories`: Browse by attraction type (Forts, Museums, Palaces, Temples).
-- `/attractions`: Our complete directory of monuments and wonders.
-
-## AI Assistant
-We feature the "ZeQue Assistant", a professional AI travel guide available on all pages to answer specific questions about Indian heritage, suggest routes, and provide contextual facts.
-
-## Target Audience
-Families, students, photographers, history buffs, and anyone looking to understand India rather than just visit it.
+Current Data Statistics:
+- States available: 0
+- Cities available: 8
+- Attractions available: 32

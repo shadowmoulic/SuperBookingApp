@@ -10,6 +10,11 @@ from .models import (
     TicketType,
     Collection,
     CollectionExperience,
+    BookingPolicy,
+    TicketFeature,
+    ExperienceHighlight,
+    ExperienceAttribute,
+    ProviderBookingConfiguration
 )
 
 myModels = [
@@ -23,6 +28,11 @@ myModels = [
     TicketType,
     Collection,
     CollectionExperience,
+    BookingPolicy,
+    TicketFeature,
+    ExperienceHighlight,
+    ExperienceAttribute,
+    ProviderBookingConfiguration
 ]
 
 admin.site.register(myModels)

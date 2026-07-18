@@ -7,6 +7,8 @@ import {
 import api from "../api/api";
 import BookingCard from "../components/BookingCard";
 import Loading from "../components/Loading";
+import { HomeSkeleton } from "../components/SkeletonLoaders";
+import { ErrorScreen } from "../components/ErrorScreen";
 import LocationContext from "../context/LocationContext";
 import ModalContext from "../context/ModalContext";
 import TrailCard from "../components/TrailCard";
@@ -222,6 +224,7 @@ function SmallExperienceCard({ experience }) {
             src={coverImage}
             alt={experience.name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
           />
           {/* Absolute Price Tag */}
           <div className="absolute top-4 right-4 bg-surface-container-lowest/95 backdrop-blur-xs px-3 py-1.5 rounded-lg shadow-sm border border-outline-variant/30">
@@ -235,7 +238,7 @@ function SmallExperienceCard({ experience }) {
         <div className="p-5 flex-1 flex flex-col justify-between">
           <div>
             {/* City Tag */}
-            <span className="text-xs font-semibold tracking-wider uppercase text-outline-variant font-['Inter'] block mb-1">
+            <span className="text-xs font-semibold tracking-wider uppercase text-on-surface-variant font-['Inter'] block mb-1">
               {experience.city}
             </span>
             {/* Name Title */}
@@ -248,7 +251,7 @@ function SmallExperienceCard({ experience }) {
           <div className="mt-auto w-full">
             <div className="w-full py-2.5 rounded-lg border-2 border-primary text-primary font-['Hanken_Grotesk'] font-semibold text-sm transition-all duration-300 group-hover:bg-primary group-hover:text-on-primary flex items-center justify-center gap-1.5 active:scale-98">
               Book Tickets
-              <span className="material-symbols-outlined text-base">arrow_forward</span>
+              <ArrowRight className="stroke-[3]" />
             </div>
           </div>
         </div>
@@ -258,10 +261,9 @@ function SmallExperienceCard({ experience }) {
 }
 
 function CategoryGridCard({ category }) {
-  const { selectedLocation } = useContext(LocationContext);
   const catSlug = category.name.toLowerCase().replace(/s$/, '').replace(/\s+/g, '-');
   return (
-    <Link to={`/${selectedLocation.toLowerCase().replace(/\s+/g, '-')}/${catSlug}`} className="block group">
+    <Link to={`/category/${catSlug}`} className="block group">
       <div className="bg-surface-container-lowest rounded-xl p-5 flex flex-col items-center justify-center border border-outline-variant/30 hover:shadow-lg hover:border-primary/20 transition-all duration-300 cursor-pointer h-36">
         <div className="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center mb-3 group-hover:bg-primary/5 transition-all">
           {category.icon_url ? (
@@ -425,20 +427,9 @@ function Home() {
       .finally(() => setLoading(false));
   };
 
-  if (loading) return <Loading />;
+  if (loading) return <HomeSkeleton />;
   if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-red-500 font-['Inter'] text-center px-6">
-        <span className="material-symbols-outlined text-4xl mb-3 select-none">error</span>
-        <p className="text-sm font-semibold">Failed to load content: {error}</p>
-        <button
-          onClick={fetchHomeData}
-          className="mt-4 px-5 py-2 bg-primary text-white rounded-lg text-xs font-semibold hover:brightness-110 active:scale-95 transition-all cursor-pointer shadow-sm"
-        >
-          Retry Loading
-        </button>
-      </div>
-    );
+    return <ErrorScreen message={error} onRetry={fetchHomeData} />;
   }
   if (!homeData) {
     return (
@@ -493,19 +484,27 @@ function Home() {
           {/* Background slides */}
           {HERO_SLIDES.map((slide, i) => (
             <div key={i} className={`absolute inset-0 transition-opacity duration-700 ${i === currentSlide ? "opacity-100" : "opacity-0"}`}>
-              <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+              <img
+                src={slide.image}
+                alt={slide.title || "Hero Slide Banner"}
+                className="w-full h-full object-cover"
+                fetchpriority={i === 0 ? "high" : "low"}
+                loading="eager"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-slate-900/20" />
             </div>
           ))}
 
           {/* Slide nav dots */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1">
             {HERO_SLIDES.map((_, i) => (
               <button
                 key={i} onClick={() => setCurrentSlide(i)}
-                className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? "w-7 bg-amber-400" : "w-2 bg-white/40 hover:bg-white/70"}`}
+                className="h-12 w-8 flex items-center justify-center cursor-pointer group"
                 aria-label={`Slide ${i + 1}`}
-              />
+              >
+                <span className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? "w-7 bg-amber-400" : "w-2 bg-white/40 group-hover:bg-white/70"}`} />
+              </button>
             ))}
           </div>
 
@@ -701,7 +700,7 @@ function Home() {
                     </button>
                   </div>
                   <Link to="/cities" className="text-primary font-['Hanken_Grotesk'] font-semibold flex items-center gap-1.5 hover:underline text-sm active:scale-95 transition-all">
-                    View All <span className="material-symbols-outlined text-base">arrow_forward</span>
+                    View All <ArrowRight className="stroke-[3]" />
                   </Link>
                 </div>
               </div>
@@ -757,7 +756,7 @@ function Home() {
                         to={`/${selectedLocation.toLowerCase().replace(/\s+/g, '-')}/${categorySlug}`}
                         className="text-primary font-['Hanken_Grotesk'] font-semibold flex items-center gap-1.5 hover:underline text-sm active:scale-95 transition-all"
                       >
-                        View All <span className="material-symbols-outlined text-base">arrow_forward</span>
+                        View All <ArrowRight className="stroke-[3]" />
                       </Link>
                     </div>
                   </div>
@@ -852,8 +851,9 @@ function Home() {
                 <div className="space-y-5">
                   {/* City */}
                   <div>
-                    <label className="block font-['Inter'] text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Destination</label>
+                    <label htmlFor="home-planner-city" className="block font-['Inter'] text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Destination</label>
                     <select
+                      id="home-planner-city"
                       value={plannerCity}
                       onChange={(e) => { const c = e.target.value; setPlannerCity(c); setItinerary(FALLBACK_ITINERARIES[c]); }}
                       className="w-full bg-surface-container-low border border-outline-variant rounded-xl px-4 py-3 text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary font-['Inter'] cursor-pointer"
@@ -923,6 +923,7 @@ function Home() {
                         {itinerary.duration}
                       </span>
                     </div>
+
 
                     {itinerary.days.map((dayData, di) => (
                       <div key={di} className="bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden shadow-xs">

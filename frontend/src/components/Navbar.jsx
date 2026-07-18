@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Menu, X, Search, User } from "lucide-react";
 import AuthContext from "../context/AuthContext";
 import ModalContext from "../context/ModalContext";
 import LocationContext from "../context/LocationContext";
@@ -40,9 +41,8 @@ function LocationDropdown({ locations, selectedLocation, onSelect, align = "left
 
   return (
     <div
-      className={`absolute top-full mt-2 w-40 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-lg overflow-hidden animate-scale-in ${
-        align === "right" ? "right-0 z-[110]" : "left-0 z-[70]"
-      }`}
+      className={`absolute top-full mt-2 w-40 rounded-xl border border-outline-variant bg-surface-container-lowest shadow-lg overflow-hidden animate-scale-in ${align === "right" ? "right-0 z-[110]" : "left-0 z-[70]"
+        }`}
     >
       <div className="relative">
         <div
@@ -102,7 +102,7 @@ function LocationDropdown({ locations, selectedLocation, onSelect, align = "left
 }
 
 function Navbar() {
-  const { user, logout } = useContext(AuthContext);
+  const { user} = useContext(AuthContext);
   const { openLoginModal } = useContext(ModalContext);
   const { locations, selectedLocation, changeLocation } = useContext(LocationContext);
   const navigate = useNavigate();
@@ -274,7 +274,7 @@ function Navbar() {
                 <span className="material-symbols-outlined text-primary text-base leading-none">location_on</span>
                 <span>{selectedLocation}</span>
                 <span
-                  className="material-symbols-outlined text-[10px] text-outline-variant ml-0.5 select-none leading-none"
+                  className="material-symbols-outlined text-[10px] text-on-surface-variant ml-0.5 select-none leading-none"
                   style={{ transform: isNavbarLocOpen ? "rotate(180deg)" : "none", fontSize: "10px", transition: "transform 0.2s ease" }}
                 >
                   keyboard_arrow_down
@@ -292,23 +292,15 @@ function Navbar() {
                 />
               )}
             </div>
-            <button
-              onClick={() => openSearch()}
-              className="flex-1 flex items-center justify-between text-left text-xs text-outline-variant pl-3 pr-2 py-0.5 focus:outline-none cursor-pointer"
-              style={{ transform: "none", boxShadow: "none" }}
-            >
+            <button onClick={() => openSearch()} className="flex-1 flex items-center justify-between text-left text-xs text-outline-variant pl-3 pr-2 py-0.5 focus:outline-none cursor-pointer" style={{ transform: "none", boxShadow: "none" }}>
               <span>Search experiences...</span>
-              <span className="material-symbols-outlined text-outline-variant text-lg">search</span>
+              <span className="material-symbols-outlined text-on-surface-variant text-lg">search</span>
             </button>
           </div>
 
           {/* Right-aligned User Actions */}
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => openSearch()}
-              className="sm:hidden flex w-10 h-10 rounded-full border border-outline-variant text-on-surface items-center justify-center hover:text-primary hover:border-primary transition-all shadow-xs cursor-pointer bg-surface-container-lowest"
-              aria-label="Search"
-            >
+            <button onClick={() => openSearch()} className="sm:hidden flex w-10 h-10 rounded-full border border-outline-variant text-on-surface items-center justify-center hover:text-primary hover:border-primary transition-all shadow-xs cursor-pointer bg-surface-container-lowest" aria-label="Search">
               <span className="material-symbols-outlined text-xl">search</span>
             </button>
 
@@ -327,24 +319,18 @@ function Navbar() {
               <span className="material-symbols-outlined text-xl">shopping_bag</span>
             </Link>
 
-            {user ? (
-              <>
-                <button
-                  onClick={logout}
-                  className="sm:flex hidden bg-primary text-on-primary hover:brightness-110 px-5 py-2 rounded-full text-xs sm:text-sm font-bold font-['Hanken_Grotesk'] tracking-wide transition-all cursor-pointer flex items-center gap-1.5 shadow-sm hover:shadow active:scale-95"
-                >
-                  <span className="material-symbols-outlined text-base leading-none">logout</span>
-                  Logout
-                </button>
-                <button
-                  onClick={logout}
-                  className="sm:hidden flex w-10 h-10 rounded-full bg-primary text-on-primary items-center justify-center hover:brightness-110 transition-all cursor-pointer shadow-sm active:scale-95"
-                  aria-label="Logout"
-                >
-                  <span className="material-symbols-outlined text-lg leading-none">logout</span>
-                </button>
-              </>
-            ) : (
+           {user ? (
+  <Link
+    to="/dashboard"
+    className="bg-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary-container)] text-[var(--md-sys-color-on-primary)] hover:text-[var(--md-sys-color-on-primary-container)] px-4 py-2 rounded-full flex items-center gap-2 transition-all"
+  >
+    <User className="w-4 h-4" />
+
+    <span>
+      Hi, {user.first_name || user.username || "User"}
+    </span>
+  </Link>
+) : (
               <>
                 <button
                   onClick={openLoginModal}
@@ -379,14 +365,14 @@ function Navbar() {
               >
                 <span className="material-symbols-outlined text-xl">arrow_back</span>
               </button>
-              <span className="material-symbols-outlined text-outline-variant hidden sm:block">search</span>
+              <span className="material-symbols-outlined text-on-surface-variant hidden sm:block">search</span>
               <input
                 type="text"
                 autoFocus
                 placeholder="Search destinations or experiences..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent border-none text-on-surface placeholder-outline-variant focus:outline-none focus:ring-0 text-sm font-['Inter']"
+                className="flex-1 bg-transparent border-none text-on-surface placeholder-on-surface-variant/60 focus:outline-none focus:ring-0 text-sm font-['Inter']"
               />
 
               {/* Custom Location Selector in Search Overlay */}
@@ -399,10 +385,7 @@ function Navbar() {
                 >
                   <span className="material-symbols-outlined text-primary text-xs leading-none">location_on</span>
                   <span>{selectedLocation}</span>
-                  <span
-                    className="material-symbols-outlined text-[10px] text-outline-variant select-none ml-0.5 leading-none"
-                    style={{ transform: isSearchLocOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s ease" }}
-                  >
+                  <span className="material-symbols-outlined text-[10px] text-outline-variant select-none ml-0.5 leading-none" style={{ transform: isSearchLocOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s ease" }}>
                     keyboard_arrow_down
                   </span>
                 </button>
@@ -422,7 +405,7 @@ function Navbar() {
 
               <button
                 onClick={() => closeSearch()}
-                className="text-outline-variant hover:text-on-surface-variant cursor-pointer hidden sm:block"
+                className="text-on-surface-variant hover:text-on-surface cursor-pointer hidden sm:block"
               >
                 <span className="material-symbols-outlined text-xl">close</span>
               </button>
@@ -431,13 +414,13 @@ function Navbar() {
             {/* Results Section */}
             <div className="flex-1 overflow-y-auto p-4 min-h-[200px] no-scrollbar">
               {searching ? (
-                <div className="flex items-center justify-center py-10 text-outline-variant font-['Inter'] gap-2 text-xs">
+                <div className="flex items-center justify-center py-10 text-on-surface-variant font-['Inter'] gap-2 text-xs">
                   <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
                   Searching...
                 </div>
               ) : searchResults.length === 0 ? (
-                <div className="text-center py-12 text-outline-variant text-sm font-['Inter']">
-                  <span className="material-symbols-outlined text-3xl mb-1 text-outline-variant block">search_off</span>
+                <div className="text-center py-12 text-on-surface-variant text-sm font-['Inter']">
+                  <span className="material-symbols-outlined text-3xl mb-1 text-on-surface-variant block">search_off</span>
                   No experiences found
                 </div>
               ) : (

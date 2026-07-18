@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, MapPin, Search, ChevronDown, ChevronUp, Compass, Calendar } from "lucide-react";
 import api from "../api/api";
 import LocationContext from "../context/LocationContext";
+import { ErrorBlock } from "../components/ErrorScreen";
 
 const FALLBACK_IMAGE =
   "https://img.magnific.com/free-vector/modern-skyline-building-background-design-with-reflection-effect_1017-50620.jpg?semt=ais_hybrid&w=740&q=80";
@@ -267,8 +268,8 @@ const CityIndex = () => {
             </p>
 
             {/* Search Input */}
-            <div className="mt-8 max-w-2xl mx-auto rounded-full bg-surface-container-low border border-outline-variant p-2 shadow-md focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-              <div className="flex items-center gap-3 bg-surface-container-lowest px-5 py-3.5 rounded-full">
+            <div className="mt-8 max-w-2xl mx-auto rounded-2xl bg-surface-container-low border border-outline-variant p-2 shadow-md focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+              <div className="flex items-center gap-3 bg-surface-container-lowest px-5 py-3.5 rounded-2xl">
                 <Search className="h-5 w-5 text-on-surface-variant/60" />
                 <input
                   type="text"
@@ -338,20 +339,26 @@ const CityIndex = () => {
       {/* Cities List Section */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {loading ? (
-          <div className="rounded-3xl border border-outline-variant/40 bg-surface-container-low px-6 py-20 text-center shadow-xs">
-            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-sky-100 border-t-primary" />
-            <p className="mt-4 text-sm font-semibold text-on-surface-variant animate-pulse font-['Inter']">Retrieving city guides...</p>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div key={idx} className="border border-outline-variant/20 rounded-3xl overflow-hidden bg-surface-container-lowest h-96 flex flex-col animate-pulse">
+                <div className="bg-surface-container h-56 w-full" />
+                <div className="p-6 flex-grow flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="bg-surface-container h-6 w-1/3 rounded-lg" />
+                    <div className="bg-surface-container h-4 w-full rounded-lg" />
+                    <div className="bg-surface-container h-4 w-2/3 rounded-lg" />
+                  </div>
+                  <div className="flex justify-between items-center mt-6 border-t border-outline-variant/10 pt-4">
+                    <div className="bg-surface-container h-4 w-20 rounded-lg" />
+                    <div className="bg-surface-container h-4 w-20 rounded-lg" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
-          <div className="rounded-3xl border border-red-200 bg-red-50/20 px-6 py-16 text-center shadow-xs">
-            <p className="text-sm font-semibold text-red-600 font-['Inter']">Failed to load cities: {error}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 rounded-full bg-primary px-6 py-2.5 text-xs font-bold text-on-primary transition-all shadow-xs hover:brightness-105"
-            >
-              Retry Loading
-            </button>
-          </div>
+          <ErrorBlock message={`Failed to load cities: ${error}`} onRetry={() => window.location.reload()} />
         ) : (
           <>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -372,6 +379,7 @@ const CityIndex = () => {
                         src={city.image_url || city.icon_url || FALLBACK_IMAGE}
                         alt={city.name}
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        onError={(e) => { e.target.src = FALLBACK_IMAGE; }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
                       <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 shadow-sm backdrop-blur-md">

@@ -1,4 +1,6 @@
 from django.contrib import admin
-from .models import User_Data
+from .models import User_Data, Enterprise, EnterpriseMember
 
-admin.site.register(User_Data)
+myModels = [User_Data, Enterprise, EnterpriseMember]
+
+admin.site.register(myModels)

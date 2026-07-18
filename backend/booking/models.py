@@ -209,11 +209,10 @@ class Payment(models.Model):
 
     id = models.BigAutoField(primary_key=True)
     reference = models.CharField(max_length=100, unique=True, db_index=True, null=False)
-    booking = models.OneToOneField(
+    booking = models.ForeignKey(
         Booking,
         on_delete=models.CASCADE,
-        related_name="payment",
-        unique=True,
+        related_name="payments",
         db_index=True,
     )
     user = models.ForeignKey(
@@ -356,3 +355,151 @@ class Inventory(models.Model):
 
     def __str__(self):
         return f"{self.experience.name} - {self.inventory_date} ({self.available_capacity}/{self.total_capacity})"
+
+
+class Schedule(models.Model):
+    RECURRENCE_CHOICES = [
+        ("daily", "Daily"),
+        ("weekly", "Weekly"),
+        ("specific-date", "Specific Date"),
+        ("range", "Range"),
+    ]
+
+    ticket_type = models.ForeignKey(
+        "content.TicketType", on_delete=models.CASCADE, related_name="schedules"
+    )
+    recurrence_type = models.CharField(max_length=20, choices=RECURRENCE_CHOICES)
+    specific_date = models.DateField(blank=True, null=True)
+    day_of_week = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        choices=[
+            (0, "Monday"),
+            (1, "Tuesday"),
+            (2, "Wednesday"),
+            (3, "Thursday"),
+            (4, "Friday"),
+            (5, "Saturday"),
+            (6, "Sunday"),
+        ],
+    )
+    start_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    capacity = models.IntegerField()
+    available_capacity = models.IntegerField()
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "schedules"
+
+    def clean(self):
+        super().clean()
+        if self.capacity is not None and self.capacity < 0:
+            raise ValidationError("Capacity cannot be negative.")
+        if self.available_capacity is not None and self.available_capacity < 0:
+            raise ValidationError("Available capacity cannot be negative.")
+        if (
+            self.available_capacity is not None
+            and self.capacity is not None
+            and self.available_capacity > self.capacity
+        ):
+            raise ValidationError("Available capacity cannot exceed total capacity.")
+
+        if self.recurrence_type == "specific-date" and not self.specific_date:
+            raise ValidationError("specific_date is required for specific-date recurrence.")
+        if self.recurrence_type == "weekly" and self.day_of_week is None:
+            raise ValidationError("day_of_week is required for weekly recurrence.")
+        if self.recurrence_type == "range" and (not self.start_date or not self.end_date):
+            raise ValidationError("start_date and end_date are required for range recurrence.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.ticket_type.name} schedule ({self.recurrence_type}) {self.start_time}-{self.end_time}"
+
+
+class Seat(models.Model):
+    STATUS_CHOICES = [
+        ("available", "Available"),
+        ("reserved", "Reserved"),
+        ("booked", "Booked"),
+    ]
+
+    schedule = models.ForeignKey(
+        Schedule, on_delete=models.CASCADE, related_name="seats"
+    )
+    seat_number = models.CharField(max_length=50)
+    seat_type = models.CharField(max_length=50, blank=True, null=True)
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default="available"
+    )
+
+    class Meta:
+        db_table = "seats"
+        unique_together = [("schedule", "seat_number")]
+
+    def __str__(self):
+        return f"Seat {self.seat_number} - {self.status} (Schedule {self.schedule.id})"
+
+
+class BulkBookingRequest(models.Model):
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    public_id = models.CharField(
+        max_length=15, unique=True, blank=True, editable=False
+    )
+    enterprise = models.ForeignKey(
+        "user.Enterprise",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="bulk_requests",
+    )
+    user = models.ForeignKey(
+        User_Data, on_delete=models.CASCADE, related_name="bulk_requests"
+    )
+    experience = models.ForeignKey(Experience, on_delete=models.CASCADE)
+    ticket_type = models.ForeignKey("content.TicketType", on_delete=models.CASCADE)
+    booking_date = models.DateField()
+    quantity = models.IntegerField(validators=[MinValueValidator(1)])
+    notes = models.TextField(blank=True, null=True)
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default="pending"
+    )
+    approved_by = models.ForeignKey(
+        User_Data,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="approved_bulk_requests",
+    )
+    approved_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "bulk_booking_requests"
+
+    def save(self, *args, **kwargs):
+        if not self.public_id:
+            while True:
+                random_id = generate_random_id()
+                if not BulkBookingRequest.objects.filter(
+                    public_id=f"bb-{random_id}"
+                ).exists():
+                    self.public_id = f"bb-{random_id}"
+                    break
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.public_id} - {self.quantity} tickets for {self.experience.name} ({self.status})"
+

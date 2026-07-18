@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState, useContext } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { createPortal } from "react-dom";
 import {
   ArrowLeft, Share2, MapPin, Star, Clock, Zap, Award, Gauge, Ticket,
   CheckCircle2, CreditCard, Shirt, CameraOff, Plus, Minus, ArrowRight, ShieldAlert,
-  Calendar, Flame, HelpCircle
+  Calendar, Flame, HelpCircle,
+  ChevronRight
 } from "lucide-react";
 import api from "../api/api";
 import AuthContext from "../context/AuthContext";
@@ -24,8 +24,19 @@ export function ExperienceDetails() {
   const [experience, setExperience] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedNationality, setSelectedNationality] = useState("indian");
+  const [indianCount, setIndianCount] = useState(1);
+  const [foreignerCount, setForeignerCount] = useState(0);
 
-  // Date Generator for next 7 days (used in mobile Picker)
+  const handleIndianCountChange = (delta) => {
+    setIndianCount((current) => Math.max(0, current + delta));
+  };
+
+  const handleForeignerCountChange = (delta) => {
+    setForeignerCount((current) => Math.max(0, current + delta));
+  };
+
+  // Date Generator for next 7 days (used in the booking flow)
   const dates = useMemo(() => {
     const baseDate = new Date();
     return Array.from({ length: 7 }, (_, index) => {
@@ -41,33 +52,6 @@ export function ExperienceDetails() {
       };
     });
   }, []);
-
-  // Booking states
-  const [selectedDateIndex, setSelectedDateIndex] = useState(0);
-  const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
-  });
-  const [timeSlot, setTimeSlot] = useState("06:00 AM - 09:00 AM (Sunrise)");
-
-  useEffect(() => {
-    if (dates[selectedDateIndex]) {
-      setSelectedDate(dates[selectedDateIndex].iso);
-    }
-  }, [selectedDateIndex, dates]);
-
-  // Separate traveler counts (also supports desktop selected base ticket price switcher)
-  const [indianCount, setIndianCount] = useState(1);
-  const [foreignerCount, setForeignerCount] = useState(0);
-
-  // Nationality toggle for desktop (so you can click to select standard/foreigner)
-  const [selectedNationality, setSelectedNationality] = useState("indian");
-
-  // Mobile Bottom sheet Picker and scroll states
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showStickyBar, setShowStickyBar] = useState(false);
-
-  const normalizedId = id ? id.toLowerCase() : "";
 
   useEffect(() => {
     if (id) {
@@ -106,22 +90,7 @@ export function ExperienceDetails() {
       });
   };
 
-  // Mobile Sticky Scroll Listener
-  useEffect(() => {
-    const handleScroll = () => {
-      const pricingSection = document.getElementById("pricing-cards-section");
-      if (pricingSection) {
-        const rect = pricingSection.getBoundingClientRect();
-        if (rect.bottom < 64) {
-          setShowStickyBar(true);
-        } else {
-          setShowStickyBar(false);
-        }
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  // Mobile sticky scroll listener removed because booking metadata now lives on BookingPage.
 
   const images = useMemo(() => {
     return String(experience?.image_url || FALLBACK_IMAGE)
@@ -181,44 +150,11 @@ export function ExperienceDetails() {
   const totalTickets = indianCount + foreignerCount;
   const totalPrice = (indianCount * ticketPrices.indian) + (foreignerCount * ticketPrices.foreigner);
 
-  const handleIndianCountChange = (delta) => {
-    setIndianCount((current) => Math.max(0, current + delta));
+  const handleBuyNow = () => {
+    navigate(`/attraction/${id}/booking`);
   };
 
-  const handleForeignerCountChange = (delta) => {
-    setForeignerCount((current) => Math.max(0, current + delta));
-  };
 
-  const handleBuyNow = async () => {
-    if (!isAuthenticated) {
-      openLoginModal();
-      return;
-    }
-
-    if (totalTickets === 0) {
-      alert("Please select at least 1 traveler before booking.");
-      return;
-    }
-
-    const bookingData = {
-      experience: experience.public_id,
-      booking_date: selectedDate,
-      total_tickets: parseInt(totalTickets, 10),
-      slot_time: timeSlot.includes("Sunrise") ? "06:00" : "10:00",
-    };
-
-    try {
-      const response = await api.post("/api/booking/create/", bookingData);
-      navigate(`/payment/${response.data.booking_reference}`);
-    } catch (error) {
-      console.error("Booking creation failed:", error);
-      alert(error.response?.data?.message || "Failed to create booking. Please try again.");
-    }
-  };
-
-  const togglePicker = () => {
-    setShowDatePicker(prev => !prev);
-  };
 
   if (loading || !experience) {
     return (
@@ -241,12 +177,29 @@ export function ExperienceDetails() {
 
   return (
     <div className="bg-surface-container-lowest min-h-screen w-full relative">
+      {experience && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "TouristAttraction",
+            "name": experience.name,
+            "description": experience.description,
+            "image": images,
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": experience.city || "",
+              "addressCountry": "IN"
+            },
+            "url": window.location.href
+          })
+        }} />
+      )}
       <div className="mx-auto py-16 w-full relative"></div>
       <div className="lg:hidden">
         {/* Hero Section */}
         <section className="relative w-full h-[50vh] sm:h-[60vh] min-h-[350px] overflow-hidden">
           <img
-            alt={experience.name}
+            alt={experience?.name || "Experience Banner"}
             className="w-full h-full object-cover"
             src={images[0] || experience.image_url || FALLBACK_IMAGE}
           />
@@ -361,9 +314,9 @@ export function ExperienceDetails() {
             </ul>
           </section> */}
 
-          {experience.image_sunrise && (
+          {/* {experience.image_sunrise && (
             <>
-              {/* Why Sunrise Editorial */}
+              // Why Sunrise Editorial
               <section className="bg-surface-container -mx-4 sm:-mx-8 px-4 sm:px-8 py-8 rounded-3xl">
                 <h3 className="text-lg font-black text-on-surface mb-3">Why visit at Sunrise?</h3>
                 <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed font-semibold mb-6">
@@ -373,33 +326,38 @@ export function ExperienceDetails() {
                   <img
                     alt={`${experience.name} Sunrise`}
                     className="w-full h-full object-cover"
-                    src={experience.image_sunrise}
+                    src={experience.image_sunrise || FALLBACK_EXP_IMAGE}
+                    onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
                   />
                 </div>
               </section>
             </>
-          )}
+          )} */}
           {/* Bento Pro Tips */}
           <section className="space-y-4">
             <h3 className="text-lg font-black text-on-surface">Pro Tips</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-5 bg-primary/5 rounded-2xl border border-primary/10">
-                <CreditCard className="w-5 h-5 text-primary mb-2" />
+              <div className="p-5 bg-primary/5 rounded-2xl border border-primary/10 flex flex-col items-center text-center shadow-2xs">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary mb-2 shadow-xs">
+                  <CreditCard className="w-5 h-5" />
+                </div>
                 <p className="text-xs font-black text-on-surface mb-1">Carry ID</p>
-                <p className="text-[11px] text-on-surface-variant font-semibold leading-relaxed">A valid original government ID is mandatory for entry.</p>
+                <p className="text-[10px] text-on-surface-variant font-semibold leading-relaxed">A valid original government ID is mandatory for entry.</p>
               </div>
-              <div className="p-5 bg-tertiary/5 rounded-2xl border border-tertiary/10">
-                <Shirt className="w-5 h-5 text-tertiary mb-2" />
+              <div className="p-5 bg-primary/5 rounded-2xl border border-primary/10 flex flex-col items-center text-center shadow-2xs">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary mb-2 shadow-xs">
+                  <Shirt className="w-5 h-5" />
+                </div>
                 <p className="text-xs font-black text-on-surface mb-1">Dress Code</p>
-                <p className="text-[11px] text-on-surface-variant font-semibold leading-relaxed">Shoes must be removed at the mausoleum entrance.</p>
+                <p className="text-[10px] text-on-surface-variant font-semibold leading-relaxed">Shoes must be removed at the mausoleum entrance.</p>
               </div>
-              <div className="col-span-2 p-5 bg-secondary/5 rounded-2xl border border-secondary/10 flex items-center gap-4">
-                <div className="w-12 h-12 bg-surface-container-lowest border border-outline-variant/30 rounded-xl flex items-center justify-center shrink-0">
-                  <CameraOff className="w-6 h-6 text-secondary" />
+              <div className="col-span-2 p-5 bg-primary/5 rounded-2xl border border-primary/10 flex flex-col items-center text-center gap-3 shadow-2xs">
+                <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-on-primary shadow-xs shrink-0">
+                  <CameraOff className="w-6 h-6" />
                 </div>
                 <div>
                   <p className="text-xs font-black text-on-surface mb-0.5">Pro Cameras Restricted</p>
-                  <p className="text-[11px] text-on-surface-variant font-semibold leading-relaxed">Tripods and professional lighting require prior written permission.</p>
+                  <p className="text-[10px] text-on-surface-variant font-semibold leading-relaxed">Tripods and professional lighting require prior written permission.</p>
                 </div>
               </div>
             </div>
@@ -441,7 +399,7 @@ export function ExperienceDetails() {
             <span className="text-xl font-extrabold text-primary">₹{ticketPrices.indian}</span>
           </div>
           <button
-            onClick={togglePicker}
+            onClick={handleBuyNow}
             disabled={!experience.is_open}
             className="bg-primary hover:brightness-110 text-on-primary px-10 py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all cursor-pointer disabled:bg-outline-variant/40 disabled:text-on-surface-variant/40 disabled:cursor-not-allowed"
           >
@@ -449,107 +407,7 @@ export function ExperienceDetails() {
           </button>
         </footer>
 
-        {/* Mobile Bottom Sheet Date & Guest Picker Modal */}
-        <div
-          onClick={togglePicker}
-          className={`fixed inset-0 bg-black/40 z-50 transition-opacity duration-300 ${showDatePicker ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-            }`}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className={`absolute bottom-0 left-0 w-full bg-surface-container-lowest rounded-t-[32px] p-6 sm:p-8 transition-transform duration-300 shadow-2xl ${showDatePicker ? "translate-y-0" : "translate-y-full"
-              }`}
-          >
-            <div className="w-12 h-1.5 bg-surface-container rounded-full mx-auto mb-6"></div>
-            <h4 className="text-lg font-black text-center mb-6 text-on-surface">Plan your visit</h4>
 
-            <div className="space-y-6">
-
-              {/* Date selection inside sheet */}
-              <div className="space-y-3">
-                <p className="text-xs font-bold text-on-surface-variant">Select Date</p>
-                <div className="flex gap-2.5 overflow-x-auto hide-scrollbar pb-2">
-                  {dates.map((date, index) => {
-                    const isSelected = dates[selectedDateIndex]?.iso === date.iso;
-                    return (
-                      <button
-                        key={date.iso}
-                        onClick={() => setSelectedDateIndex(index)}
-                        className={`flex flex-col items-center justify-center min-w-[70px] h-20 rounded-2xl border transition-colors cursor-pointer ${isSelected
-                          ? "border-primary bg-primary/5 text-primary font-bold"
-                          : "border-outline-variant/30 hover:border-primary"
-                          }`}
-                      >
-                        <span className="text-[8px] font-black">{date.month}</span>
-                        <span className="text-xl font-extrabold my-0.5">{date.day}</span>
-                        <span className="text-[8px] opacity-80">{date.isToday ? "Today" : date.weekday}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Guest adjusters inside sheet */}
-              <div className="space-y-3">
-                <p className="text-xs font-bold text-on-surface-variant">Guests</p>
-
-                <div className="p-4 border border-outline-variant/30 rounded-2xl flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-xs sm:text-sm text-on-surface">Indian National</p>
-                    <p className="text-[10px] text-on-surface-variant/70 font-semibold">Adults (15+ years) • ₹{ticketPrices.indian}</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => handleIndianCountChange(-1)}
-                      className="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center text-on-surface-variant/70 hover:bg-surface-container-low cursor-pointer active:scale-90"
-                    >
-                      -
-                    </button>
-                    <span className="font-extrabold text-sm text-on-surface w-3 text-center">{indianCount}</span>
-                    <button
-                      onClick={() => handleIndianCountChange(1)}
-                      className="w-8 h-8 rounded-full border border-primary text-primary flex items-center justify-center hover:bg-primary/5 cursor-pointer active:scale-90"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <div className="p-4 border border-outline-variant/30 rounded-2xl flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-xs sm:text-sm text-on-surface">Foreigner</p>
-                    <p className="text-[10px] text-on-surface-variant/70 font-semibold">Adults (15+ years) • ₹{ticketPrices.foreigner}</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => handleForeignerCountChange(-1)}
-                      className="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center text-on-surface-variant/70 hover:bg-surface-container-low cursor-pointer active:scale-90"
-                    >
-                      -
-                    </button>
-                    <span className="font-extrabold text-sm text-on-surface w-3 text-center">{foreignerCount}</span>
-                    <button
-                      onClick={() => handleForeignerCountChange(1)}
-                      className="w-8 h-8 rounded-full border border-primary text-primary flex items-center justify-center hover:bg-primary/5 cursor-pointer active:scale-90"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-
-              <button
-                onClick={handleBuyNow}
-                disabled={!experience.is_open}
-                className="w-full bg-primary hover:brightness-110 text-on-primary py-4 rounded-xl font-bold text-sm mt-4 shadow-md active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:bg-outline-variant/40 disabled:text-on-surface-variant/40 disabled:cursor-not-allowed"
-              >
-                {experience.is_open ? `Proceed to Payment • ₹${totalPrice}` : "Coming Soon"}
-              </button>
-
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* -------------------- DESKTOP LAYOUT (attr-desc.txt) -------------------- */}
@@ -558,12 +416,12 @@ export function ExperienceDetails() {
         {/* Breadcrumb & Title Section */}
         <div className="mb-8">
           <nav className="flex gap-1.5 text-on-surface-variant font-semibold text-xs mb-2 uppercase tracking-wider">
-            <Link className="hover:text-primary transition-colors" to="/">India</Link>
-            <span>/</span>
+            <Link to="/" className="hover:text-primary transition-colors">Home</Link>
+            <ChevronRight size={13} />
             {experience.city && (
               <>
-                <Link className="hover:text-primary transition-colors" to={`/city/${experience.city.toLowerCase().replace(/\s+/g, '-')}`}>{experience.city}</Link>
-                <span>/</span>
+                <Link to={`/city/${experience.city.toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-primary transition-colors">{experience.city}</Link>
+                <ChevronRight size={13} />
               </>
             )}
             <span className="text-on-surface font-bold">{experience.name}</span>
@@ -607,24 +465,29 @@ export function ExperienceDetails() {
             <section className="grid grid-cols-12 grid-rows-2 gap-4 h-[500px]">
               <div className="col-span-8 row-span-2 relative overflow-hidden rounded-2xl group cursor-pointer border border-outline-variant/30">
                 <img
-                  alt={experience.name}
+                  alt={experience?.name || "Experience Main Image"}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-102"
-                  src={images[0] || experience.image_url}
+                  src={images[0] || experience.image_url || FALLBACK_EXP_IMAGE}
+                  onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
+                  fetchpriority="high"
+                  loading="eager"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
               <div className="col-span-4 row-span-1 overflow-hidden rounded-2xl group cursor-pointer border border-outline-variant/30">
                 <img
-                  alt={experience.name}
+                  alt={experience?.name || "Experience Detail Image"}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  src={images[1] || images[0] || experience.image_url}
+                  src={images[1] || images[0] || experience.image_url || FALLBACK_EXP_IMAGE}
+                  onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
                 />
               </div>
               <div className="col-span-4 row-span-1 relative overflow-hidden rounded-2xl group cursor-pointer border border-outline-variant/30">
                 <img
-                  alt={experience.name}
+                  alt={experience?.name || "Experience Detail Image"}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  src={images[2] || images[0] || experience.image_url}
+                  src={images[2] || images[0] || experience.image_url || FALLBACK_EXP_IMAGE}
+                  onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
                 />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <span className="text-white text-xs font-black border border-white px-4 py-2 rounded-lg">View All Photos</span>
@@ -632,6 +495,19 @@ export function ExperienceDetails() {
               </div>
             </section>
             <section className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-xs">
+              {experience.highlights && experience.highlights.length > 0 && (
+                <div className="flex flex-col justify-start mb-6 border-b border-outline-variant/30 pb-6">
+                  <h3 className="font-['Hanken_Grotesk'] text-lg font-bold text-on-surface mb-3">Highlights</h3>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {experience.highlights.map((highlight, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                        <span className="text-on-surface-variant font-['Inter'] text-sm font-semibold">{highlight.title}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <div className="lg:col-span-2 flex flex-col justify-start">
                 <h2 className="font-['Hanken_Grotesk'] text-2xl sm:text-3xl font-bold text-primary mb-4">
                   About {experience.name}
@@ -699,9 +575,9 @@ export function ExperienceDetails() {
               </ul>
             </section> */}
 
-            {experience.image_sunrise && (
+            {/* {experience.image_sunrise && (
               <>
-                {/* Why Visit at Sunrise */}
+                //  Why Visit at Sunrise
                 <section className="py-4">
                   <div className="flex flex-col md:flex-row gap-8 items-center">
                     <div className="md:w-1/2 space-y-4">
@@ -724,73 +600,87 @@ export function ExperienceDetails() {
                       <img
                         alt="Sunrise at Taj"
                         className="rounded-2xl border border-outline-variant/30 shadow-sm w-full h-[280px] object-cover"
-                        src={experience.image_sunrise}
+                        src={experience.image_sunrise || FALLBACK_EXP_IMAGE}
+                        onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
                       />
                     </div>
                   </div>
                 </section>
-              </>
-            )}
-            {/* Pro Tips Section */}
-            <section className="space-y-6">
-              <h2 className="text-lg font-black text-on-surface">Pro Tips for Your Visit</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all">
-                  <CreditCard className="w-8 h-8 text-primary mb-3" />
-                  <h3 className="text-sm font-extrabold text-on-surface mb-1.5">Valid ID</h3>
-                  <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">All visitors must carry an original passport or government-issued ID card matching the booking name.</p>
-                </div>
-                <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all">
-                  <Shirt className="w-8 h-8 text-primary mb-3" />
-                  <h3 className="text-sm font-extrabold text-on-surface mb-1.5">Dress Code</h3>
-                  <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">Modest clothing is recommended. Shoe covers are provided and mandatory for entering the Mausoleum.</p>
-                </div>
-                <div className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all">
-                  <CameraOff className="w-8 h-8 text-primary mb-3" />
-                  <h3 className="text-sm font-extrabold text-on-surface mb-1.5">Camera Policy</h3>
-                  <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">Still photography is permitted on the grounds, but prohibited inside the main mausoleum chamber.</p>
-                </div>
-              </div>
-            </section>
+              </>)} 
+            */}
 
-            {/* Traveler Reviews */}
-            {reviewsList.length > 0 && (
-              <section className="border-t border-outline-variant/30 pt-8 space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-black text-on-surface">Traveler Reviews</h2>
-                </div>
-                <div className="space-y-4">
-                  {reviewsList.map((review) => (
-                    <div key={review.id} className="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/30">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary-container/40 flex items-center justify-center font-black text-xs text-on-primary-container">
-                            {review.user_name ? review.user_name.slice(0, 2).toUpperCase() : "US"}
-                          </div>
-                          <div>
-                            <p className="text-xs font-black text-on-surface">{review.user_name}</p>
-                            <p className="text-[10px] text-on-surface-variant font-bold">
-                              {review.created_at ? new Date(review.created_at).toLocaleDateString("en-US", { month: 'long', year: 'numeric' }) : "Verified Guest"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex text-tertiary-container">
-                          {"★".repeat(review.rating || 5)}
-                        </div>
+            {/* Experience Attributes */}
+            {experience.attributes && experience.attributes.length > 0 && (
+              <section className="space-y-6">
+                <h2 className="text-lg font-black text-on-surface">Pro Tips for Your Visit</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {experience.attributes.map((attr, idx) => {
+                    const getIcon = (key) => {
+                      const k = key.toLowerCase();
+                      if (k.includes("dress") || k.includes("clothing") || k.includes("wear")) {
+                        return <Shirt className="w-8 h-8 text-primary mb-3" />;
+                      }
+                      if (k.includes("photo") || k.includes("camera") || k.includes("video")) {
+                        return <CameraOff className="w-8 h-8 text-primary mb-3" />;
+                      }
+                      if (k.includes("id") || k.includes("passport") || k.includes("card") || k.includes("identity")) {
+                        return <CreditCard className="w-8 h-8 text-primary mb-3" />;
+                      }
+                      return <HelpCircle className="w-8 h-8 text-primary mb-3" />;
+                    };
+
+                    return (
+                      <div key={idx} className="bg-surface-container-lowest p-5 rounded-2xl border border-outline-variant/30 hover:border-primary transition-all">
+                        {getIcon(attr.key)}
+                        <h3 className="text-sm font-extrabold text-on-surface mb-1.5">{attr.key}</h3>
+                        <p className="text-xs text-on-surface-variant font-semibold leading-relaxed">{attr.value}</p>
                       </div>
-                      <p className="text-xs sm:text-sm text-on-surface font-semibold italic leading-relaxed">
-                        "{review.review_text}"
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             )}
 
-          </div>
+            {/* Traveler Reviews */}
+            {
+              reviewsList.length > 0 && (
+                <section className="border-t border-outline-variant/30 pt-8 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-black text-on-surface">Traveler Reviews</h2>
+                  </div>
+                  <div className="space-y-4">
+                    {reviewsList.map((review) => (
+                      <div key={review.id} className="p-5 rounded-2xl bg-surface-container-low border border-outline-variant/30">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary-container/40 flex items-center justify-center font-black text-xs text-on-primary-container">
+                              {review.user_name ? review.user_name.slice(0, 2).toUpperCase() : "US"}
+                            </div>
+                            <div>
+                              <p className="text-xs font-black text-on-surface">{review.user_name}</p>
+                              <p className="text-[10px] text-on-surface-variant font-bold">
+                                {review.created_at ? new Date(review.created_at).toLocaleDateString("en-US", { month: 'long', year: 'numeric' }) : "Verified Guest"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex text-tertiary-container">
+                            {"★".repeat(review.rating || 5)}
+                          </div>
+                        </div>
+                        <p className="text-xs sm:text-sm text-on-surface font-semibold italic leading-relaxed">
+                          "{review.review_text}"
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )
+            }
+
+          </div >
 
           {/* Right Column: Sticky Booking Widget */}
-          <div className="lg:col-span-1">
+          < div className="lg:col-span-1 bg-primary/5 rounded-[24px] p-4" >
             <div className="sticky top-28 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-sm space-y-4">
 
               {/* Urgency Banner */}
@@ -805,28 +695,15 @@ export function ExperienceDetails() {
                 <span className="text-xs text-on-surface-variant font-semibold">/{totalTickets > 0 ? `${totalTickets} traveler${totalTickets > 1 ? 's' : ''}` : 'person'}</span>
               </div>
 
-              {/* Nationality rows with inline counters */}
-              <div className="space-y-2 border border-outline-variant/30 rounded-xl overflow-hidden">
-                {/* Indian National */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant/30">
-                  <div>
-                    <p className="text-xs font-black text-on-surface">Indian National</p>
-                    <p className="text-[10px] text-primary font-bold">₹{ticketPrices.indian} / person</p>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <button
-                      onClick={() => handleIndianCountChange(-1)}
-                      className="w-7 h-7 rounded-full border border-outline-variant flex items-center justify-center font-bold text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-90 text-sm"
-                    >−</button>
-                    <span className="font-black text-sm w-4 text-center text-on-surface">{indianCount}</span>
-                    <button
-                      onClick={() => handleIndianCountChange(1)}
-                      className="w-7 h-7 rounded-full border border-primary text-primary flex items-center justify-center font-bold hover:bg-primary/5 cursor-pointer active:scale-90 text-sm"
-                    >+</button>
-                  </div>
+              <div className="space-y-4">
+                <div className="rounded-3xl bg-surface-container p-5 border border-outline-variant/30">
+                  <p className="text-xs uppercase font-bold tracking-[0.24em] text-on-surface-variant">Ready to book?</p>
+                  <p className="mt-3 text-sm text-on-surface-variant leading-relaxed">
+                    Select nationality and visit details on the booking page. Date, guests, and payment are completed there.
+                  </p>
                 </div>
                 {/* Foreigner */}
-                <div className="flex items-center justify-between px-4 py-3">
+                {/* <div className="flex items-center justify-between px-4 py-3">
                   <div>
                     <p className="text-xs font-black text-on-surface">Foreigner</p>
                     <p className="text-[10px] text-primary font-bold">₹{ticketPrices.foreigner} / person</p>
@@ -842,11 +719,11 @@ export function ExperienceDetails() {
                       className="w-7 h-7 rounded-full border border-primary text-primary flex items-center justify-center font-bold hover:bg-primary/5 cursor-pointer active:scale-90 text-sm"
                     >+</button>
                   </div>
-                </div>
-              </div>
+                </div> */}
+              </div >
 
               {/* Date & Time */}
-              <div className="space-y-3">
+              < div className="space-y-3" >
                 <div>
                   <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Date</label>
                   <input
@@ -870,7 +747,7 @@ export function ExperienceDetails() {
                     <option>03:00 PM - 06:00 PM (Sunset)</option>
                   </select>
                 </div>
-              </div>
+              </div >
 
               {/* Book Now CTA */}
               <button
@@ -887,10 +764,10 @@ export function ExperienceDetails() {
                   "Coming Soon"
                 )}
               </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+            </div >
+          </div >
+        </div >
+      </div >
+    </div >
   );
 }

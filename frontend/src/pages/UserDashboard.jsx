@@ -80,7 +80,7 @@ const UserDashboard = () => {
   const [savedAttractions, setSavedAttractions] = useState([]);
 
   const [bookings, setBookings] = useState({ bookings: [], tickets: [] });
-  const [dashboardStats, setDashboardStats] = useState({ savedCount: 0, upcomingCount: 0, citiesCount: 1 });
+  const [dashboardStats, setDashboardStats] = useState({ pendingCount: 0, upcomingCount: 0, completedCount: 0 });
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [recentlyExplored, setRecentlyExplored] = useState([]);
 
@@ -115,13 +115,15 @@ const UserDashboard = () => {
         const confirmedList = Array.isArray(data.tickets) ? data.tickets : [];
         const pendingList = Array.isArray(data.bookings) ? data.bookings : [];
 
-        // Find unique cities in confirmed tickets
-        const uniqueCities = new Set(confirmedList.map(t => t.experience_name || "").filter(Boolean));
+        // Calculate upcoming (today and future) vs completed (past) confirmed tickets
+        const todayStr = new Date().toISOString().split("T")[0];
+        const upcomingConfirmed = confirmedList.filter(t => t.booking_date >= todayStr);
+        const completedConfirmed = confirmedList.filter(t => t.booking_date < todayStr);
 
         setDashboardStats({
-          savedCount: savedAttractions.length,
-          upcomingCount: confirmedList.length + pendingList.length,
-          citiesCount: Math.max(1, uniqueCities.size)
+          pendingCount: pendingList.length,
+          upcomingCount: upcomingConfirmed.length,
+          completedCount: completedConfirmed.length
         });
       }
       catch (err) {
@@ -194,7 +196,7 @@ const UserDashboard = () => {
 
         {/* Sidebar */}
         <div className="w-full lg:w-72 flex-shrink-0">
-          <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/35 p-6 sticky top-32 shadow-sm">
+          <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/35 p-6 sticky top-32 shadow-sm max-h-[calc(100vh-160px)] overflow-y-auto no-scrollbar">
             {/* User Profile Mini */}
             <div className="flex flex-col items-center text-center pb-6 border-b border-outline-variant/20 mb-6">
               <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-on-primary font-black text-2xl shadow-xl shadow-emerald-950/10 mb-4 ring-4 ring-background">
@@ -263,22 +265,22 @@ const UserDashboard = () => {
 
               {/* Premium Stats Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                {/* Saved Places stats card commented out as it is not coming from backend
-                <div className="bg-surface-container-high border border-outline-variant/30 rounded-3xl p-6 text-on-surface shadow-sm relative overflow-hidden group">
+                {/* Pending Trips Card */}
+                <div className="bg-surface-container-lowest border border-outline-variant/35 rounded-3xl p-6 shadow-sm relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <BookMarked className="w-24 h-24 rotate-12 transform -translate-y-4 translate-x-4 text-on-surface" />
+                    <CreditCard className="w-24 h-24 rotate-12 transform -translate-y-4 translate-x-4 text-on-surface" />
                   </div>
                   <div className="relative z-10">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-6 border border-primary/15">
-                      <BookMarked className="w-5 h-5 text-primary" />
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center mb-6 border border-amber-500/20">
+                      <CreditCard className="w-5 h-5 text-amber-600" />
                     </div>
-                    <p className="text-on-surface-variant text-xs font-bold uppercase tracking-wider mb-1">Saved Places</p>
-                    <h3 className="text-4xl font-black">{dashboardStats.savedCount}</h3>
+                    <p className="text-on-surface-variant text-xs font-bold uppercase tracking-wider mb-1">Pending Orders</p>
+                    <h3 className="text-4xl font-black text-on-surface">{dashboardStats.pendingCount}</h3>
                   </div>
                 </div>
-                */}
 
-                <div className="bg-primary rounded-3xl p-6 text-on-primary shadow-xl shadow-emerald-950/15 relative overflow-hidden group md:col-start-2">
+                {/* Upcoming Trips Card */}
+                <div className="bg-primary rounded-3xl p-6 text-on-primary shadow-xl shadow-emerald-950/15 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 p-6 opacity-15 group-hover:opacity-25 transition-opacity">
                     <Calendar className="w-24 h-24 rotate-12 transform -translate-y-4 translate-x-4" />
                   </div>
@@ -291,17 +293,19 @@ const UserDashboard = () => {
                   </div>
                 </div>
 
-                {/* Cities Explored stats card commented out as it is not coming from backend
+                {/* Completed Trips Card */}
                 <div className="bg-surface-container-lowest border border-outline-variant/35 rounded-3xl p-6 shadow-sm relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <Award className="w-24 h-24 rotate-12 transform -translate-y-4 translate-x-4 text-on-surface" />
+                  </div>
                   <div className="relative z-10">
-                    <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center mb-6">
-                      <MapPin className="w-5 h-5 text-amber-600" />
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-6 border border-emerald-500/15">
+                      <Award className="w-5 h-5 text-emerald-600" />
                     </div>
-                    <p className="text-on-surface-variant text-xs font-bold uppercase tracking-wider mb-1">Cities Explored</p>
-                    <h3 className="text-4xl font-black text-on-surface">{dashboardStats.citiesCount}</h3>
+                    <p className="text-on-surface-variant text-xs font-bold uppercase tracking-wider mb-1">Completed Trips</p>
+                    <h3 className="text-4xl font-black text-on-surface">{dashboardStats.completedCount}</h3>
                   </div>
                 </div>
-                */}
               </div>
 
               {/* Recently Explored Section */}

@@ -616,3 +616,111 @@ class CollectionExperience(models.Model):
     def __str__(self):
         return f"{self.collection.name} -> {self.experience.name} (order: {self.display_order})"
 
+
+class BookingPolicy(models.Model):
+    ticket_type = models.OneToOneField(
+        TicketType, on_delete=models.CASCADE, related_name="booking_policy"
+    )
+    instant_confirmation = models.BooleanField(default=True)
+    requires_manual_confirmation = models.BooleanField(default=False)
+    cancellation_allowed = models.BooleanField(default=True)
+    cancellation_before_hours = models.IntegerField(default=24)
+    refund_allowed = models.BooleanField(default=True)
+    validity_type = models.CharField(
+        max_length=50,
+        default="fixed",
+        choices=[("fixed", "Fixed"), ("relative", "Relative")],
+    )
+    validity_duration = models.DurationField(blank=True, null=True)
+    slot_booking_required = models.BooleanField(default=True)
+    qr_reusable = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "booking_policies"
+
+    def __str__(self):
+        return f"Policy for {self.ticket_type}"
+
+
+class TicketFeature(models.Model):
+    FEATURE_TYPES = [
+        ("inclusion", "Inclusion"),
+        ("exclusion", "Exclusion"),
+        ("requirement", "Requirement"),
+    ]
+    ticket_type = models.ForeignKey(
+        TicketType, on_delete=models.CASCADE, related_name="ticket_features"
+    )
+    feature_type = models.CharField(max_length=20, choices=FEATURE_TYPES)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    display_order = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "ticket_features"
+        ordering = ["display_order"]
+        indexes = [
+            models.Index(fields=["ticket_type"], name="idx_feature_ticket_type"),
+            models.Index(fields=["feature_type"], name="idx_feature_feature_type"),
+        ]
+
+    def __str__(self):
+        return f"{self.feature_type}: {self.title} ({self.ticket_type})"
+
+
+class ExperienceHighlight(models.Model):
+    experience = models.ForeignKey(
+        Experience, on_delete=models.CASCADE, related_name="highlights"
+    )
+    title = models.CharField(max_length=255)
+    icon = models.CharField(max_length=100, blank=True, null=True)
+    display_order = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "experience_highlights"
+        ordering = ["display_order"]
+
+    def __str__(self):
+        return f"{self.title} ({self.experience.name})"
+
+
+class ExperienceAttribute(models.Model):
+    experience = models.ForeignKey(
+        Experience, on_delete=models.CASCADE, related_name="attributes"
+    )
+    key = models.CharField(max_length=100)
+    value = models.CharField(max_length=255)
+    display_order = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = "experience_attributes"
+        ordering = ["display_order"]
+        unique_together = [("experience", "key")]
+
+    def __str__(self):
+        return f"{self.key}: {self.value} ({self.experience.name})"
+
+
+class ProviderBookingConfiguration(models.Model):
+    provider = models.OneToOneField(
+        Provider, on_delete=models.CASCADE, related_name="booking_configuration"
+    )
+    max_individual_booking = models.IntegerField(default=10)
+    max_group_booking = models.IntegerField(default=20)
+    allow_bulk_booking = models.BooleanField(default=True)
+    require_manual_bulk_approval = models.BooleanField(default=True)
+    require_email_verification = models.BooleanField(default=False)
+    require_phone_verification = models.BooleanField(default=False)
+    require_captcha = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "provider_booking_configurations"
+
+    def __str__(self):
+        return f"Config for {self.provider.name}"
+
+
