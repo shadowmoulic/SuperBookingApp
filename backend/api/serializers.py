@@ -173,6 +173,57 @@ class TicketTypeSerializer(serializers.ModelSerializer):
             "schedules",
         ]
 
+    def get_schedules(self, obj):
+        schedules = []
+        operating_hours = obj.experience.operating_hours.filter(is_closed=False)
+
+        if operating_hours.exists():
+            for oh in operating_hours.order_by("day_of_week"):
+                schedules.append({
+                    "id": None,
+                    "recurrence_type": "weekly",
+                    "specific_date": None,
+                    "day_of_week": oh.day_of_week,
+                    "start_date": None,
+                    "end_date": None,
+                    "start_time": oh.opens_at.isoformat() if oh.opens_at else None,
+                    "end_time": oh.closes_at.isoformat() if oh.closes_at else None,
+                    "capacity": obj.experience.max_daily_capacity or 0,
+                    "available_capacity": obj.experience.max_daily_capacity or 0,
+                    "is_active": True,
+                })
+        elif obj.experience.opening_time and obj.experience.closing_time:
+            schedules.append({
+                "id": None,
+                "recurrence_type": "daily",
+                "specific_date": None,
+                "day_of_week": None,
+                "start_date": None,
+                "end_date": None,
+                "start_time": obj.experience.opening_time.isoformat(),
+                "end_time": obj.experience.closing_time.isoformat(),
+                "capacity": obj.experience.max_daily_capacity or 0,
+                "available_capacity": obj.experience.max_daily_capacity or 0,
+                "is_active": True,
+            })
+        return schedules
+
+    def get_booking_policy(self, obj):
+        return {
+            "instant_confirmation": True,
+            "requires_manual_confirmation": False,
+            "cancellation_allowed": True,
+            "cancellation_before_hours": 24,
+            "refund_allowed": True,
+            "validity_type": "fixed",
+            "validity_duration": None,
+            "slot_booking_required": False,
+            "qr_reusable": False,
+        }
+
+    def get_ticket_features(self, obj):
+        return []
+
 
 class ExperienceSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
@@ -181,6 +232,8 @@ class ExperienceSerializer(serializers.ModelSerializer):
     average_rating = serializers.SerializerMethodField()
     total_reviews = serializers.SerializerMethodField()
     reviews = serializers.SerializerMethodField()
+    highlights = serializers.SerializerMethodField()
+    attributes = serializers.SerializerMethodField()
     provider = ProviderSerializer(read_only=True)
     ticket_types = TicketTypeSerializer(many=True, read_only=True)
     highlights = ExperienceHighlightSerializer(many=True, read_only=True)
@@ -258,6 +311,67 @@ class ExperienceSerializer(serializers.ModelSerializer):
                 return paginator.get_paginated_response(serializer.data).data
 
         return ReviewSerializer(reviews[:10], many=True).data
+
+    def get_ticket_types(self, obj):
+        active_ticket_types = obj.ticket_types.filter(deleted_at__isnull=True, is_active=True)
+        if active_ticket_types.exists():
+            return TicketTypeSerializer(active_ticket_types, many=True, context=self.context).data
+
+        fallback_price = float(obj.entry_fee_base) if obj.entry_fee_base is not None else 0.0
+        schedule = None
+        if obj.opening_time and obj.closing_time:
+            schedule = {
+                "id": None,
+                "recurrence_type": "daily",
+                "specific_date": None,
+                "day_of_week": None,
+                "start_date": None,
+                "end_date": None,
+                "start_time": obj.opening_time.isoformat(),
+                "end_time": obj.closing_time.isoformat(),
+                "capacity": obj.max_daily_capacity or 0,
+                "available_capacity": obj.max_daily_capacity or 0,
+                "is_active": True,
+            }
+
+        return [
+            {
+                "public_id": f"tt-fallback-{obj.public_id}",
+                "name": "General Admission",
+                "description": obj.description or "General admission ticket",
+                "is_active": bool(obj.is_open),
+                "pricing_rules": [
+                    {
+                        "id": None,
+                        "base_price": str(obj.entry_fee_base or "0.00"),
+                        "seasonal_multiplier": "1.00",
+                        "valid_from": None,
+                        "valid_to": None,
+                        "final_price": fallback_price,
+                        "is_active": True,
+                    }
+                ],
+                "booking_policy": {
+                    "instant_confirmation": True,
+                    "requires_manual_confirmation": False,
+                    "cancellation_allowed": True,
+                    "cancellation_before_hours": 24,
+                    "refund_allowed": True,
+                    "validity_type": "fixed",
+                    "validity_duration": None,
+                    "slot_booking_required": False,
+                    "qr_reusable": False,
+                },
+                "ticket_features": [],
+                "schedules": [schedule] if schedule else [],
+            }
+        ]
+
+    def get_highlights(self, obj):
+        return []
+
+    def get_attributes(self, obj):
+        return []
 
 class ExperienceShortSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()

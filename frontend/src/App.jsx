@@ -36,6 +36,8 @@ import ItineraryIndex from "./pages/ItineraryIndex";
 import UserDashboard from "./pages/UserDashboard";
 
 import BookingPage from "./pages/BookingPage";
+import { AttractionDetailsTemp } from "./pages/AttractionDetailsTemp";
+import { BookingTemp } from "./pages/BookingTemp";
 import SuccessPage from "./pages/SuccessPage";
 import FailedPage from "./pages/FailedPage";
 import CheckoutPage from "./pages/CheckoutPage";
@@ -61,6 +63,9 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/attraction/:id" element={<ExperienceDetails />} />
+          <Route path="/attraction/:id/booking" element={<BookingPage />} />
+          <Route path="/attraction-temp/:slug" element={<AttractionDetailsTemp />} />
+          <Route path="/attraction-temp/:slug/booking" element={<BookingTemp />} />
           {/* <Route path="/unesco-sites" element={<UnescoSites />} /> */}
           {/* <Route path="/top-places" element={<TopPlaces />} /> */}
           {/* <Route path="/explore-near-me" element={<ExploreNearMe />} /> */}
@@ -110,3 +115,5 @@ function App() {
 }
 
 export default App;
+
+

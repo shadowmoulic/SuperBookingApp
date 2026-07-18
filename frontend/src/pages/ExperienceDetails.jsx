@@ -177,6 +177,23 @@ export function ExperienceDetails() {
 
   return (
     <div className="bg-surface-container-lowest min-h-screen w-full relative">
+      {experience && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "TouristAttraction",
+            "name": experience.name,
+            "description": experience.description,
+            "image": images,
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": experience.city || "",
+              "addressCountry": "IN"
+            },
+            "url": window.location.href
+          })
+        }} />
+      )}
       <div className="mx-auto py-16 w-full relative"></div>
       <div className="lg:hidden">
         {/* Hero Section */}
