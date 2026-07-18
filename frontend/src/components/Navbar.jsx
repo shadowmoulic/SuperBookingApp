@@ -253,12 +253,6 @@ function Navbar() {
               >
                 Attractions
               </Link>
-              <Link
-                to="/itineraries"
-                className="px-3.5 py-2 rounded-lg text-sm font-semibold text-on-surface-variant hover:text-primary hover:bg-surface-container active:scale-98 transition-all"
-              >
-                Trip Planner
-              </Link>
             </div>
           </div>
 
