@@ -34,9 +34,10 @@ export default function CityDetails() {
 
   useEffect(() => {
     loadCity();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  const loadCity = () => {
+  function loadCity() {
     setLoading(true);
     api
       .get(`/api/city/${id}`)
@@ -57,7 +58,9 @@ export default function CityDetails() {
           const filtered = list.filter(x => x.url !== item.url);
           filtered.unshift(item);
           localStorage.setItem("recently_explored", JSON.stringify(filtered.slice(0, 4)));
-        } catch (e) { }
+        } catch (e) {
+          console.error("Local storage error:", e);
+        }
       })
       .catch((err) => {
         setError(err.message);
