@@ -788,6 +788,7 @@ class HomeView(generics.RetrieveAPIView):
 
         # 3. Get featured categories experiences with pagination
         featured_categories_config = [
+            {"name": "Amusement Parks", "title": "Explore Amusement Parks"},
             {"name": "Museums", "title": "Explore Museums"},
             {"name": "Forts", "title": "Explore Forts"},
         ]
