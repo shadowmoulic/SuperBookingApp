@@ -415,7 +415,7 @@ export default function CityDetails() {
                     key={expId}
                     className="group bg-surface-container-lowest border border-outline-variant/40 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-outline-variant flex flex-col h-full relative cursor-pointer"
                   >
-                    <div className="relative h-56 overflow-hidden flex-shrink-0">
+                    <div className="relative h-72 overflow-hidden flex-shrink-0">
                       <img
                         src={coverImage}
                         alt={experience.name}
@@ -448,24 +448,26 @@ export default function CityDetails() {
                       )}
                     </div>
 
-                    <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div className="px-5 py-3 h-[30%] flex-1 flex flex-col justify-between">
                       <div>
-                        <span className="text-[10px] font-bold text-primary uppercase font-['Inter'] tracking-wider mb-1.5 block">
-                          {experience.category}
-                        </span>
-                        <h3 className="font-['Hanken_Grotesk'] font-bold text-on-surface text-base leading-snug mb-2 group-hover:text-primary transition-colors line-clamp-2 h-10">
+                        <div className="flex items-center justify-between h-auto">
+                          <span className="text-[10px] font-bold text-primary uppercase font-['Inter'] tracking-wider block">
+                            {experience.category}
+                          </span>
+                          <div className="flex items-center text-on-surface-variant text-xs font-['Inter'] mb-2">
+                            <span className="material-symbols-outlined text-xs leading-none">location_on</span>
+                            <span>{experience.city || experience.location}</span>
+                          </div>
+                        </div>
+                        <h3 className="font-['Hanken_Grotesk'] font-bold text-on-surface text-base leading-snug mb-0.5 group-hover:text-primary transition-colors line-clamp-2 h-10">
                           {experience.name}
                         </h3>
-                        <div className="flex items-center gap-1 text-on-surface-variant text-xs font-['Inter'] mb-4">
-                          <span className="material-symbols-outlined text-xs leading-none">location_on</span>
-                          <span>{experience.city || experience.location}</span>
-                        </div>
                       </div>
 
-                      <div className="flex justify-between items-end border-t border-outline-variant/30 pt-4 mt-auto">
+                      <div className="flex justify-between items-end border-t border-outline-variant/30 mt-auto">
                         <div>
                           <span className="text-[10px] text-on-surface-variant block font-['Inter'] uppercase tracking-wider mb-0.5">Starts from</span>
-                          <span className="font-['JetBrains_Mono'] text-sm font-bold text-on-surface">
+                          <span className="text-sm font-bold text-on-surface">
                             ₹{Number(experience.entry_fee_base).toFixed(2)}
                           </span>
                         </div>
