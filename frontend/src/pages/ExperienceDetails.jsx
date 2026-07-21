@@ -24,6 +24,8 @@ export function ExperienceDetails() {
   const [experience, setExperience] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedDate, setSelectedDate] = useState();
+  const [timeSlot, setTimeSlot] = useState();
   const [selectedNationality, setSelectedNationality] = useState("indian");
   const [indianCount, setIndianCount] = useState(1);
   const [foreignerCount, setForeignerCount] = useState(0);
