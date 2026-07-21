@@ -28,29 +28,31 @@ function LocationBentoCard({ location }) {
   return (
     <Link to={`/city/${location.name.toLowerCase().replace(/\s+/g, '-')}`} className="block h-full">
       <div className="relative group cursor-pointer rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 h-72 md:h-80 w-full">
-        {/* Background Image */}
-        <img
-          src={coverImage}
-          alt={location.name}
-          onError={handleImageError}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-        />
+        <div className="relative group cursor-pointer rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 h-72 md:h-80 w-full">
+          {/* Background Image */}
+          <img
+            src={coverImage}
+            alt={location.name}
+            onError={handleImageError}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
 
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent transition-opacity duration-500 group-hover:opacity-90" />
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent transition-opacity duration-500 group-hover:opacity-90" />
 
-        {/* Text Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 z-10 flex justify-between">
-          <div>
-            <h3 className="font-['Hanken_Grotesk'] font-bold text-[#fff] text-xl md:text-2xl leading-tight drop-shadow">
-              {location.name}
-            </h3>
-            <p className="text-[#fff]/80 font-['Inter'] text-sm mt-1">{location.state}</p>
-          </div>
-          <div className="items-center">
-            <div className="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-1.5 text-center">
-              <p className="text-[#fff] font-bold text-xs">{location.experience_count}</p>
-              <p className="text-[#ddd] text-[9px] leading-tight mt-0.5">Attractions</p>
+          {/* Text Content */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 z-10 flex justify-between">
+            <div>
+              <h3 className="font-['Hanken_Grotesk'] font-bold text-[#fff] text-xl md:text-2xl leading-tight drop-shadow">
+                {location.name}
+              </h3>
+              <p className="text-[#fff]/80 font-['Inter'] text-sm mt-1">{location.state}</p>
+            </div>
+            <div className="items-center">
+              <div className="bg-black/40 backdrop-blur-sm rounded-lg px-2 py-1.5 text-center">
+                <p className="text-[#fff] font-bold text-xs">{location.experience_count}</p>
+                <p className="text-[#ddd] text-[9px] leading-tight mt-0.5">Attractions</p>
+              </div>
             </div>
           </div>
           {/* <div className="grid grid-cols-3 gap-1.5 mt-3">
@@ -64,13 +66,6 @@ function LocationBentoCard({ location }) {
                     }
                     )}
           </div> */}
-        </div>
-
-        {/* Hover Arrow */}
-        <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
-          <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
-            <path d="M1 7h12M7 1l6 6-6 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
         </div>
       </div>
     </Link>

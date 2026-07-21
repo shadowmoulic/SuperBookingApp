@@ -217,9 +217,8 @@ function SmallExperienceCard({ experience }) {
   return (
     <Link to={`/attraction/${slug}`} className="block h-full group">
       <div className="bg-surface-container-lowest rounded-xl shadow-md hover:shadow-xl border border-outline-variant/30 flex flex-col h-full overflow-hidden transition-all duration-300 relative">
-
         {/* Image Container */}
-        <div className="relative w-full h-52 overflow-hidden flex-shrink-0">
+        <div className="relative w-full h-[75%] overflow-hidden flex-shrink-0">
           <img
             src={coverImage}
             alt={experience.name}
@@ -227,32 +226,37 @@ function SmallExperienceCard({ experience }) {
             onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
           />
           {/* Absolute Price Tag */}
-          <div className="absolute top-4 right-4 bg-surface-container-lowest/95 backdrop-blur-xs px-3 py-1.5 rounded-lg shadow-sm border border-outline-variant/30">
+          {/* <div className="absolute top-4 right-4 bg-surface-container-lowest/95 backdrop-blur-xs px-3 py-1.5 rounded-lg shadow-sm border border-outline-variant/30">
             <span className="font-['JetBrains_Mono'] text-sm font-bold text-on-surface">
               ₹{Number(experience.entry_fee_base).toFixed(2)}
             </span>
-          </div>
+          </div> */}
         </div>
 
-        {/* Card Body */}
-        <div className="p-5 flex-1 flex flex-col justify-between">
-          <div>
-            {/* City Tag */}
-            <span className="text-xs font-semibold tracking-wider uppercase text-on-surface-variant font-['Inter'] block mb-1">
-              {experience.city}
-            </span>
-            {/* Name Title */}
-            <h3 className="font-['Hanken_Grotesk'] font-bold text-lg text-on-surface leading-snug mb-4 group-hover:text-primary transition-colors line-clamp-2 h-12">
-              {experience.name}
-            </h3>
-          </div>
 
-          {/* Book Tickets Outline Button */}
-          <div className="mt-auto w-full">
+        {/* Book Tickets Outline Button */}
+        {/* <div className="mt-auto w-full">
             <div className="w-full py-2.5 rounded-lg border-2 border-primary text-primary font-['Hanken_Grotesk'] font-semibold text-sm transition-all duration-300 group-hover:bg-primary group-hover:text-on-primary flex items-center justify-center gap-1.5 active:scale-98">
               Book Tickets
               <ArrowRight className="stroke-[3]" />
-            </div>
+              </div>
+          </div> */}
+        {/* Card Body */}
+        <div className="px-3 py-2 flex-1 flex h-[20%] items-center justify-between">
+          <div className="">
+            {/* Name Title */}
+            <h3 className="font-['Hanken_Grotesk'] font-bold text-s text-on-surface leading-snug mb-1 group-hover:text-primary transition-colors">
+              {experience.name}
+            </h3>
+            {/* City Tag */}
+            <span className="text-[10px] font-semibold tracking-wider uppercase text-on-surface-variant font-['Inter'] block mb-1">
+              {experience.city}
+            </span>
+          </div>
+          <div className="bg-surface-container-lowest/95 backdrop-blur-xs px-3 py-1.5 rounded-lg shadow-sm border border-outline-variant/30">
+            <span className="font text-sm font-bold text-on-surface">
+              ₹{Number(experience.entry_fee_base)}
+            </span>
           </div>
         </div>
       </div>
@@ -707,7 +711,7 @@ function Home() {
               <div className="relative">
                 <div ref={locationsRef} className="flex overflow-x-auto pb-4 gap-6 scroll-smooth snap-x snap-mandatory no-scrollbar">
                   {homeData.explore_locations.data.map((location) => (
-                    <div key={location.public_id} className="w-[280px] sm:w-[450px] shrink-0 snap-start">
+                    <div key={location.public_id} className="w-[280px] shrink-0 snap-start">
                       <LocationBentoCard location={location} />
                     </div>
                   ))}
@@ -764,7 +768,7 @@ function Home() {
                   <div className="relative">
                     <div ref={el => featuredCatsRefs.current[catIdx] = el} className="flex overflow-x-auto pb-4 gap-6 scroll-smooth snap-x snap-mandatory no-scrollbar">
                       {category.experiences.map((exp) => (
-                        <div key={exp.id} className="w-[240px] sm:w-[280px] shrink-0 snap-start">
+                        <div key={exp.id} className="w-[200px] sm:w-[200px] h-[360px] shrink-0 snap-start">
                           <SmallExperienceCard experience={exp} />
                         </div>
                       ))}
