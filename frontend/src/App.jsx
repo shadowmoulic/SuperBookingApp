@@ -7,6 +7,10 @@ import LoginSignup from "./components/LoginSignup";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import Chatbot from "./components/Chatbot";
+import EmployeeProtectedRoute from "./Dashboard/EmployeeProtectedRoute";
+import Dashboard from "./Dashboard/Dashboard";
+
+
 
 import { AuthProvider } from "./context/AuthContext";
 import { LocationProvider } from "./context/LocationContext";
@@ -86,7 +90,8 @@ function AppContent() {
           <Route path="/itineraries" element={<ItineraryIndex />} />
 
           <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
-
+          
+         <Route path="/dashboard1" element={<EmployeeProtectedRoute><Dashboard /> </EmployeeProtectedRoute> }/>
           <Route path="/booking/:id" element={<BookingPage />} />
           <Route path="/payment/:id" element={<CheckoutPage />} />
           <Route path="/payments/success" element={<SuccessPage />} />
