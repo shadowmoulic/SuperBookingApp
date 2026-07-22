@@ -273,6 +273,7 @@ Represents the customer reservation transaction.
   - `user_id` (ForeignKey to `User_Data`, related name `bookings`)
   - `experience_id` (ForeignKey to `Experience`, related name `experience`)
   - `booking_date` (DateField, index)
+  - `slot_time` (TimeField, optional)
   - `total_tickets` (IntegerField)
   - `total_amount` (DecimalField)
   - `status` (CharField, default `"pending"`, index)
@@ -285,28 +286,13 @@ Represents the customer reservation transaction.
   - `updated_at` (DateTimeField)
   - `deleted_at` (DateTimeField, nullable)
 
-#### BookingItem
-Individual item line within a booking, referencing specific ticket types, time slots, categories, and quantities.
-- **Table**: `booking_items`
-- **Fields**:
-  - `id` (BigAutoField, PK)
-  - `booking_id` (ForeignKey to `Booking`, related name `items`)
-  - `ticket_type_id` (ForeignKey to `content.TicketType`, related name `booking_items`)
-  - `time_slot_id` (ForeignKey to `TicketTypeSchedule`, related name `booking_items`, nullable)
-  - `quantity` (IntegerField, default `1`)
-  - `unit_price` (DecimalField)
-  - `subtotal` (DecimalField)
-  - `nationality_category` (CharField, default `"Any"`, optional category selection)
-  - `age_category` (CharField, default `"Any"`, optional category selection)
-  - `created_at` (DateTimeField)
-  - `updated_at` (DateTimeField)
-
 #### Ticket
-Issued entry tickets associated with a specific BookingItem.
+Issued entry tickets associated with a successful Booking.
 - **Table**: `tickets`
 - **Fields**:
   - `id` (BigAutoField, PK)
-  - `booking_item_id` (ForeignKey to `BookingItem`, related name `tickets`, nullable)
+  - `booking_id` (ForeignKey to `Booking`, related name `tickets`)
+  - `ticket_type` (CharField)
   - `price` (DecimalField)
   - `qr_code` (CharField, unique, index)
   - `is_used` (BooleanField, default `False`, index)
@@ -333,12 +319,27 @@ Records transaction information for booking checkouts.
   - `created_at` (DateTimeField, index)
   - `updated_at` (DateTimeField)
 
+#### Inventory
+Tracks and constraints daily capacities per Experience.
+- **Table**: `inventory`
+- **Fields**:
+  - `id` (BigAutoField, PK)
+  - `public_id` (CharField, unique)
+  - `experience_id` (ForeignKey to `Experience`, related name `inventories`)
+  - `inventory_date` (DateField)
+  - `total_capacity` (IntegerField)
+  - `available_capacity` (IntegerField)
+  - `reserved_capacity` (IntegerField)
+  - `is_closed` (BooleanField, default `False`)
+  - `created_at` (DateTimeField)
+  - `updated_at` (DateTimeField)
+
 #### Schedule
-Defines recurrent operating time windows for an Experience.
+Defines recurrent booking slots and capacities for a TicketType.
 - **Table**: `schedules`
 - **Fields**:
   - `id` (BigAutoField, PK)
-  - `experience_id` (ForeignKey to `Experience`, related name `schedules`)
+  - `ticket_type_id` (ForeignKey to `content.TicketType`, related name `schedules`)
   - `recurrence_type` (CharField)
   - `specific_date` (DateField, nullable)
   - `day_of_week` (PositiveSmallIntegerField, nullable)
@@ -349,37 +350,6 @@ Defines recurrent operating time windows for an Experience.
   - `capacity` (IntegerField)
   - `available_capacity` (IntegerField)
   - `is_active` (BooleanField, default `True`)
-
-#### TicketTypeSchedule
-Junction model connecting a TicketType to a Schedule slot.
-- **Table**: `ticket_type_schedules`
-- **Fields**:
-  - `id` (BigAutoField, PK)
-  - `public_id` (CharField, unique)
-  - `ticket_type_id` (ForeignKey to `content.TicketType`, related name `ticket_type_schedules`)
-  - `schedule_id` (ForeignKey to `Schedule`, related name `ticket_type_schedules`)
-  - `is_active` (BooleanField, default `True`)
-  - `created_at` (DateTimeField)
-  - `updated_at` (DateTimeField)
-
-#### Inventory
-Tracks daily capacities and status counters per TicketType and time slot.
-- **Table**: `inventory`
-- **Fields**:
-  - `id` (BigAutoField, PK)
-  - `public_id` (CharField, unique)
-  - `ticket_type_id` (ForeignKey to `content.TicketType`, related name `inventories`)
-  - `time_slot_id` (ForeignKey to `TicketTypeSchedule`, related name `inventories`, nullable)
-  - `date` (DateField, index)
-  - `capacity` (IntegerField)
-  - `reserved_count` (IntegerField, default `0`)
-  - `confirmed_count` (IntegerField, default `0`)
-  - `used_count` (IntegerField, default `0`)
-  - `cancelled_count` (IntegerField, default `0`)
-  - `blocked_count` (IntegerField, default `0`)
-  - `is_open` (BooleanField, default `True`, index)
-  - `created_at` (DateTimeField)
-  - `updated_at` (DateTimeField)
 
 #### Seat
 Represents individual seats or allocations within a Schedule.
@@ -460,17 +430,6 @@ Links `User_Data` accounts with `Enterprise` organization entities.
   - `created_at` (DateTimeField)
   - `updated_at` (DateTimeField)
 
-#### ProviderMember
-Links `User_Data` accounts with `content.Provider` organization entities.
-- **Table**: `provider_members`
-- **Fields**:
-  - `id` (BigAutoField, PK)
-  - `provider_id` (ForeignKey to `content.Provider`, related name `members`)
-  - `user_id` (ForeignKey to `User_Data`, related name `provider_memberships`)
-  - `role` (CharField, default `"staff"`, choices: `owner`, `admin`, `manager`, `staff`, `viewer`)
-  - `created_at` (DateTimeField)
-  - `updated_at` (DateTimeField)
-
 ---
 
 ### 2.4 Reviews App Models
@@ -490,15 +449,3 @@ Feedback and ratings for visited experiences.
 
 ### 2.5 Authentication App Models
 The `authentication` app does not define any custom database tables. It relies entirely on Django's built-in system authentication models (e.g., standard `User`, `Group`, `Permission`) for managing credentials, security groups, and token/session validation contexts.
-
----
-
-### 2.6 Provider API App (`provider_api`)
-The `provider_api` app provides dedicated management and analytics REST endpoints for event/venue Providers. It authenticates Provider users via JWT (`/provider-api/auth/login/`, `/provider-api/auth/refresh/`, `/provider-api/auth/logout/`, `/provider-api/auth/me/`) and exposes a Provider Analytics Home endpoint (`/provider-api/home/`) delivering aggregated metrics across:
-- **Experiences**: Total, active, and inactive counts for provider experiences.
-- **Bookings**: Total, confirmed, pending, cancelled booking counts & total confirmed revenue.
-- **Tickets**: Total tickets issued, used ticket count, unused ticket count.
-- **TicketTypes**: Active and total ticket types.
-- **Features**: Inclusions, exclusions, and requirements breakdown.
-- **Schedule**: Recurrent operating schedules and configured time slots.
-- **Inventory**: Aggregated daily capacity, reserved count, confirmed count, used count, cancelled count, and blocked count.

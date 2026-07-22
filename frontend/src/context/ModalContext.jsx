@@ -6,21 +6,11 @@ export default ModalContext;
 
 export const ModalProvider = ({ children }) => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [redirectUrl, setRedirectUrl] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchInitialQuery, setSearchInitialQuery] = useState("");
 
-  const openLoginModal = (targetUrl = null) => {
-    if (targetUrl) {
-      setRedirectUrl(targetUrl);
-    }
-    setIsLoginModalOpen(true);
-  };
-
-  const closeLoginModal = () => {
-    setIsLoginModalOpen(false);
-    setRedirectUrl(null);
-  };
+  const openLoginModal = () => setIsLoginModalOpen(true);
+  const closeLoginModal = () => setIsLoginModalOpen(false);
 
   const openSearch = (query = "") => {
     setSearchInitialQuery(query);
@@ -36,8 +26,6 @@ export const ModalProvider = ({ children }) => {
     isLoginModalOpen,
     openLoginModal,
     closeLoginModal,
-    redirectUrl,
-    setRedirectUrl,
     isSearchOpen,
     openSearch,
     closeSearch,
