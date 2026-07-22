@@ -3,7 +3,7 @@ from django.utils import timezone
 from io import BytesIO
 import qrcode
 from user.models import User_Data
-from content.models import Experience, PricingRule, generate_random_id
+from content.models import Experience, generate_random_id
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 import uuid
@@ -36,6 +36,7 @@ class Booking(models.Model):
         db_index=True,
     )
     booking_date = models.DateField(null=False, db_index=True)
+    slot_time = models.TimeField(blank=True, null=True)
     total_tickets = models.IntegerField(null=False)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, null=False)
     status = models.CharField(
@@ -92,82 +93,26 @@ class Booking(models.Model):
         ]
 
 
-class BookingItem(models.Model):
+class Ticket(models.Model):
+    TICKET_TYPE_CHOICES = [
+        ("adult", "Adult"),
+        ("child", "Child"),
+        ("senior", "Senior"),
+    ]
+
     id = models.BigAutoField(primary_key=True)
     booking = models.ForeignKey(
         Booking,
         on_delete=models.CASCADE,
-        related_name="items",
-        db_index=True,
-        help_text="Booking this item belongs to",
-    )
-    ticket_type = models.ForeignKey(
-        "content.TicketType",
-        on_delete=models.CASCADE,
-        related_name="booking_items",
-        db_index=True,
-        help_text="Ticket type associated with this booking item",
-    )
-    time_slot = models.ForeignKey(
-        "TicketTypeSchedule",
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name="booking_items",
-        db_index=True,
-        help_text="Scheduled time slot for this booking item",
-    )
-    quantity = models.IntegerField(default=1, validators=[MinValueValidator(1)])
-    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
-    nationality_category = models.CharField(
-        max_length=20,
-        choices=PricingRule.NATIONALITY_CHOICES,
-        default="Any",
-        blank=True,
-        null=True,
-        help_text="Nationality category for this item",
-    )
-    age_category = models.CharField(
-        max_length=20,
-        choices=PricingRule.AGE_CHOICES,
-        default="Any",
-        blank=True,
-        null=True,
-        help_text="Age category for this item",
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        if not self.subtotal:
-            self.subtotal = self.unit_price * self.quantity
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        ticket_type_name = self.ticket_type.name if self.ticket_type else "Unknown"
-        return f"{self.quantity}x {ticket_type_name} (Booking {self.booking.reference})"
-
-    class Meta:
-        db_table = "booking_items"
-        ordering = ["id"]
-        indexes = [
-            models.Index(fields=["booking_id"]),
-            models.Index(fields=["ticket_type_id"]),
-            models.Index(fields=["time_slot_id"]),
-        ]
-
-
-class Ticket(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    booking_item = models.ForeignKey(
-        BookingItem,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
         related_name="tickets",
         db_index=True,
-        help_text="Booking item this ticket was issued for",
+        help_text="Booking this ticket belongs to",
+    )
+    ticket_type = models.CharField(
+        max_length=20,
+        choices=TICKET_TYPE_CHOICES,
+        null=False,
+        help_text="Type of ticket (adult, child, senior)",
     )
     price = models.DecimalField(
         max_digits=10,
@@ -229,14 +174,13 @@ class Ticket(models.Model):
 
     def __str__(self):
         status = "✓ Used" if self.is_used else "✗ Unused"
-        type_name = self.booking_item.ticket_type.name if (self.booking_item and self.booking_item.ticket_type) else "Unknown"
-        return f"Ticket {self.qr_code} - {type_name} [{status}]"
+        return f"Ticket {self.qr_code} - {self.ticket_type} [{status}]"
 
     class Meta:
         db_table = "tickets"
         ordering = ["created_at"]
         indexes = [
-            models.Index(fields=["booking_item_id"]),
+            models.Index(fields=["booking_id"]),
             models.Index(fields=["qr_code"]),
             models.Index(fields=["is_used"]),
         ]
@@ -355,6 +299,64 @@ class Payment(models.Model):
         super().save(*args, **kwargs)
 
 
+class Inventory(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    public_id = models.CharField(max_length=15, unique=True, blank=True, editable=False)
+    experience = models.ForeignKey(
+        Experience,
+        on_delete=models.CASCADE,
+        db_column="experience_id",
+        related_name="inventories",
+    )
+    inventory_date = models.DateField()
+    total_capacity = models.IntegerField(validators=[MinValueValidator(0)])
+    available_capacity = models.IntegerField(validators=[MinValueValidator(0)])
+    reserved_capacity = models.IntegerField(validators=[MinValueValidator(0)])
+    is_closed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "inventory"
+        indexes = [
+            models.Index(fields=["experience"], name="idx_inventory_experience"),
+            models.Index(fields=["inventory_date"], name="idx_inventory_date"),
+            models.Index(fields=["is_closed"], name="idx_inventory_is_closed"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["experience", "inventory_date"],
+                name="uq_experience_inventory_date"
+            )
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.total_capacity < 0:
+            raise ValidationError("Total capacity cannot be negative.")
+        if self.available_capacity < 0:
+            raise ValidationError("Available capacity cannot be negative.")
+        if self.reserved_capacity < 0:
+            raise ValidationError("Reserved capacity cannot be negative.")
+        if self.available_capacity > self.total_capacity:
+            raise ValidationError("Available capacity cannot exceed total capacity.")
+        if self.reserved_capacity > self.total_capacity:
+            raise ValidationError("Reserved capacity cannot exceed total capacity.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        if not self.public_id:
+            while True:
+                random_id = generate_random_id()
+                if not Inventory.objects.filter(public_id=f"inv-{random_id}").exists():
+                    self.public_id = f"inv-{random_id}"
+                    break
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.experience.name} - {self.inventory_date} ({self.available_capacity}/{self.total_capacity})"
+
+
 class Schedule(models.Model):
     RECURRENCE_CHOICES = [
         ("daily", "Daily"),
@@ -363,18 +365,24 @@ class Schedule(models.Model):
         ("range", "Range"),
     ]
 
-    experience = models.ForeignKey(
-        Experience, on_delete=models.CASCADE, related_name="schedules"
+    ticket_type = models.ForeignKey(
+        "content.TicketType", on_delete=models.CASCADE, related_name="schedules"
     )
     recurrence_type = models.CharField(max_length=20, choices=RECURRENCE_CHOICES)
     specific_date = models.DateField(blank=True, null=True)
-    monday = models.BooleanField(default=False, help_text="Applies on Monday")
-    tuesday = models.BooleanField(default=False, help_text="Applies on Tuesday")
-    wednesday = models.BooleanField(default=False, help_text="Applies on Wednesday")
-    thursday = models.BooleanField(default=False, help_text="Applies on Thursday")
-    friday = models.BooleanField(default=False, help_text="Applies on Friday")
-    saturday = models.BooleanField(default=False, help_text="Applies on Saturday")
-    sunday = models.BooleanField(default=False, help_text="Applies on Sunday")
+    day_of_week = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        choices=[
+            (0, "Monday"),
+            (1, "Tuesday"),
+            (2, "Wednesday"),
+            (3, "Thursday"),
+            (4, "Friday"),
+            (5, "Saturday"),
+            (6, "Sunday"),
+        ],
+    )
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
     start_time = models.TimeField()
@@ -401,145 +409,17 @@ class Schedule(models.Model):
 
         if self.recurrence_type == "specific-date" and not self.specific_date:
             raise ValidationError("specific_date is required for specific-date recurrence.")
-        if self.recurrence_type == "weekly":
-            has_any_day = any([
-                self.monday, self.tuesday, self.wednesday,
-                self.thursday, self.friday, self.saturday, self.sunday
-            ])
-            if not has_any_day:
-                raise ValidationError("At least one weekday must be selected for weekly recurrence.")
+        if self.recurrence_type == "weekly" and self.day_of_week is None:
+            raise ValidationError("day_of_week is required for weekly recurrence.")
         if self.recurrence_type == "range" and (not self.start_date or not self.end_date):
             raise ValidationError("start_date and end_date are required for range recurrence.")
-
-    def is_available_on_date(self, target_date):
-        """Check if schedule is active and available on a given date."""
-        if not self.is_active:
-            return False
-
-        if self.start_date and target_date < self.start_date:
-            return False
-        if self.end_date and target_date > self.end_date:
-            return False
-
-        if self.recurrence_type == "specific-date":
-            return self.specific_date == target_date
-
-        if self.recurrence_type == "weekly":
-            weekday = target_date.weekday()
-            days_map = {
-                0: self.monday,
-                1: self.tuesday,
-                2: self.wednesday,
-                3: self.thursday,
-                4: self.friday,
-                5: self.saturday,
-                6: self.sunday,
-            }
-            return days_map.get(weekday, False)
-
-        if self.recurrence_type in ("daily", "range"):
-            return True
-
-        return True
 
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self):
-        exp_name = self.experience.name if self.experience else "Unknown Experience"
-        return f"{exp_name} schedule ({self.recurrence_type}) {self.start_time}-{self.end_time}"
-
-
-class TicketTypeSchedule(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    public_id = models.CharField(max_length=15, unique=True, blank=True, editable=False)
-    ticket_type = models.ForeignKey(
-        "content.TicketType",
-        on_delete=models.CASCADE,
-        related_name="ticket_type_schedules",
-        db_index=True,
-    )
-    schedule = models.ForeignKey(
-        Schedule,
-        on_delete=models.CASCADE,
-        related_name="ticket_type_schedules",
-        db_index=True,
-    )
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = "ticket_type_schedules"
-        unique_together = [("ticket_type", "schedule")]
-        indexes = [
-            models.Index(fields=["ticket_type"]),
-            models.Index(fields=["schedule"]),
-        ]
-
-    def save(self, *args, **kwargs):
-        if not self.public_id:
-            while True:
-                random_id = generate_random_id()
-                if not TicketTypeSchedule.objects.filter(public_id=f"tts-{random_id}").exists():
-                    self.public_id = f"tts-{random_id}"
-                    break
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        tt_name = self.ticket_type.name if self.ticket_type else "Unknown"
-        return f"{tt_name} - Schedule {self.schedule_id} ({self.public_id})"
-
-
-class Inventory(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    public_id = models.CharField(max_length=15, unique=True, blank=True, editable=False)
-    ticket_type = models.ForeignKey(
-        "content.TicketType",
-        on_delete=models.CASCADE,
-        related_name="inventories",
-        db_index=True,
-    )
-    time_slot = models.ForeignKey(
-        TicketTypeSchedule,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name="inventories",
-        db_index=True,
-    )
-    date = models.DateField(db_index=True)
-    capacity = models.IntegerField(validators=[MinValueValidator(0)])
-    reserved_count = models.IntegerField(default=0, validators=[MinValueValidator(0)])
-    confirmed_count = models.IntegerField(default=0, validators=[MinValueValidator(0)])
-    used_count = models.IntegerField(default=0, validators=[MinValueValidator(0)])
-    cancelled_count = models.IntegerField(default=0, validators=[MinValueValidator(0)])
-    blocked_count = models.IntegerField(default=0, validators=[MinValueValidator(0)])
-    is_open = models.BooleanField(default=True, db_index=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = "inventory"
-        indexes = [
-            models.Index(fields=["ticket_type"], name="idx_inventory_ticket_type"),
-            models.Index(fields=["date"], name="idx_inventory_date"),
-            models.Index(fields=["is_open"], name="idx_inventory_is_open"),
-        ]
-
-    def save(self, *args, **kwargs):
-        if not self.public_id:
-            while True:
-                random_id = generate_random_id()
-                if not Inventory.objects.filter(public_id=f"inv-{random_id}").exists():
-                    self.public_id = f"inv-{random_id}"
-                    break
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        tt_name = self.ticket_type.name if self.ticket_type else "Unknown"
-        return f"{tt_name} - {self.date} (Cap: {self.capacity})"
+        return f"{self.ticket_type.name} schedule ({self.recurrence_type}) {self.start_time}-{self.end_time}"
 
 
 class Seat(models.Model):

@@ -92,6 +92,8 @@ export function ExperienceDetails() {
       });
   };
 
+  // Mobile sticky scroll listener removed because booking metadata now lives on BookingPage.
+
   const images = useMemo(() => {
     return String(experience?.image_url || FALLBACK_IMAGE)
       .split(",")
@@ -176,7 +178,7 @@ export function ExperienceDetails() {
   }
 
   return (
-    <div className="bg-surface-container-lowest min-h-screen w-full relative pt-[90px]">
+    <div className="bg-surface-container-lowest min-h-screen w-full relative">
       {experience && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{
           __html: JSON.stringify({
@@ -194,6 +196,7 @@ export function ExperienceDetails() {
           })
         }} />
       )}
+      <div className="mx-auto py-16 w-full relative"></div>
       <div className="lg:hidden">
         {/* Hero Section */}
         <section className="relative w-full h-[50vh] sm:h-[60vh] min-h-[350px] overflow-hidden">
@@ -219,9 +222,9 @@ export function ExperienceDetails() {
           <div className="absolute bottom-6 left-4 right-4 sm:left-8 sm:right-8">
             <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-2xl text-white">
               <div className="flex flex-wrap items-center gap-2 mb-2.5">
-                {/* <span className="bg-primary text-on-primary text-[9px] font-extrabold px-2.5 py-1 rounded tracking-wider uppercase shadow-xs">
+                <span className="bg-primary text-on-primary text-[9px] font-extrabold px-2.5 py-1 rounded tracking-wider uppercase shadow-xs">
                   Instant Confirmation
-                </span> */}
+                </span>
                 <div className="flex items-center gap-1 bg-tertiary-container text-on-tertiary-container px-2 py-0.5 rounded font-black text-[10px]">
                   <Star className="w-3.5 h-3.5 fill-current" />
                   <span>{Number(experience.average_rating || 5.0).toFixed(1)} ({experience.total_reviews || 0})</span>
@@ -325,8 +328,8 @@ export function ExperienceDetails() {
                   <img
                     alt={`${experience.name} Sunrise`}
                     className="w-full h-full object-cover"
-                    src={experience.image_sunrise || FALLBACK_IMAGE_EXP}
-                    onError={(e) => { e.target.src = FALLBACK_IMAGE_EXP; }}
+                    src={experience.image_sunrise || FALLBACK_EXP_IMAGE}
+                    onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
                   />
                 </div>
               </section>
@@ -434,11 +437,11 @@ export function ExperienceDetails() {
                   <MapPin className="w-4 h-4 text-primary" />
                   {experience.address || `${experience.city}, India`}
                 </span>
-                {/* <span className="w-1.5 h-1.5 bg-outline-variant rounded-full"></span> */}
-                {/* <span className="flex items-center gap-1 text-primary font-extrabold">
+                <span className="w-1.5 h-1.5 bg-outline-variant rounded-full"></span>
+                <span className="flex items-center gap-1 text-primary font-extrabold">
                   <Zap className="w-4 h-4" />
                   Instant Confirmation
-                </span> */}
+                </span>
               </div>
             </div>
 
@@ -458,7 +461,7 @@ export function ExperienceDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
 
           {/* Left Columns (Content) */}
-          <div className="lg:col-span-3 space-y-8">
+          <div className="lg:col-span-2 space-y-8">
 
             {/* Immersive Gallery */}
             <section className="grid grid-cols-12 grid-rows-2 gap-4 h-[500px]">
@@ -466,9 +469,9 @@ export function ExperienceDetails() {
                 <img
                   alt={experience?.name || "Experience Main Image"}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-102"
-                  src={images[0] || experience.image_url || FALLBACK_IMAGE_EXP}
-                  onError={(e) => { e.target.src = FALLBACK_IMAGE_EXP; }}
-                  fetchPriority="high"
+                  src={images[0] || experience.image_url || FALLBACK_EXP_IMAGE}
+                  onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
+                  fetchpriority="high"
                   loading="eager"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -477,24 +480,22 @@ export function ExperienceDetails() {
                 <img
                   alt={experience?.name || "Experience Detail Image"}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  src={images[1] || images[0] || experience.image_url || FALLBACK_IMAGE_EXP}
-                  onError={(e) => { e.target.src = FALLBACK_IMAGE_EXP; }}
+                  src={images[1] || images[0] || experience.image_url || FALLBACK_EXP_IMAGE}
+                  onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
                 />
               </div>
               <div className="col-span-4 row-span-1 relative overflow-hidden rounded-2xl group cursor-pointer border border-outline-variant/30">
                 <img
                   alt={experience?.name || "Experience Detail Image"}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  src={images[2] || images[0] || experience.image_url || FALLBACK_IMAGE_EXP}
-                  onError={(e) => { e.target.src = FALLBACK_IMAGE_EXP; }}
+                  src={images[2] || images[0] || experience.image_url || FALLBACK_EXP_IMAGE}
+                  onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
                 />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <span className="text-white text-xs font-black border border-white px-4 py-2 rounded-lg">View All Photos</span>
                 </div>
               </div>
             </section>
-          </div>
-          <div className="lg:col-span-2 space-y-8">
             <section className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-xs">
               {experience.highlights && experience.highlights.length > 0 && (
                 <div className="flex flex-col justify-start mb-6 border-b border-outline-variant/30 pb-6">
@@ -540,6 +541,75 @@ export function ExperienceDetails() {
                 )}
               </div>
             </section>
+
+            {/* What's Included */}
+            {/* <section className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/30 shadow-xs">
+              <h2 className="text-lg font-black text-on-surface mb-6">What's Included</h2>
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <li className="flex items-start gap-4 font-semibold">
+                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-on-surface font-extrabold">Skip-the-line Admission</p>
+                    <p className="text-xs text-on-surface-variant mt-0.5">Priority entry through the dedicated fast-track gate.</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-4 font-semibold">
+                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-on-surface font-extrabold">Mausoleum Access</p>
+                    <p className="text-xs text-on-surface-variant mt-0.5">Entrance to the central inner tomb of Mumtaz Mahal & Shah Jahan.</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-4 font-semibold">
+                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-on-surface font-extrabold">Mosque & Guest House</p>
+                    <p className="text-xs text-on-surface-variant mt-0.5">Access to the red sandstone peripheral structures.</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-4 font-semibold">
+                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm text-on-surface font-extrabold">Taj Museum Entry</p>
+                    <p className="text-xs text-on-surface-variant mt-0.5">View original architectural drawings and Mughal artifacts.</p>
+                  </div>
+                </li>
+              </ul>
+            </section> */}
+
+            {/* {experience.image_sunrise && (
+              <>
+                //  Why Visit at Sunrise
+                <section className="py-4">
+                  <div className="flex flex-col md:flex-row gap-8 items-center">
+                    <div className="md:w-1/2 space-y-4">
+                      <h2 className="text-lg font-black text-on-surface">Why Visit at Sunrise?</h2>
+                      <p className="text-sm text-on-surface-variant font-semibold leading-relaxed">
+                        Witnessing the Taj Mahal at dawn is a spiritual experience. As the first rays of the sun hit the semi-translucent white marble, the monument transforms from a soft grey-blue to a vibrant, glowing gold. This "Editorial Hour" offers the best photography light and significantly thinner crowds, allowing for a moment of quiet contemplation in the shadow of eternal love.
+                      </p>
+                      <div className="flex gap-4 pt-2">
+                        <div className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/30 flex-1">
+                          <span className="block text-xl font-black text-primary mb-1">05:30</span>
+                          <span className="text-[10px] text-on-surface-variant font-bold">Recommended Arrival</span>
+                        </div>
+                        <div className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/30 flex-1">
+                          <span className="block text-xl font-black text-primary mb-1">85%</span>
+                          <span className="text-[10px] text-on-surface-variant font-bold">Fewer Crowds</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="md:w-1/2">
+                      <img
+                        alt="Sunrise at Taj"
+                        className="rounded-2xl border border-outline-variant/30 shadow-sm w-full h-[280px] object-cover"
+                        src={experience.image_sunrise || FALLBACK_EXP_IMAGE}
+                        onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
+                      />
+                    </div>
+                  </div>
+                </section>
+              </>)} 
+            */}
 
             {/* Experience Attributes */}
             {experience.attributes && experience.attributes.length > 0 && (
@@ -613,19 +683,73 @@ export function ExperienceDetails() {
 
           {/* Right Column: Sticky Booking Widget */}
           < div className="lg:col-span-1 bg-primary/5 rounded-[24px] p-4" >
-            <div className="top-28 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="sticky top-28 bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5 shadow-sm space-y-4">
 
               {/* Urgency Banner */}
-              {/* <div className="bg-error-container text-on-error-container px-3 py-2 rounded-lg flex items-center gap-2">
+              <div className="bg-error-container text-on-error-container px-3 py-2 rounded-lg flex items-center gap-2">
                 <Flame className="w-4 h-4 animate-pulse shrink-0" />
                 <span className="text-[9px] font-black uppercase tracking-wider">Selling Fast! 14 tickets left</span>
-              </div> */}
+              </div>
 
               {/* Price display */}
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-on-surface-variant font-semibold">Starting from</span>
+              <div className="flex items-baseline gap-1">
                 <h2 className="text-2xl font-black text-primary">₹{totalPrice > 0 ? totalPrice : ticketPrices.indian}</h2>
+                <span className="text-xs text-on-surface-variant font-semibold">/{totalTickets > 0 ? `${totalTickets} traveler${totalTickets > 1 ? 's' : ''}` : 'person'}</span>
               </div>
+
+              <div className="space-y-4">
+                <div className="rounded-3xl bg-surface-container p-5 border border-outline-variant/30">
+                  <p className="text-xs uppercase font-bold tracking-[0.24em] text-on-surface-variant">Ready to book?</p>
+                  <p className="mt-3 text-sm text-on-surface-variant leading-relaxed">
+                    Select nationality and visit details on the booking page. Date, guests, and payment are completed there.
+                  </p>
+                </div>
+                {/* Foreigner */}
+                {/* <div className="flex items-center justify-between px-4 py-3">
+                  <div>
+                    <p className="text-xs font-black text-on-surface">Foreigner</p>
+                    <p className="text-[10px] text-primary font-bold">₹{ticketPrices.foreigner} / person</p>
+                  </div>
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      onClick={() => handleForeignerCountChange(-1)}
+                      className="w-7 h-7 rounded-full border border-outline-variant flex items-center justify-center font-bold text-on-surface-variant hover:bg-surface-container-low cursor-pointer active:scale-90 text-sm"
+                    >−</button>
+                    <span className="font-black text-sm w-4 text-center text-on-surface">{foreignerCount}</span>
+                    <button
+                      onClick={() => handleForeignerCountChange(1)}
+                      className="w-7 h-7 rounded-full border border-primary text-primary flex items-center justify-center font-bold hover:bg-primary/5 cursor-pointer active:scale-90 text-sm"
+                    >+</button>
+                  </div>
+                </div> */}
+              </div >
+
+              {/* Date & Time */}
+              < div className="space-y-3" >
+                <div>
+                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Date</label>
+                  <input
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full h-10 px-3 border border-outline-variant/30 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none transition-all text-xs font-semibold bg-surface-container-lowest text-on-surface"
+                    type="date"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Time Slot</label>
+                  <select
+                    value={timeSlot}
+                    onChange={(e) => setTimeSlot(e.target.value)}
+                    className="w-full h-10 px-3 border border-outline-variant/30 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none transition-all text-xs font-semibold bg-surface-container-lowest text-on-surface appearance-none"
+                  >
+                    <option>06:00 AM - 09:00 AM (Sunrise)</option>
+                    <option>09:00 AM - 12:00 PM</option>
+                    <option>12:00 PM - 03:00 PM</option>
+                    <option>03:00 PM - 06:00 PM (Sunset)</option>
+                  </select>
+                </div>
+              </div >
 
               {/* Book Now CTA */}
               <button

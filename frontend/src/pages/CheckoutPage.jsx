@@ -69,6 +69,7 @@ export default function CheckoutPage() {
   const payableAmount = booking ? Number(booking.total_amount) - discount : 0;
 
   const offers = [
+    "10% off for first-time bookings applied",
     "Free digital guidebook unlocked",
     "Priority entry at gateway gate active",
   ];
@@ -274,7 +275,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto py-16 w-full relative bg-background">
+    <div className="min-h-screen bg-gray-50/50 flex flex-col font-['Inter']">
       <div className="max-w-4xl mx-auto py-8 px-6 md:px-16 w-full flex-1 flex flex-col justify-center">
 
         <div className="animate-fade-in w-full">

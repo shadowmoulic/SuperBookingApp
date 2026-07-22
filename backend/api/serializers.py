@@ -1,6 +1,3 @@
-from decimal import Decimal
-from django.db.models import Q
-from django.utils import timezone
 from rest_framework import serializers
 from content import models as ContentModel
 from booking import models as BookingModel
@@ -76,9 +73,7 @@ class PricingRuleSerializer(serializers.ModelSerializer):
         model = ContentModel.PricingRule
         fields = [
             "id",
-            "price",
-            "nationality_category",
-            "age_category",
+            "base_price",
             "seasonal_multiplier",
             "valid_from",
             "valid_to",
@@ -91,6 +86,7 @@ class PricingRuleSerializer(serializers.ModelSerializer):
 
     def get_is_active(self, obj):
         return obj.is_active()
+
 
 
 class BookingPolicySerializer(serializers.ModelSerializer):
@@ -120,59 +116,14 @@ class TicketFeatureSerializer(serializers.ModelSerializer):
         ]
 
 
-class OperatingHoursSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ContentModel.OperatingHours
-        fields = [
-            "opening_time",
-            "closing_time",
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-            "sunday",
-        ]
-
-
-class OperatingExceptionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ContentModel.OperatingException
-        fields = [
-            "id",
-            "date",
-            "is_closed",
-            "opening_time",
-            "closing_time",
-            "reason",
-            "created_at",
-            "updated_at",
-        ]
-
-
 class ScheduleSerializer(serializers.ModelSerializer):
-    experience_name = serializers.CharField(source="experience.name", read_only=True)
-    experience_public_id = serializers.CharField(
-        source="experience.public_id", read_only=True
-    )
-
     class Meta:
         model = BookingModel.Schedule
         fields = [
             "id",
-            "experience",
-            "experience_name",
-            "experience_public_id",
             "recurrence_type",
             "specific_date",
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-            "sunday",
+            "day_of_week",
             "start_date",
             "end_date",
             "start_time",
@@ -180,49 +131,6 @@ class ScheduleSerializer(serializers.ModelSerializer):
             "capacity",
             "available_capacity",
             "is_active",
-        ]
-
-
-class TicketTypeScheduleSerializer(serializers.ModelSerializer):
-    schedule_start_time = serializers.TimeField(
-        source="schedule.start_time", read_only=True
-    )
-    schedule_end_time = serializers.TimeField(
-        source="schedule.end_time", read_only=True
-    )
-    recurrence_type = serializers.CharField(
-        source="schedule.recurrence_type", read_only=True
-    )
-    specific_date = serializers.DateField(
-        source="schedule.specific_date", read_only=True
-    )
-    monday = serializers.BooleanField(source="schedule.monday", read_only=True)
-    tuesday = serializers.BooleanField(source="schedule.tuesday", read_only=True)
-    wednesday = serializers.BooleanField(source="schedule.wednesday", read_only=True)
-    thursday = serializers.BooleanField(source="schedule.thursday", read_only=True)
-    friday = serializers.BooleanField(source="schedule.friday", read_only=True)
-    saturday = serializers.BooleanField(source="schedule.saturday", read_only=True)
-    sunday = serializers.BooleanField(source="schedule.sunday", read_only=True)
-
-    class Meta:
-        model = BookingModel.TicketTypeSchedule
-        fields = [
-            "public_id",
-            "schedule",
-            "schedule_start_time",
-            "schedule_end_time",
-            "recurrence_type",
-            "specific_date",
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-            "sunday",
-            "is_active",
-            "created_at",
-            "updated_at",
         ]
 
 
@@ -248,11 +156,9 @@ class ExperienceAttributeSerializer(serializers.ModelSerializer):
 
 class TicketTypeSerializer(serializers.ModelSerializer):
     pricing_rules = PricingRuleSerializer(many=True, read_only=True)
-    schedules = TicketTypeScheduleSerializer(
-        source="ticket_type_schedules", many=True, read_only=True
-    )
-    booking_policy = serializers.SerializerMethodField()
-    ticket_features = serializers.SerializerMethodField()
+    booking_policy = BookingPolicySerializer(read_only=True)
+    ticket_features = TicketFeatureSerializer(many=True, read_only=True)
+    schedules = ScheduleSerializer(many=True, read_only=True)
 
     class Meta:
         model = ContentModel.TicketType
@@ -267,10 +173,42 @@ class TicketTypeSerializer(serializers.ModelSerializer):
             "schedules",
         ]
 
+    def get_schedules(self, obj):
+        schedules = []
+        operating_hours = obj.experience.operating_hours.filter(is_closed=False)
+
+        if operating_hours.exists():
+            for oh in operating_hours.order_by("day_of_week"):
+                schedules.append({
+                    "id": None,
+                    "recurrence_type": "weekly",
+                    "specific_date": None,
+                    "day_of_week": oh.day_of_week,
+                    "start_date": None,
+                    "end_date": None,
+                    "start_time": oh.opens_at.isoformat() if oh.opens_at else None,
+                    "end_time": oh.closes_at.isoformat() if oh.closes_at else None,
+                    "capacity": obj.experience.max_daily_capacity or 0,
+                    "available_capacity": obj.experience.max_daily_capacity or 0,
+                    "is_active": True,
+                })
+        elif obj.experience.opening_time and obj.experience.closing_time:
+            schedules.append({
+                "id": None,
+                "recurrence_type": "daily",
+                "specific_date": None,
+                "day_of_week": None,
+                "start_date": None,
+                "end_date": None,
+                "start_time": obj.experience.opening_time.isoformat(),
+                "end_time": obj.experience.closing_time.isoformat(),
+                "capacity": obj.experience.max_daily_capacity or 0,
+                "available_capacity": obj.experience.max_daily_capacity or 0,
+                "is_active": True,
+            })
+        return schedules
+
     def get_booking_policy(self, obj):
-        policy = ContentModel.BookingPolicy.objects.filter(ticket_type=obj).first()
-        if policy:
-            return BookingPolicySerializer(policy).data
         return {
             "instant_confirmation": True,
             "requires_manual_confirmation": False,
@@ -284,9 +222,6 @@ class TicketTypeSerializer(serializers.ModelSerializer):
         }
 
     def get_ticket_features(self, obj):
-        features = ContentModel.TicketFeature.objects.filter(ticket_type=obj)
-        if features.exists():
-            return TicketFeatureSerializer(features, many=True).data
         return []
 
 
@@ -297,12 +232,12 @@ class ExperienceSerializer(serializers.ModelSerializer):
     average_rating = serializers.SerializerMethodField()
     total_reviews = serializers.SerializerMethodField()
     reviews = serializers.SerializerMethodField()
+    highlights = serializers.SerializerMethodField()
+    attributes = serializers.SerializerMethodField()
     provider = ProviderSerializer(read_only=True)
     ticket_types = TicketTypeSerializer(many=True, read_only=True)
     highlights = ExperienceHighlightSerializer(many=True, read_only=True)
     attributes = ExperienceAttributeSerializer(many=True, read_only=True)
-    operating_hours = OperatingHoursSerializer(read_only=True)
-    operating_exceptions = OperatingExceptionSerializer(many=True, read_only=True)
 
     class Meta:
         model = ContentModel.Experience
@@ -319,8 +254,6 @@ class ExperienceSerializer(serializers.ModelSerializer):
             "ticket_types",
             "highlights",
             "attributes",
-            "operating_hours",
-            "operating_exceptions",
             "latitude",
             "longitude",
             "image_url",
@@ -347,7 +280,6 @@ class ExperienceSerializer(serializers.ModelSerializer):
 
     def get_slug(self, obj):
         from django.utils.text import slugify
-
         return slugify(obj.name)
 
     def get_average_rating(self, obj):
@@ -381,17 +313,11 @@ class ExperienceSerializer(serializers.ModelSerializer):
         return ReviewSerializer(reviews[:10], many=True).data
 
     def get_ticket_types(self, obj):
-        active_ticket_types = obj.ticket_types.filter(
-            deleted_at__isnull=True, is_active=True
-        )
+        active_ticket_types = obj.ticket_types.filter(deleted_at__isnull=True, is_active=True)
         if active_ticket_types.exists():
-            return TicketTypeSerializer(
-                active_ticket_types, many=True, context=self.context
-            ).data
+            return TicketTypeSerializer(active_ticket_types, many=True, context=self.context).data
 
-        fallback_price = (
-            float(obj.entry_fee_base) if obj.entry_fee_base is not None else 0.0
-        )
+        fallback_price = float(obj.entry_fee_base) if obj.entry_fee_base is not None else 0.0
         schedule = None
         if obj.opening_time and obj.closing_time:
             schedule = {
@@ -417,9 +343,7 @@ class ExperienceSerializer(serializers.ModelSerializer):
                 "pricing_rules": [
                     {
                         "id": None,
-                        "price": str(obj.entry_fee_base or "0.00"),
-                        "nationality_category": "Indian",
-                        "age_category": "Adult",
+                        "base_price": str(obj.entry_fee_base or "0.00"),
                         "seasonal_multiplier": "1.00",
                         "valid_from": None,
                         "valid_to": None,
@@ -448,7 +372,6 @@ class ExperienceSerializer(serializers.ModelSerializer):
 
     def get_attributes(self, obj):
         return []
-
 
 class ExperienceShortSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
@@ -484,7 +407,6 @@ class ExperienceShortSerializer(serializers.ModelSerializer):
 
     def get_slug(self, obj):
         from django.utils.text import slugify
-
         return slugify(obj.name)
 
     def get_average_rating(self, obj):
@@ -498,7 +420,6 @@ class ExperienceShortSerializer(serializers.ModelSerializer):
         if hasattr(obj, "total_reviews"):
             return obj.total_reviews
         return 0
-
 
 class StateSerializer(serializers.ModelSerializer):
     slug = serializers.SerializerMethodField()
@@ -527,7 +448,6 @@ class StateSerializer(serializers.ModelSerializer):
 
     def get_slug(self, obj):
         from django.utils.text import slugify
-
         return slugify(obj.name)
 
     def get_city_count(self, obj):
@@ -538,9 +458,7 @@ class StateSerializer(serializers.ModelSerializer):
     def get_experience_count(self, obj):
         if hasattr(obj, "experience_count"):
             return obj.experience_count
-        return ContentModel.Experience.objects.filter(
-            city__state=obj, deleted_at__isnull=True
-        ).count()
+        return ContentModel.Experience.objects.filter(city__state=obj, deleted_at__isnull=True).count()
 
     def get_cities(self, obj):
         cities = obj.cities.select_related("state").all().order_by("id")
@@ -554,9 +472,7 @@ class StateSerializer(serializers.ModelSerializer):
             paginator.page_size = 10
             paginator.page_query_param = "cities_page"
             paginated_cities = paginator.paginate_queryset(cities, request)
-            serializer = CityShortSerializer(
-                paginated_cities, many=True, context=self.context
-            )
+            serializer = CityShortSerializer(paginated_cities, many=True, context=self.context)
             return paginator.get_paginated_response(serializer.data).data
 
         # If there is no request, return the first 10 cities
@@ -564,13 +480,9 @@ class StateSerializer(serializers.ModelSerializer):
         return CityShortSerializer(cities, many=True, context=self.context).data
 
     def get_experiences(self, obj):
-        experiences = (
-            ContentModel.Experience.objects.filter(
-                city__state=obj, deleted_at__isnull=True
-            )
-            .select_related("category", "city", "provider")
-            .order_by("id")
-        )
+        experiences = ContentModel.Experience.objects.filter(
+            city__state=obj, deleted_at__isnull=True
+        ).select_related("category", "city", "provider").order_by("id")
 
         # Get the request from the context
         request = self.context.get("request")
@@ -581,16 +493,12 @@ class StateSerializer(serializers.ModelSerializer):
             paginator.page_size = 10
             paginator.page_query_param = "experiences_page"
             paginated_experiences = paginator.paginate_queryset(experiences, request)
-            serializer = ExperienceShortSerializer(
-                paginated_experiences, many=True, context=self.context
-            )
+            serializer = ExperienceShortSerializer(paginated_experiences, many=True, context=self.context)
             return paginator.get_paginated_response(serializer.data).data
 
         # If there is no request, return the first 10 experiences
         experiences = experiences[:10]
-        return ExperienceShortSerializer(
-            experiences, many=True, context=self.context
-        ).data
+        return ExperienceShortSerializer(experiences, many=True, context=self.context).data
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -623,7 +531,6 @@ class StateShortSerializer(serializers.ModelSerializer):
 
     def get_slug(self, obj):
         from django.utils.text import slugify
-
         return slugify(obj.name)
 
     def get_city_count(self, obj):
@@ -634,9 +541,7 @@ class StateShortSerializer(serializers.ModelSerializer):
     def get_experience_count(self, obj):
         if hasattr(obj, "experience_count"):
             return obj.experience_count
-        return ContentModel.Experience.objects.filter(
-            city__state=obj, deleted_at__isnull=True
-        ).count()
+        return ContentModel.Experience.objects.filter(city__state=obj, deleted_at__isnull=True).count()
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -644,12 +549,10 @@ class StateShortSerializer(serializers.ModelSerializer):
             data["best-time"] = data.pop("best_time")
         return data
 
-
 class CityNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContentModel.City
         fields = ["name"]
-
 
 class CitySerializer(serializers.ModelSerializer):
     state = serializers.CharField(source="state.name", default=None, read_only=True)
@@ -678,20 +581,15 @@ class CitySerializer(serializers.ModelSerializer):
 
     def get_slug(self, obj):
         from django.utils.text import slugify
-
         return slugify(obj.name)
 
     def get_experience_count(self, obj):
         if hasattr(obj, "experience_count"):
             return obj.experience_count
         return obj.experiences.filter(deleted_at__isnull=True).count()
-
+    
     def get_experiences(self, obj):
-        experiences = (
-            obj.experiences.select_related("category", "city", "provider")
-            .filter(deleted_at__isnull=True)
-            .order_by("id")
-        )
+        experiences = obj.experiences.select_related("category", "city", "provider").filter(deleted_at__isnull=True).order_by("id")
 
         # Get the request from the context
         request = self.context.get("request")
@@ -702,16 +600,12 @@ class CitySerializer(serializers.ModelSerializer):
             paginator.page_size = 10
             paginator.page_query_param = "experiences_page"
             paginated_experiences = paginator.paginate_queryset(experiences, request)
-            serializer = ExperienceShortSerializer(
-                paginated_experiences, many=True, context=self.context
-            )
+            serializer = ExperienceShortSerializer(paginated_experiences, many=True, context=self.context)
             return paginator.get_paginated_response(serializer.data).data
 
         # If there is no request, return the first 10 experiences
         experiences = experiences[:10]
-        return ExperienceShortSerializer(
-            experiences, many=True, context=self.context
-        ).data
+        return ExperienceShortSerializer(experiences, many=True, context=self.context).data
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -745,7 +639,6 @@ class CityShortSerializer(serializers.ModelSerializer):
 
     def get_slug(self, obj):
         from django.utils.text import slugify
-
         return slugify(obj.name)
 
     def get_experience_count(self, obj):
@@ -780,15 +673,10 @@ class CategorySerializer(serializers.ModelSerializer):
 
     def get_slug(self, obj):
         from django.utils.text import slugify
-
         return slugify(obj.name)
 
     def get_experiences(self, obj):
-        experiences = (
-            obj.experiences.select_related("category", "city", "provider")
-            .filter(deleted_at__isnull=True)
-            .order_by("id")
-        )
+        experiences = obj.experiences.select_related("category", "city", "provider").filter(deleted_at__isnull=True).order_by("id")
 
         # Get the request from the context
         request = self.context.get("request")
@@ -798,16 +686,12 @@ class CategorySerializer(serializers.ModelSerializer):
             paginator = StandardResultsSetPagination()
             paginator.page_size = 10
             paginated_experiences = paginator.paginate_queryset(experiences, request)
-            serializer = ExperienceShortSerializer(
-                paginated_experiences, many=True, context=self.context
-            )
+            serializer = ExperienceShortSerializer(paginated_experiences, many=True, context=self.context)
             return paginator.get_paginated_response(serializer.data).data
 
         # If there is no request, return the first 10 experiences
         experiences = experiences[:10]
-        return ExperienceShortSerializer(
-            experiences, many=True, context=self.context
-        ).data
+        return ExperienceShortSerializer(experiences, many=True, context=self.context).data
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -818,42 +702,16 @@ class CategorySerializer(serializers.ModelSerializer):
         return data
 
 
-class BookingItemSerializer(serializers.ModelSerializer):
-    ticket_type_name = serializers.CharField(source="ticket_type.name", read_only=True)
-    ticket_type_public_id = serializers.CharField(
-        source="ticket_type.public_id", read_only=True
-    )
-    time_slot_public_id = serializers.CharField(
-        source="time_slot.public_id", read_only=True
-    )
-
-    class Meta:
-        model = BookingModel.BookingItem
-        fields = [
-            "id",
-            "ticket_type",
-            "ticket_type_name",
-            "ticket_type_public_id",
-            "time_slot",
-            "time_slot_public_id",
-            "quantity",
-            "unit_price",
-            "subtotal",
-            "nationality_category",
-            "age_category",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["subtotal", "created_at", "updated_at"]
-
-
 class BookingSerializer(serializers.ModelSerializer):
-    experience_id = serializers.CharField(source="experience.public_id", read_only=True)
-    experience_name = serializers.CharField(source="experience.name", read_only=True)
+    experience_id = serializers.CharField(
+        source="experience.public_id", read_only=True
+    )
+    experience_name = serializers.CharField(
+        source="experience.name", read_only=True
+    )
     experience_image = serializers.CharField(
         source="experience.image_url", read_only=True
     )
-    items = BookingItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = BookingModel.Booking
@@ -864,6 +722,7 @@ class BookingSerializer(serializers.ModelSerializer):
             "experience_name",
             "experience_image",
             "booking_date",
+            "slot_time",
             "total_tickets",
             "total_amount",
             "status",
@@ -872,7 +731,6 @@ class BookingSerializer(serializers.ModelSerializer):
             "refund_amount",
             "refund_status",
             "special_requests",
-            "items",
             "created_at",
             "updated_at",
             "deleted_at",
@@ -885,41 +743,10 @@ class BookingSerializer(serializers.ModelSerializer):
         ]
 
 
-class BookingItemCreateSerializer(serializers.Serializer):
-    ticket_type = serializers.SlugRelatedField(
-        slug_field="public_id", queryset=ContentModel.TicketType.objects.all()
-    )
-    time_slot = serializers.SlugRelatedField(
-        slug_field="public_id",
-        queryset=BookingModel.TicketTypeSchedule.objects.all(),
-        required=False,
-        allow_null=True,
-    )
-    quantity = serializers.IntegerField(min_value=1, default=1)
-    unit_price = serializers.DecimalField(
-        max_digits=10, decimal_places=2, required=False
-    )
-    nationality_category = serializers.ChoiceField(
-        choices=ContentModel.PricingRule.NATIONALITY_CHOICES,
-        required=False,
-        allow_blank=False,
-        allow_null=False,
-        default="Any",
-    )
-    age_category = serializers.ChoiceField(
-        choices=ContentModel.PricingRule.AGE_CHOICES,
-        required=False,
-        allow_blank=False,
-        allow_null=False,
-        default="Any",
-    )
-
-
 class BookingCreateSerializer(serializers.ModelSerializer):
     experience = serializers.SlugRelatedField(
         slug_field="public_id", queryset=ContentModel.Experience.objects.all()
     )
-    items = BookingItemCreateSerializer(many=True, required=True, write_only=True)
 
     class Meta:
         model = BookingModel.Booking
@@ -927,193 +754,17 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             "reference",
             "experience",
             "booking_date",
-            "items",
+            "slot_time",
             "total_tickets",
             "special_requests",
         ]
         read_only_fields = ["reference"]
-        extra_kwargs = {"total_tickets": {"required": False}}
-
-    def validate(self, attrs):
-        experience = attrs.get("experience")
-        booking_date = attrs.get("booking_date")
-        items = attrs.get("items")
-
-        # 1. Experience Check
-        if not experience or (hasattr(experience, "is_open") and not experience.is_open):
-            raise serializers.ValidationError(
-                {"experience": f"Experience '{experience.name if experience else 'Unknown'}' is currently closed/unavailable."}
-            )
-
-        date_to_check = booking_date or timezone.now().date()
-
-        # 2. OperatingHours Check (General Venue Operating Calendar)
-        if hasattr(experience, "operating_hours") and experience.operating_hours:
-            oh = experience.operating_hours
-            if not oh.is_open_on_date(date_to_check):
-                raise serializers.ValidationError(
-                    {"booking_date": f"Experience is not operating on {date_to_check.strftime('%A')}."}
-                )
-
-        # 3. OperatingException Check (Date-Specific Overrides)
-        op_exception = ContentModel.OperatingException.objects.filter(
-            experience=experience, date=date_to_check
-        ).first()
-
-        effective_opening = None
-        effective_closing = None
-        if op_exception:
-            if op_exception.is_closed:
-                reason_msg = f" ({op_exception.reason})" if op_exception.reason else ""
-                raise serializers.ValidationError(
-                    {"booking_date": f"Experience is closed on {date_to_check}{reason_msg}."}
-                )
-            effective_opening = op_exception.opening_time
-            effective_closing = op_exception.closing_time
-        elif hasattr(experience, "operating_hours") and experience.operating_hours:
-            effective_opening = experience.operating_hours.opening_time
-            effective_closing = experience.operating_hours.closing_time
-
-        # 4. Items Presence Check
-        if not items:
-            raise serializers.ValidationError(
-                {"items": "At least one booking item is required."}
-            )
-
-        for item in items:
-            tt = item.get("ticket_type")
-            ts = item.get("time_slot")
-            qty = item.get("quantity", 1)
-
-            # Ticket Type Validation
-            if not tt:
-                raise serializers.ValidationError(
-                    {"items": "Each booking item must have a ticket_type."}
-                )
-            if hasattr(tt, "is_active") and not tt.is_active:
-                raise serializers.ValidationError(
-                    {"items": f"Ticket type '{tt.name}' is currently inactive."}
-                )
-            if tt.experience != experience:
-                raise serializers.ValidationError(
-                    {
-                        "items": f"Ticket type '{tt.name}' does not belong to experience '{experience.name}'."
-                    }
-                )
-
-            # Null Check for Nationality and Age
-            if item.get("nationality_category") is None:
-                raise serializers.ValidationError(
-                    {"items": f"nationality_category cannot be null for ticket type '{tt.name}'."}
-                )
-            if item.get("age_category") is None:
-                raise serializers.ValidationError(
-                    {"items": f"age_category cannot be null for ticket type '{tt.name}'."}
-                )
-
-            # Pricing Rule Validation
-            pricing_rules = ContentModel.PricingRule.objects.filter(ticket_type=tt)
-            if pricing_rules.exists():
-                valid_rules = pricing_rules.filter(
-                    Q(valid_from__lte=date_to_check)
-                    & (Q(valid_to__gte=date_to_check) | Q(valid_to__isnull=True))
-                )
-                if not valid_rules.exists():
-                    raise serializers.ValidationError(
-                        {
-                            "items": f"No active pricing rule found for ticket type '{tt.name}' on {date_to_check}."
-                        }
-                    )
-
-                nat = item.get("nationality_category", "Any")
-                age = item.get("age_category", "Any")
-
-                cat_matched_rules = valid_rules.filter(
-                    (Q(nationality_category__iexact=nat) | Q(nationality_category__iexact="Any"))
-                    & (Q(age_category__iexact=age) | Q(age_category__iexact="Any"))
-                )
-
-                if not cat_matched_rules.exists():
-                    raise serializers.ValidationError(
-                        {
-                            "items": f"No valid pricing rule matching category ({nat}/{age}) for '{tt.name}'."
-                        }
-                    )
-
-            # TicketTypeSchedule Validation & Fallback
-            if not ts:
-                tts_qs = BookingModel.TicketTypeSchedule.objects.filter(
-                    ticket_type=tt,
-                    is_active=True,
-                    schedule__is_active=True,
-                )
-                valid_tts = [
-                    tts
-                    for tts in tts_qs
-                    if tts.schedule and tts.schedule.is_available_on_date(date_to_check)
-                ]
-
-                if len(valid_tts) == 1:
-                    ts = valid_tts[0]
-                    item["time_slot"] = ts
-                elif len(valid_tts) == 0:
-                    raise serializers.ValidationError(
-                        {
-                            "items": f"time_slot is required for ticket type '{tt.name}', but no active schedule is available on {date_to_check}."
-                        }
-                    )
-                else:
-                    raise serializers.ValidationError(
-                        {
-                            "items": f"time_slot is required for ticket type '{tt.name}' because multiple schedules ({len(valid_tts)}) exist. Please select a time_slot."
-                        }
-                    )
-
-            if ts:
-                if hasattr(ts, "is_active") and not ts.is_active:
-                    raise serializers.ValidationError(
-                        {"items": f"Selected time slot is inactive."}
-                    )
-                if ts.ticket_type != tt:
-                    raise serializers.ValidationError(
-                        {
-                            "items": f"Selected time slot does not match ticket type '{tt.name}'."
-                        }
-                    )
-                if ts.schedule:
-                    sched = ts.schedule
-                    if not sched.is_available_on_date(date_to_check):
-                        raise serializers.ValidationError(
-                            {"items": f"Selected time slot is not available on {date_to_check}."}
-                        )
-
-                    if effective_opening and sched.start_time and sched.start_time < effective_opening:
-                        raise serializers.ValidationError(
-                            {"items": f"Slot start time ({sched.start_time}) is before venue opening time ({effective_opening})."}
-                        )
-                    if effective_closing and sched.end_time and sched.end_time > effective_closing:
-                        raise serializers.ValidationError(
-                            {"items": f"Slot end time ({sched.end_time}) is after venue closing time ({effective_closing})."}
-                        )
-
-                    # Capacity / Inventory Check
-                    if (
-                        sched.available_capacity is not None
-                        and sched.available_capacity < qty
-                    ):
-                        raise serializers.ValidationError(
-                            {
-                                "items": f"Requested quantity ({qty}) exceeds available slot capacity ({sched.available_capacity})."
-                            }
-                        )
-
-        return attrs
 
     def create(self, validated_data):
         request = self.context.get("request")
         experience = validated_data["experience"]
+        tickets = validated_data["total_tickets"]
         user = request.user
-        items_data = validated_data.pop("items", [])
 
         try:
             user_data = User_Data.objects.get(user=user)
@@ -1123,75 +774,8 @@ class BookingCreateSerializer(serializers.ModelSerializer):
             )
 
         validated_data["user"] = user_data
-
-        constructed_items = []
-        for item_info in items_data:
-            tt = item_info["ticket_type"]
-            ts = item_info.get("time_slot")
-            qty = item_info.get("quantity", 1)
-            u_price = item_info.get("unit_price")
-            if u_price is None:
-                pricing_rules = ContentModel.PricingRule.objects.filter(ticket_type=tt)
-                nat = item_info.get("nationality_category", "Any")
-                age = item_info.get("age_category", "Any")
-                pr = None
-                if nat and age:
-                    pr = pricing_rules.filter(
-                        (Q(nationality_category__iexact=nat) | Q(nationality_category__iexact="Any"))
-                        & (Q(age_category__iexact=age) | Q(age_category__iexact="Any"))
-                    ).first()
-                if not pr and nat:
-                    pr = pricing_rules.filter(
-                        Q(nationality_category__iexact=nat) | Q(nationality_category__iexact="Any")
-                    ).first()
-                if not pr and age:
-                    pr = pricing_rules.filter(
-                        Q(age_category__iexact=age) | Q(age_category__iexact="Any")
-                    ).first()
-                if not pr:
-                    pr = pricing_rules.first()
-
-                if pr:
-                    u_price = pr.get_final_price()
-                else:
-                    u_price = experience.entry_fee_base or Decimal("0.00")
-
-            constructed_items.append(
-                {
-                    "ticket_type": tt,
-                    "time_slot": ts,
-                    "quantity": qty,
-                    "unit_price": u_price,
-                    "subtotal": u_price * qty,
-                    "nationality_category": item_info.get("nationality_category"),
-                    "age_category": item_info.get("age_category"),
-                }
-            )
-
-        total_tickets = sum(item["quantity"] for item in constructed_items)
-        total_amount = sum(item["subtotal"] for item in constructed_items)
-
-        validated_data["total_tickets"] = total_tickets
-        validated_data["total_amount"] = total_amount
-
-        booking = BookingModel.Booking.objects.create(**validated_data)
-
-        for item_data in constructed_items:
-            BookingModel.BookingItem.objects.create(
-                booking=booking,
-                ticket_type=item_data["ticket_type"],
-                time_slot=item_data.get("time_slot"),
-                quantity=item_data["quantity"],
-                unit_price=item_data["unit_price"],
-                subtotal=item_data["subtotal"],
-                nationality_category=item_data.get("nationality_category"),
-                age_category=item_data.get("age_category"),
-            )
-
-        return booking
-
-    def to_representation(self, instance):
-        return BookingDetailSerializer(instance, context=self.context).data
+        validated_data["total_amount"] = experience.entry_fee_base * tickets
+        return BookingModel.Booking.objects.create(**validated_data)
 
 
 class BookingDetailSerializer(serializers.ModelSerializer):
@@ -1199,7 +783,6 @@ class BookingDetailSerializer(serializers.ModelSerializer):
 
     user = serializers.StringRelatedField(read_only=True)
     experience = ExperienceShortSerializer(read_only=True)
-    items = BookingItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = BookingModel.Booking
@@ -1208,12 +791,12 @@ class BookingDetailSerializer(serializers.ModelSerializer):
             "user",
             "experience",
             "booking_date",
+            "slot_time",
             "total_tickets",
             "total_amount",
             "status",
             "refund_status",
             "special_requests",
-            "items",
             "created_at",
             "updated_at",
         ]
@@ -1274,33 +857,39 @@ class CreatePaymentSerializer(serializers.ModelSerializer):
 
 class TicketSerializer(serializers.ModelSerializer):
     qr_image = serializers.SerializerMethodField()
-    booking_reference = serializers.SerializerMethodField()
-    booking_date = serializers.SerializerMethodField()
-    ticket_type_name = serializers.SerializerMethodField()
-    age_category = serializers.SerializerMethodField()
-    nationality_category = serializers.SerializerMethodField()
-    time_slot = serializers.SerializerMethodField()
-    quantity = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
-    experience_id = serializers.SerializerMethodField()
-    experience_name = serializers.SerializerMethodField()
-    experience_image = serializers.SerializerMethodField()
+    booking_reference = serializers.CharField(
+        source="booking.reference", read_only=True
+    )
+    booking_date = serializers.DateField(source="booking.booking_date", read_only=True)
+    slot_time = serializers.TimeField(source="booking.slot_time", read_only=True)
+    total_tickets = serializers.IntegerField(
+        source="booking.total_tickets", read_only=True
+    )
+    total_amount = serializers.DecimalField(
+        source="booking.total_amount", max_digits=10, decimal_places=2, read_only=True
+    )
+    status = serializers.CharField(source="booking.status", read_only=True)
+    experience_id = serializers.CharField(
+        source="booking.experience.public_id", read_only=True
+    )
+    experience_name = serializers.CharField(
+        source="booking.experience.name", read_only=True
+    )
+    experience_image = serializers.CharField(
+        source="booking.experience.image_url", read_only=True
+    )
 
     class Meta:
         model = BookingModel.Ticket
         fields = [
+            "id",
             "qr_code",
             "qr_image",
             "booking_reference",
             "booking_date",
-            "ticket_type_name",
-            "age_category",
-            "nationality_category",
-            "time_slot",
-            "quantity",
-            "price",
-            "is_used",
-            "used_at",
+            "slot_time",
+            "total_tickets",
+            "total_amount",
             "status",
             "experience_id",
             "experience_name",
@@ -1309,107 +898,6 @@ class TicketSerializer(serializers.ModelSerializer):
 
     def get_qr_image(self, obj):
         return obj.get_qr_code_image_base64()
-
-    def get_booking_reference(self, obj):
-        return (
-            obj.booking_item.booking.reference
-            if (obj.booking_item and obj.booking_item.booking)
-            else None
-        )
-
-    def get_booking_date(self, obj):
-        return (
-            obj.booking_item.booking.booking_date
-            if (obj.booking_item and obj.booking_item.booking)
-            else None
-        )
-
-    def get_ticket_type_name(self, obj):
-        return (
-            obj.booking_item.ticket_type.name
-            if (obj.booking_item and obj.booking_item.ticket_type)
-            else None
-        )
-
-    def get_age_category(self, obj):
-        return (
-            obj.booking_item.age_category
-            if (obj.booking_item)
-            else None
-        )
-
-    def get_nationality_category(self, obj):
-        return (
-            obj.booking_item.nationality_category
-            if (obj.booking_item)
-            else None
-        )
-
-    def get_time_slot(self, obj):
-        return (
-            f"{obj.booking_item.time_slot.schedule.start_time} - {obj.booking_item.time_slot.schedule.end_time}"
-            if (obj.booking_item and obj.booking_item.time_slot)
-            else None
-        )
-        
-    def get_quantity(self, obj):
-        return (
-            obj.booking_item.quantity
-            if (obj.booking_item)
-            else None
-        )
-
-    def get_price(self, obj):
-        return (
-            obj.booking_item.unit_price
-            if (obj.booking_item)
-            else None
-        )
-
-    def get_status(self, obj):
-        return (
-            obj.booking_item.booking.status
-            if (obj.booking_item and obj.booking_item.booking)
-            else None
-        )
-
-    def get_experience_id(self, obj):
-        return (
-            obj.booking_item.booking.experience.public_id
-            if (
-                obj.booking_item
-                and obj.booking_item.booking
-                and obj.booking_item.booking.experience
-            )
-            else None
-        )
-
-    def get_experience_name(self, obj):
-        return (
-            obj.booking_item.booking.experience.name
-            if (
-                obj.booking_item
-                and obj.booking_item.booking
-                and obj.booking_item.booking.experience
-            )
-            else None
-        )
-
-    def get_experience_image(self, obj):
-        return (
-            obj.booking_item.booking.experience.image_url
-            if (
-                obj.booking_item
-                and obj.booking_item.booking
-                and obj.booking_item.booking.experience
-            )
-            else None
-        )
-
-    def get_items(self, obj):
-        if obj.booking_item and obj.booking_item.booking:
-            return BookingItemSerializer(obj.booking_item).data
-        return []
 
 
 class UserDataRegisterSerializer(serializers.ModelSerializer):
@@ -1459,33 +947,20 @@ class UserDataRegisterSerializer(serializers.ModelSerializer):
 
 
 class InventorySerializer(serializers.ModelSerializer):
-    ticket_type_name = serializers.CharField(source="ticket_type.name", read_only=True)
-    ticket_type_public_id = serializers.CharField(
-        source="ticket_type.public_id", read_only=True
-    )
-    time_slot_public_id = serializers.CharField(
-        source="time_slot.public_id", read_only=True
+    experience = serializers.SlugRelatedField(
+        slug_field="public_id", read_only=True
     )
 
     class Meta:
         model = BookingModel.Inventory
         fields = [
             "public_id",
-            "ticket_type",
-            "ticket_type_name",
-            "ticket_type_public_id",
-            "time_slot",
-            "time_slot_public_id",
-            "date",
-            "capacity",
-            "reserved_count",
-            "confirmed_count",
-            "used_count",
-            "cancelled_count",
-            "blocked_count",
-            "is_open",
-            "created_at",
-            "updated_at",
+            "experience",
+            "inventory_date",
+            "total_capacity",
+            "available_capacity",
+            "reserved_capacity",
+            "is_closed",
         ]
 
 

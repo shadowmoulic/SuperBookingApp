@@ -47,7 +47,6 @@ INSTALLED_APPS = [
     "booking",
     "content",
     "user",
-    "provider_api",
     "corsheaders",
     "reviews",
 ]
