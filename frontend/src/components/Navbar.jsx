@@ -102,7 +102,7 @@ function LocationDropdown({ locations, selectedLocation, onSelect, align = "left
 }
 
 function Navbar() {
-  const { user} = useContext(AuthContext);
+  const { user, hasPermission } = useContext(AuthContext);
   const { openLoginModal } = useContext(ModalContext);
   const { locations, selectedLocation, changeLocation } = useContext(LocationContext);
   const navigate = useNavigate();
@@ -312,6 +312,46 @@ function Navbar() {
             >
               <span className="material-symbols-outlined text-xl">shopping_bag</span>
             </Link>
+
+            {/* Provider Panel Actions */}
+            {user && hasPermission && (hasPermission("analytics.view") || hasPermission("booking.validate")) && (
+              <>
+                <Link
+                  to="/provider"
+                  className="lg:flex hidden border border-outline-variant text-on-surface hover:text-primary hover:border-primary px-4 py-2 rounded-full text-xs sm:text-sm font-bold font-['Hanken_Grotesk'] tracking-wide transition-all flex items-center gap-1.5 shadow-xs hover:shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-base leading-none">business_center</span>
+                  Provider Panel
+                </Link>
+                <Link
+                  to="/provider"
+                  className="lg:hidden flex w-10 h-10 rounded-full border border-outline-variant text-on-surface hover:text-primary hover:border-primary items-center justify-center transition-all shadow-xs bg-surface-container-lowest"
+                  aria-label="Provider Panel"
+                >
+                  <span className="material-symbols-outlined text-xl">business_center</span>
+                </Link>
+              </>
+            )}
+
+            {/* Enterprise Panel Actions */}
+            {user && hasPermission && hasPermission("booking.bulk") && (
+              <>
+                <Link
+                  to="/enterprise"
+                  className="lg:flex hidden border border-outline-variant text-on-surface hover:text-primary hover:border-primary px-4 py-2 rounded-full text-xs sm:text-sm font-bold font-['Hanken_Grotesk'] tracking-wide transition-all flex items-center gap-1.5 shadow-xs hover:shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-base leading-none">corporate_fare</span>
+                  Enterprise Panel
+                </Link>
+                <Link
+                  to="/enterprise"
+                  className="lg:hidden flex w-10 h-10 rounded-full border border-outline-variant text-on-surface hover:text-primary hover:border-primary items-center justify-center transition-all shadow-xs bg-surface-container-lowest"
+                  aria-label="Enterprise Panel"
+                >
+                  <span className="material-symbols-outlined text-xl">corporate_fare</span>
+                </Link>
+              </>
+            )}
 
            {user ? (
   <Link

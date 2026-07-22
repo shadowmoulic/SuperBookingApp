@@ -436,13 +436,32 @@ class CreatePaymentView(APIView):
             )
 
             import uuid
-            ticket_code = str(uuid.uuid4().hex[:6].upper())
-            ticket = BookingModel.Ticket.objects.create(
-                booking=booking,
-                ticket_type="adult",
-                price=0,
-                qr_code=f"{booking.reference}_{ticket_code}",
-            )
+            booking_items = list(booking.items.all())
+            if not booking_items:
+                ticket_type_obj = ContentModel.TicketType.objects.filter(experience=booking.experience).first()
+                if not ticket_type_obj:
+                    ticket_type_obj, _ = ContentModel.TicketType.objects.get_or_create(
+                        experience=booking.experience, name="General Adult"
+                    )
+                item = BookingModel.BookingItem.objects.create(
+                    booking=booking,
+                    ticket_type=ticket_type_obj,
+                    quantity=booking.total_tickets,
+                    unit_price=booking.total_amount / max(booking.total_tickets, 1),
+                    subtotal=booking.total_amount,
+                )
+                booking_items = [item]
+
+            created_tickets = []
+            for item in booking_items:
+                for _ in range(item.quantity):
+                    ticket_code = str(uuid.uuid4().hex[:6].upper())
+                    t = BookingModel.Ticket.objects.create(
+                        booking_item=item,
+                        price=item.unit_price,
+                        qr_code=f"{booking.reference}_{item.id}_{ticket_code}",
+                    )
+                    created_tickets.append(t)
 
             return Response({
                 "message": "Promo code applied successfully, booking confirmed!",
@@ -561,20 +580,40 @@ class VerifyPaymentView(APIView):
             payment.save(update_fields=["status", "paid_at", "updated_at"])
 
             booking = payment.booking
-            ticket_code = str(uuid.uuid4().hex[:6].upper())
-            ticket = BookingModel.Ticket.objects.create(
-                booking=booking,
-                ticket_type="adult",
-                price=booking.total_amount,
-                qr_code=f"{booking.reference}_{ticket_code}",
-            )
+            booking_items = list(booking.items.all())
+            if not booking_items:
+                ticket_type_obj = ContentModel.TicketType.objects.filter(experience=booking.experience).first()
+                if not ticket_type_obj:
+                    ticket_type_obj, _ = ContentModel.TicketType.objects.get_or_create(
+                        experience=booking.experience, name="General Adult"
+                    )
+                item = BookingModel.BookingItem.objects.create(
+                    booking=booking,
+                    ticket_type=ticket_type_obj,
+                    quantity=booking.total_tickets,
+                    unit_price=booking.total_amount / max(booking.total_tickets, 1),
+                    subtotal=booking.total_amount,
+                )
+                booking_items = [item]
+
+            created_tickets = []
+            for item in booking_items:
+                for _ in range(item.quantity):
+                    ticket_code = str(uuid.uuid4().hex[:6].upper())
+                    t = BookingModel.Ticket.objects.create(
+                        booking_item=item,
+                        price=item.unit_price,
+                        qr_code=f"{booking.reference}_{item.id}_{ticket_code}",
+                    )
+                    created_tickets.append(t)
+
             booking.status = "confirmed"
             booking.save(update_fields=["status", "updated_at"])
 
             return Response(
                 {
                     "message": "Payment verified",
-                    "ticket": ticket.qr_code,
+                    "tickets": [t.qr_code for t in created_tickets],
                 },
                 status=status.HTTP_200_OK,
             )
@@ -862,8 +901,13 @@ class BookingTicketView(generics.RetrieveAPIView):
 
             # collect unused ticket QR codes for confirmed bookings
             tickets_qs = BookingModel.Ticket.objects.filter(
-                booking__in=confirmed_bookings, is_used=False
-            ).select_related("booking", "booking__experience")
+                booking_item__booking__in=confirmed_bookings, is_used=False
+            ).select_related(
+                "booking_item",
+                "booking_item__booking",
+                "booking_item__booking__experience",
+                "booking_item__ticket_type",
+            )
             tickets = ContentSerializer.TicketSerializer(tickets_qs, many=True).data
         else:
             continue_bookings = {}
@@ -1001,9 +1045,6 @@ class RetrieveExperienceReviewsView(generics.ListAPIView):
             .select_related("user_id__user", "experience_id")
             .order_by("-created_at")
         )
-
-
-# ── OFFICIAL PORTAL VIEWS ──────────────────────────────────────────
 
 import os
 import csv
@@ -1564,6 +1605,41 @@ class OfficialCategoryView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class EnterpriseView(APIView):
+    permission_classes = [IsOfficialAuthenticated]
+
+    def get(self, request):
+        try:
+            enterprise = Enterprise.objects.get(id=request.data.get("enterprise_id"))
+            return Response({"enterprise": enterprise})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def put(self, request):
+        try:
+            enterprise = Enterprise.objects.get(id=request.data.get("enterprise_id"))
+            enterprise.organization_name = request.data.get("organization_name")
+            enterprise.organization_type = request.data.get("organization_type")
+            enterprise.address = request.data.get("address")
+            enterprise.phone = request.data.get("phone")
+            enterprise.email = request.data.get("email")
+            enterprise.website = request.data.get("website")
+            enterprise.logo_url = request.data.get("logo_url")
+            enterprise.cover_image_url = request.data.get("cover_image_url")
+            enterprise.save()
+            return Response({"message": "Enterprise updated"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        try:
+            enterprise = Enterprise.objects.get(id=request.data.get("enterprise_id"))
+            enterprise.delete()
+            return Response({"message": "Enterprise deleted"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class EnterpriseRegistrationView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -1604,7 +1680,12 @@ class EnterpriseMemberInviteView(APIView):
             enterprise=enterprise, user=request.user.user_data
         ).first()
 
-        if not requester_member or requester_member.role not in ["owner", "admin"]:
+        from authentication.permissions import ENTERPRISE_ROLE_PERMISSIONS
+        has_manage_permission = False
+        if requester_member and "team.manage" in ENTERPRISE_ROLE_PERMISSIONS.get(requester_member.role, []):
+            has_manage_permission = True
+
+        if not has_manage_permission and not (request.user.is_superuser or request.user.is_staff):
             return Response({"error": "Only enterprise owners or admins can invite members."}, status=status.HTTP_403_FORBIDDEN)
 
         try:
@@ -1634,8 +1715,11 @@ class BulkBookingRequestView(APIView):
     throttle_classes = [BulkBookingRateThrottle]
 
     def get(self, request):
+        if not request.user.has_permission("booking.bulk"):
+            return Response({"error": "You do not have permission to view bulk bookings."}, status=status.HTTP_403_FORBIDDEN)
+
         user_data = request.user.user_data
-        if user_data.role == "admin":
+        if request.user.is_superuser or request.user.is_staff:
             queryset = BookingModel.BulkBookingRequest.objects.all().order_by("-created_at")
         else:
             memberships = EnterpriseMember.objects.filter(user=user_data).select_related("enterprise")
@@ -1651,6 +1735,9 @@ class BulkBookingRequestView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        if not request.user.has_permission("booking.bulk"):
+            return Response({"error": "You do not have permission to request bulk bookings."}, status=status.HTTP_403_FORBIDDEN)
+
         user_data = request.user.user_data
         experience_id = request.data.get("experience")
         ticket_type_id = request.data.get("ticket_type")
@@ -1725,16 +1812,21 @@ class BulkBookingRequestView(APIView):
 
 
 class TicketValidationView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     throttle_classes = [TicketValidationRateThrottle]
 
     def post(self, request):
+        if not request.user.has_permission("booking.validate"):
+            return Response({"error": "You do not have permission to validate tickets."}, status=status.HTTP_403_FORBIDDEN)
+
         qr_code = request.data.get("qr_code")
         if not qr_code:
             return Response({"error": "qr_code is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            ticket = BookingModel.Ticket.objects.select_related("booking", "booking__experience").get(qr_code=qr_code)
+            ticket = BookingModel.Ticket.objects.select_related(
+                "booking_item", "booking_item__booking", "booking_item__booking__experience", "booking_item__ticket_type"
+            ).get(qr_code=qr_code)
         except BookingModel.Ticket.DoesNotExist:
             return Response({"error": "Invalid ticket QR code."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -1745,21 +1837,28 @@ class TicketValidationView(APIView):
                 "used_at": ticket.used_at
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        booking = ticket.booking_item.booking if ticket.booking_item else None
+        if not booking:
+            return Response({"error": "Booking reference missing for this ticket."}, status=status.HTTP_400_BAD_REQUEST)
+
         today = timezone.now().date()
-        if ticket.booking.booking_date != today:
+        if booking.booking_date != today:
             return Response({
                 "status": "invalid",
-                "message": f"Ticket is valid for date {ticket.booking.booking_date}, but today is {today}."
+                "message": f"Ticket is valid for date {booking.booking_date}, but today is {today}."
             }, status=status.HTTP_400_BAD_REQUEST)
 
         ticket.mark_as_used()
 
+        ticket_type_name = ticket.booking_item.ticket_type.name if (ticket.booking_item and ticket.booking_item.ticket_type) else "General"
+        visitor_name = booking.user.user.get_full_name() or booking.user.user.username if (booking.user and booking.user.user) else "Guest"
+
         return Response({
             "status": "valid",
             "message": "Ticket validated successfully.",
-            "ticket_type": ticket.ticket_type,
-            "experience": ticket.booking.experience.name,
-            "visitor_name": ticket.booking.user.user.get_full_name() or ticket.booking.user.user.username,
+            "ticket_type": ticket_type_name,
+            "experience": booking.experience.name if booking.experience else "",
+            "visitor_name": visitor_name,
         }, status=status.HTTP_200_OK)
 
 

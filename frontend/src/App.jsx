@@ -7,8 +7,16 @@ import LoginSignup from "./components/LoginSignup";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import Chatbot from "./components/Chatbot";
-import EmployeeProtectedRoute from "./Dashboard/EmployeeProtectedRoute";
-import Dashboard from "./Dashboard/Dashboard";
+
+import ProviderLayout from "./pages/provider/ProviderLayout";
+import ProviderDashboard from "./pages/provider/ProviderDashboard";
+import ProviderBookings from "./pages/provider/ProviderBookings";
+import ProviderAnalytics from "./pages/provider/ProviderAnalytics";
+import ProviderTicketValidation from "./pages/provider/ProviderTicketValidation";
+
+import EnterpriseLayout from "./pages/enterprise/EnterpriseLayout";
+import EnterpriseDashboard from "./pages/enterprise/EnterpriseDashboard";
+import EnterpriseBulkBooking from "./pages/enterprise/EnterpriseBulkBooking";
 
 
 
@@ -40,8 +48,7 @@ import ItineraryIndex from "./pages/ItineraryIndex";
 import UserDashboard from "./pages/UserDashboard";
 
 import BookingPage from "./pages/BookingPage";
-import { AttractionDetailsTemp } from "./pages/AttractionDetailsTemp";
-import { BookingTemp } from "./pages/BookingTemp";
+
 import SuccessPage from "./pages/SuccessPage";
 import FailedPage from "./pages/FailedPage";
 import CheckoutPage from "./pages/CheckoutPage";
@@ -68,8 +75,6 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/attraction/:id" element={<ExperienceDetails />} />
           <Route path="/attraction/:id/booking" element={<BookingPage />} />
-          <Route path="/attraction-temp/:slug" element={<AttractionDetailsTemp />} />
-          <Route path="/attraction-temp/:slug/booking" element={<BookingTemp />} />
           {/* <Route path="/unesco-sites" element={<UnescoSites />} /> */}
           {/* <Route path="/top-places" element={<TopPlaces />} /> */}
           {/* <Route path="/explore-near-me" element={<ExploreNearMe />} /> */}
@@ -90,8 +95,21 @@ function AppContent() {
           <Route path="/itineraries" element={<ItineraryIndex />} />
 
           <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
-          
-         <Route path="/dashboard1" element={<EmployeeProtectedRoute><Dashboard /> </EmployeeProtectedRoute> }/>
+
+          {/* Provider Routes */}
+          <Route path="/provider" element={<ProtectedRoute requires={["analytics.view"]}><ProviderLayout /></ProtectedRoute>}>
+            <Route index element={<ProviderDashboard />} />
+            <Route path="bookings" element={<ProviderBookings />} />
+            <Route path="analytics" element={<ProviderAnalytics />} />
+            <Route path="validate" element={<ProtectedRoute requires={["booking.validate"]}><ProviderTicketValidation /></ProtectedRoute>} />
+          </Route>
+
+          {/* Enterprise Routes */}
+          <Route path="/enterprise" element={<ProtectedRoute requires={["booking.bulk"]}><EnterpriseLayout /></ProtectedRoute>}>
+            <Route index element={<EnterpriseDashboard />} />
+            <Route path="bulk-booking" element={<EnterpriseBulkBooking />} />
+          </Route>
+
           <Route path="/booking/:id" element={<BookingPage />} />
           <Route path="/payment/:id" element={<CheckoutPage />} />
           <Route path="/payments/success" element={<SuccessPage />} />

@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -14,7 +14,7 @@ import AuthContext from "../context/AuthContext";
 import ModalContext from "../context/ModalContext";
 
 export default function LoginSignup() {
-  const { closeLoginModal } = useContext(ModalContext);
+  const { closeLoginModal, redirectUrl } = useContext(ModalContext);
   const [isLogin, setIsLogin] = useState(true);
   const [showPhoneLogin, setShowPhoneLogin] = useState(false);
 
@@ -37,7 +37,16 @@ export default function LoginSignup() {
 
   const { loginWithFirebaseToken } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const recaptchaWrapperRef = useRef(null);
+
+  const handleLoginSuccess = () => {
+    const target = redirectUrl || location.state?.from;
+    closeLoginModal();
+    if (target) {
+      navigate(target, { replace: true });
+    }
+  };
 
   // Handle Recaptcha cleanup
   useEffect(() => {
@@ -97,8 +106,7 @@ export default function LoginSignup() {
       // Force token refresh to ensure it's valid for backend
       const idToken = await result.user.getIdToken(true);
       await loginWithFirebaseToken(idToken);
-      closeLoginModal();
-      navigate("/");
+      handleLoginSuccess();
     } catch (err) {
       const errorMessage =
         err.response?.data?.detail ||
@@ -143,8 +151,7 @@ export default function LoginSignup() {
       // Force token refresh to ensure it's valid for backend
       const idToken = await result.user.getIdToken(true);
       await loginWithFirebaseToken(idToken);
-      closeLoginModal();
-      navigate("/");
+      handleLoginSuccess();
     } catch (err) {
       const errorMessage =
         err.response?.data?.detail ||
@@ -165,8 +172,7 @@ export default function LoginSignup() {
       const idToken = await result.user.getIdToken(true);
 
       await loginWithFirebaseToken(idToken);
-      closeLoginModal();
-      navigate("/");
+      handleLoginSuccess();
     } catch (err) {
       const errorMessage =
         err.response?.data?.detail ||
