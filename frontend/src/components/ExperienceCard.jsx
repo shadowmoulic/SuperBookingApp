@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
-const FALLBACK_EXP_IMAGE = "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&q=80&w=800";
+const FALLBACK_IMAGE_EXP = "https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&q=80&w=800";
 
 function ExperienceCard({ experience }) {
   const slug = experience.name ? experience.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : experience.public_id;
@@ -30,10 +30,10 @@ function ExperienceCard({ experience }) {
         {/* Image Carousel Container */}
         <div className="relative w-full h-56 flex-shrink-0 overflow-hidden">
           <img
-            src={images[currentImageIndex] || experience.image_url || FALLBACK_EXP_IMAGE}
+            src={images[currentImageIndex] || experience.image_url || FALLBACK_IMAGE_EXP}
             alt={experience.name}
             className="w-full h-full object-cover transition-opacity duration-300"
-            onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
+            onError={(e) => { e.target.src = FALLBACK_IMAGE_EXP; }}
           />
 
           {/* Arrows — only if multiple images */}

@@ -147,24 +147,12 @@ class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        user = request.user
-        mobile = ""
-        try:
-            mobile = user.user_data.mobile
-        except Exception:
-            pass
-        return Response(
-            {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "mobile": mobile,
-            }
-        )
+        from authentication.permissions import get_me_response_data
+        data = get_me_response_data(request.user)
+        return Response(data)
 
     def patch(self, request):
+        from authentication.permissions import get_me_response_data
         user = request.user
         first_name = request.data.get("first_name")
         last_name = request.data.get("last_name")
@@ -181,16 +169,8 @@ class MeView(APIView):
             user_data.mobile = mobile
             user_data.save()
 
-        return Response(
-            {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "mobile": user.user_data.mobile if hasattr(user, "user_data") else "",
-            }
-        )
+        data = get_me_response_data(user)
+        return Response(data)
 
 
 class RegisterView(APIView):
