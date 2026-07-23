@@ -137,3 +137,30 @@ class EnterpriseMember(models.Model):
     def __str__(self):
         return f"{self.user} - {self.role} in {self.enterprise.organization_name}"
 
+
+class ProviderMember(models.Model):
+    ROLE_CHOICES = [
+        ("owner", "Owner"),
+        ("admin", "Admin"),
+        ("manager", "Manager"),
+        ("staff", "Staff"),
+        ("viewer", "Viewer"),
+    ]
+
+    provider = models.ForeignKey(
+        "content.Provider", on_delete=models.CASCADE, related_name="members"
+    )
+    user = models.ForeignKey(
+        User_Data, on_delete=models.CASCADE, related_name="provider_memberships"
+    )
+    role = models.CharField(max_length=50, choices=ROLE_CHOICES, default="staff")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "provider_members"
+        unique_together = [("provider", "user")]
+
+    def __str__(self):
+        return f"{self.user} - {self.role} in {self.provider.name}"
+

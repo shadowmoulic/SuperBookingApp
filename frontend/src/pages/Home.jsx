@@ -223,7 +223,7 @@ function SmallExperienceCard({ experience }) {
             src={coverImage}
             alt={experience.name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            onError={(e) => { e.target.src = FALLBACK_EXP_IMAGE; }}
+            onError={(e) => { e.target.src = FALLBACK_IMAGE_EXP; }}
           />
           {/* Absolute Price Tag */}
           {/* <div className="absolute top-4 right-4 bg-surface-container-lowest/95 backdrop-blur-xs px-3 py-1.5 rounded-lg shadow-sm border border-outline-variant/30">
@@ -492,7 +492,7 @@ function Home() {
                 src={slide.image}
                 alt={slide.title || "Hero Slide Banner"}
                 className="w-full h-full object-cover"
-                fetchpriority={i === 0 ? "high" : "low"}
+                fetchPriority={i === 0 ? "high" : "low"}
                 loading="eager"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-slate-900/20" />
