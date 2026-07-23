@@ -117,6 +117,10 @@ class Migration(migrations.Migration):
             field=models.DecimalField(decimal_places=2, default=1, help_text='Price for this ticket type including all charges', max_digits=10, validators=[django.core.validators.MinValueValidator(0.0)]),
             preserve_default=False,
         ),
+        migrations.RemoveField(
+            model_name='operatinghours',
+            name='id',
+        ),
         migrations.AlterField(
             model_name='operatinghours',
             name='experience',
@@ -134,10 +138,6 @@ class Migration(migrations.Migration):
         migrations.RemoveField(
             model_name='operatinghours',
             name='day_of_week',
-        ),
-        migrations.RemoveField(
-            model_name='operatinghours',
-            name='id',
         ),
         migrations.RemoveField(
             model_name='operatinghours',
