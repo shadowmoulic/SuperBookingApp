@@ -33,6 +33,7 @@ urlpatterns = [
     path("reviews/delete", views.DeleteReviewView.as_view(), name="deletereview"),
 
     # Enterprise & Bulk Booking & Validation routes
+    path("enterprises/", views.EnterpriseView.as_view(), name="enterprise_view"),
     path("enterprises/register/", views.EnterpriseRegistrationView.as_view(), name="enterprise_register"),
     path("enterprises/members/", views.EnterpriseMemberInviteView.as_view(), name="enterprise_members"),
     path("bulk-bookings/", views.BulkBookingRequestView.as_view(), name="bulk_bookings"),

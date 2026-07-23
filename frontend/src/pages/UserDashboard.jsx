@@ -110,7 +110,6 @@ const UserDashboard = () => {
         const bookingsRes = await api.get("/api/bookings/");
         const data = bookingsRes.data || { bookings: [], tickets: [] };
         setBookings(data);
-
         // Derive dynamic statistics from actual bookings and tickets
         const confirmedList = Array.isArray(data.tickets) ? data.tickets : [];
         const pendingList = Array.isArray(data.bookings) ? data.bookings : [];
@@ -401,7 +400,8 @@ const UserDashboard = () => {
                       <h3 className="text-lg font-bold text-on-surface mb-4 border-b border-outline-variant/20 pb-2">Active Digital Passes</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {confirmedTickets.map((ticket) => {
-                          const ref = ticket?.booking_reference || "-";
+                          const bookingRef = ticket?.booking_reference || "-";
+                          const qrCode = ticket?.qr_code || bookingRef;
                           const name = ticket?.experience_name || "Experience";
                           const experienceId = ticket?.experience_id || ticket?.experience;
                           const images = String(ticket?.experience_image || "")
@@ -409,6 +409,10 @@ const UserDashboard = () => {
                             .map((url) => url.trim())
                             .filter(Boolean);
                           const coverImage = images[0] || getExperienceImage(name);
+
+                          const categoryText = [ticket?.age_category, ticket?.nationality_category]
+                            .filter(Boolean)
+                            .join(" • ");
 
                           return (
                             <article
@@ -427,7 +431,7 @@ const UserDashboard = () => {
                                 />
                                 {/* Status badge */}
                                 <div className="absolute top-3 left-3">
-                                  {getStatusBadge("confirmed")}
+                                  {getStatusBadge(ticket?.status || "confirmed")}
                                 </div>
                               </Link>
 
@@ -442,27 +446,39 @@ const UserDashboard = () => {
                                   </h3>
                                   {/* Reference */}
                                   <p className="text-[10px] text-on-surface-variant/60 font-mono tracking-wider mb-4">
-                                    Ref: {ref}
+                                    Booking Ref: {bookingRef}
                                   </p>
 
-                                  {/* Details Row */}
-                                  <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs text-on-surface-variant mb-6">
+                                  {/* Details Grid */}
+                                  <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs text-on-surface-variant mb-4">
                                     <div>
                                       <span className="text-[9px] text-on-surface-variant/60 block uppercase tracking-wider mb-0.5">Date</span>
                                       <span className="font-semibold text-on-surface">{formatDate(ticket?.booking_date)}</span>
                                     </div>
                                     <div>
-                                      <span className="text-[9px] text-on-surface-variant/60 block uppercase tracking-wider mb-0.5">Slot</span>
-                                      <span className="font-semibold text-on-surface">{ticket?.slot_time || "General"}</span>
+                                      <span className="text-[9px] text-on-surface-variant/60 block uppercase tracking-wider mb-0.5">Time Slot</span>
+                                      <span className="font-semibold text-on-surface">{ticket?.time_slot || ticket?.slot_time || "General"}</span>
                                     </div>
                                     <div>
-                                      <span className="text-[9px] text-on-surface-variant/60 block uppercase tracking-wider mb-0.5">Tickets</span>
-                                      <span className="font-semibold text-on-surface">{ticket?.total_tickets ?? "1"} Ticket</span>
+                                      <span className="text-[9px] text-on-surface-variant/60 block uppercase tracking-wider mb-0.5">Ticket Type</span>
+                                      <span className="font-semibold text-on-surface truncate block">
+                                        {ticket?.ticket_type_name || "General"}
+                                      </span>
                                     </div>
                                     <div>
-                                      <span className="text-[9px] text-on-surface-variant/60 block uppercase tracking-wider mb-0.5">Paid</span>
-                                      <span className="font-semibold text-on-surface">{formatCurrency(ticket?.total_amount)}</span>
+                                      <span className="text-[9px] text-on-surface-variant/60 block uppercase tracking-wider mb-0.5">Price</span>
+                                      <span className="font-semibold text-on-surface">{formatCurrency(ticket?.price || ticket?.total_amount)}</span>
                                     </div>
+                                  </div>
+
+                                  {/* Category & Quantity Badge */}
+                                  <div className="mb-4 pt-2.5 border-t border-outline-variant/20 flex items-center justify-between text-xs">
+                                    <span className="text-on-surface-variant text-[11px] font-medium">
+                                      Category: <strong className="text-on-surface">{categoryText || "Standard"}</strong>
+                                    </span>
+                                    <span className="text-[11px] font-semibold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
+                                      Qty: {ticket?.quantity || ticket?.total_tickets || 1}
+                                    </span>
                                   </div>
                                 </div>
 
@@ -502,6 +518,25 @@ const UserDashboard = () => {
                                 <div>Tickets: <span className="font-semibold text-on-surface">{booking.total_tickets}</span></div>
                                 <div>Amount: <span className="font-semibold text-on-surface">₹{booking.total_amount}</span></div>
                               </div>
+
+                              {/* Items Breakdown */}
+                              {booking?.items && booking.items.length > 0 && (
+                                <div className="mt-3 pt-3 border-t border-outline-variant/20 space-y-1.5 text-left">
+                                  <span className="text-[9px] font-bold text-on-surface-variant/70 uppercase tracking-wider block">
+                                    Ticket Items ({booking.items.length})
+                                  </span>
+                                  {booking.items.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-center text-xs">
+                                      <span className="font-medium text-on-surface">
+                                        {item.quantity} × {item.ticket_type_name || "Ticket"} {[item.age_category, item.nationality_category].filter(Boolean).length > 0 ? `(${[item.age_category, item.nationality_category].filter(Boolean).join(" • ")})` : ""}
+                                      </span>
+                                      <span className="font-semibold text-on-surface-variant">
+                                        ₹{item.subtotal || (item.quantity * item.unit_price)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                             <button
                               onClick={() => navigate(`/payment/${booking.reference}`)}
@@ -611,10 +646,10 @@ const UserDashboard = () => {
             </button>
 
             {/* Header */}
-            <div className="text-center w-full px-4 mb-4">
+            <div className="text-center w-full px-4 mb-3">
               <span className="text-[9px] font-bold text-primary uppercase tracking-widest block mb-1">Monument Digital Pass</span>
               <h3 className="font-bold text-lg text-on-surface truncate">
-                {selectedTicket?.experience_name || "Experience"}
+                {selectedTicket?.experience_name || "Experience Pass"}
               </h3>
               <p className="text-[10px] text-on-surface-variant/60 font-mono tracking-wider uppercase mt-0.5">
                 Ref: {selectedTicket?.booking_reference || "-"}
@@ -622,7 +657,7 @@ const UserDashboard = () => {
             </div>
 
             {/* QR Image Visualizer */}
-            <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 my-4 flex items-center justify-center">
+            <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 my-3 flex flex-col items-center justify-center w-full">
               {selectedTicket?.qr_image ? (
                 <img
                   src={selectedTicket.qr_image}
@@ -635,12 +670,38 @@ const UserDashboard = () => {
                   <p className="text-xs text-error font-semibold leading-relaxed">QR image not found</p>
                 </div>
               )}
+              {selectedTicket?.qr_code && (
+                <span className="text-[10px] font-mono text-on-surface-variant/70 mt-2 tracking-widest">
+                  {selectedTicket.qr_code}
+                </span>
+              )}
             </div>
 
-            {/* Instructions */}
-            <div className="text-center text-xs text-on-surface-variant leading-relaxed px-4 mb-6">
-              <p className="font-semibold text-on-surface mb-1">Gateway instructions</p>
-              Present this code to the scanner at the monument entrance gate. Valid for {selectedTicket?.total_tickets ?? 1} visitor(s).
+            {/* Pass Details Card */}
+            <div className="text-xs text-on-surface-variant px-1 mb-6 w-full space-y-2">
+              <div className="bg-surface-container/60 border border-outline-variant/30 rounded-xl p-3.5 space-y-1.5">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-semibold text-on-surface">
+                    {selectedTicket?.ticket_type_name || "Entry Pass"}
+                  </span>
+                  <span className="font-bold text-primary">
+                    {formatCurrency(selectedTicket?.price || selectedTicket?.total_amount)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-[11px] text-on-surface-variant/80 pt-1 border-t border-outline-variant/20">
+                  <span>Category: <strong>{[selectedTicket?.age_category, selectedTicket?.nationality_category].filter(Boolean).join(" • ") || "Standard"}</strong></span>
+                  <span>Qty: <strong>{selectedTicket?.quantity || 1}</strong></span>
+                </div>
+                {selectedTicket?.time_slot && (
+                  <div className="text-[10px] text-on-surface-variant/70 pt-0.5">
+                    Time Slot: {selectedTicket.time_slot}
+                  </div>
+                )}
+              </div>
+
+              <p className="text-[11px] text-center text-on-surface-variant/70 leading-relaxed px-2">
+                Present this QR code to the scanner at the monument entrance gate.
+              </p>
             </div>
 
             {/* Modal CTA actions */}
