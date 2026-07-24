@@ -1,6 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
-
+// booking 
 function formatCurrency(amount) {
   const value = Number(amount);
   if (Number.isNaN(value)) return amount || "₹0.00";

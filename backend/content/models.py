@@ -1,3 +1,4 @@
+from random import choices
 import secrets
 import string
 from django.utils import timezone
@@ -321,6 +322,21 @@ class TicketType(models.Model):
 
 
 class PricingRule(models.Model):
+    NATIONALITY_CHOICES = [
+        ("Any", "Any"),
+        ("Indian", "Indian"),
+        ("SAARC", "SAARC"),
+        ("BIMSTEC", "BIMSTEC"),
+        ("Others", "Others"),
+    ]
+    AGE_CHOICES = [
+        ("Any", "Any"),
+        ("Adult", "Adult"),
+        ("Child", "Child"),
+        ("Infant", "Infant"),
+        ("Senior", "Senior"),
+        ("Student", "Student"),
+    ]
     ticket_type = models.ForeignKey(
         TicketType,
         on_delete=models.CASCADE,
@@ -330,12 +346,24 @@ class PricingRule(models.Model):
         blank=True,
         help_text="Ticket type this pricing applies to",
     )
-    base_price = models.DecimalField(
+    price = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         null=False,
         validators=[MinValueValidator(0.00)],
-        help_text="Base price for this ticket type",
+        help_text="Price for this ticket type including all charges",
+    )
+    nationality_category = models.CharField(
+        max_length=20,
+        choices=NATIONALITY_CHOICES,
+        default="Any",
+        help_text="Nationality category for this ticket type",
+    )
+    age_category = models.CharField(
+        max_length=20,
+        choices=AGE_CHOICES,
+        default="Any",
+        help_text="Age category for this ticket type",
     )
     seasonal_multiplier = models.DecimalField(
         max_digits=5,
@@ -355,7 +383,7 @@ class PricingRule(models.Model):
 
     def get_final_price(self):
         """Calculate final price after applying seasonal multiplier."""
-        return self.base_price * self.seasonal_multiplier
+        return self.price * self.seasonal_multiplier
 
     def is_active(self):
         """Check if pricing rule is currently active."""
@@ -374,7 +402,7 @@ class PricingRule(models.Model):
     def __str__(self):
         ticket_type_name = self.ticket_type.name if self.ticket_type else "Unknown"
         experience_name = self.ticket_type.experience.name if self.ticket_type and self.ticket_type.experience else "Unknown"
-        return f"{experience_name} - {ticket_type_name} (₹{self.base_price})"
+        return f"{experience_name} - {ticket_type_name} (₹{self.price})"
 
     class Meta:
         db_table = "pricing_rules"
@@ -390,92 +418,107 @@ class PricingRule(models.Model):
 
 
 class OperatingHours(models.Model):
-    DAY_OF_WEEK_CHOICES = [
-        ("Monday", "Monday"),
-        ("Tuesday", "Tuesday"),
-        ("Wednesday", "Wednesday"),
-        ("Thursday", "Thursday"),
-        ("Friday", "Friday"),
-        ("Saturday", "Saturday"),
-        ("Sunday", "Sunday"),
-    ]
-
-    experience = models.ForeignKey(
+    experience = models.OneToOneField(
         Experience,
         on_delete=models.CASCADE,
         related_name="operating_hours",
-        db_index=True,
-        help_text="Monument/Experience these hours apply to",
+        primary_key=True,
+        help_text="Monument/Experience these general hours apply to",
     )
-    day_of_week = models.CharField(
-        max_length=10,
-        choices=DAY_OF_WEEK_CHOICES,
-        null=False,
-        help_text="Day of the week",
+    opening_time = models.TimeField(
+        blank=True, null=True, help_text="General daily opening time"
     )
-    opens_at = models.TimeField(
-        blank=True, null=True, help_text="Opening time (NULL if closed)"
+    closing_time = models.TimeField(
+        blank=True, null=True, help_text="General daily closing time"
     )
-    closes_at = models.TimeField(
-        blank=True, null=True, help_text="Closing time (NULL if closed)"
-    )
-    is_closed = models.BooleanField(
-        default=False, help_text="True if closed on this day"
-    )
-    special_closure_reason = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-        help_text="Reason for closure (e.g., Maintenance, Holiday)",
-    )
+    monday = models.BooleanField(default=True, help_text="Open on Monday")
+    tuesday = models.BooleanField(default=True, help_text="Open on Tuesday")
+    wednesday = models.BooleanField(default=True, help_text="Open on Wednesday")
+    thursday = models.BooleanField(default=True, help_text="Open on Thursday")
+    friday = models.BooleanField(default=True, help_text="Open on Friday")
+    saturday = models.BooleanField(default=True, help_text="Open on Saturday")
+    sunday = models.BooleanField(default=True, help_text="Open on Sunday")
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
-    def is_open_now(self):
-        """Check if experience is open at current time."""
-        now = timezone.now()
-        current_day = now.strftime("%A")  # Monday, Tuesday, etc.
-        current_time = now.time()
+    def is_open_on_date(self, target_date):
+        """Check if experience is generally open on a specific date (0=Monday, ..., 6=Sunday)."""
+        weekday = target_date.weekday()
+        days_map = {
+            0: self.monday,
+            1: self.tuesday,
+            2: self.wednesday,
+            3: self.thursday,
+            4: self.friday,
+            5: self.saturday,
+            6: self.sunday,
+        }
+        return days_map.get(weekday, False)
 
-        # Check if it's the correct day
-        if self.day_of_week != current_day:
-            return False
-
-        # Check if closed
-        if self.is_closed:
-            return False
-
-        # Check if time is within operating hours
-        if self.opens_at and self.closes_at:
-            return self.opens_at <= current_time <= self.closes_at
-
-        return False
+    def is_open_at_time(self, target_time):
+        """Check if target_time falls within opening_time and closing_time."""
+        if self.opening_time and self.closing_time:
+            return self.opening_time <= target_time <= self.closing_time
+        return True
 
     def get_hours_display(self):
         """Get human-readable hours."""
-        if self.is_closed:
-            reason = (
-                f" - {self.special_closure_reason}"
-                if self.special_closure_reason
-                else ""
-            )
-            return f"Closed{reason}"
-
-        if self.opens_at and self.closes_at:
-            return f"{self.opens_at.strftime('%H:%M')} - {self.closes_at.strftime('%H:%M')}"
-
+        if self.opening_time and self.closing_time:
+            return f"{self.opening_time.strftime('%H:%M')} - {self.closing_time.strftime('%H:%M')}"
         return "Hours not set"
 
     def __str__(self):
-        return (
-            f"{self.experience.name} - {self.day_of_week}: {self.get_hours_display()}"
-        )
+        return f"{self.experience.name} Operating Hours ({self.get_hours_display()})"
 
     class Meta:
         db_table = "operating_hours"
-        ordering = ["day_of_week"]
-        unique_together = [("experience", "day_of_week")]
+
+
+class OperatingException(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    experience = models.ForeignKey(
+        Experience,
+        on_delete=models.CASCADE,
+        related_name="operating_exceptions",
+        db_index=True,
+        help_text="Experience this exception applies to",
+    )
+    date = models.DateField(
+        db_index=True, help_text="Specific date for operating exception"
+    )
+    is_closed = models.BooleanField(
+        default=True, help_text="True if closed on this date"
+    )
+    opening_time = models.TimeField(
+        blank=True, null=True, help_text="Overridden opening time (NULL if closed)"
+    )
+    closing_time = models.TimeField(
+        blank=True, null=True, help_text="Overridden closing time (NULL if closed)"
+    )
+    reason = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Reason for closure/change (e.g., Maintenance, Republic Day)",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "operating_exceptions"
+        unique_together = [("experience", "date")]
+        ordering = ["date"]
         indexes = [
-            models.Index(fields=["experience"]),
+            models.Index(fields=["experience", "date"]),
         ]
+
+    def __str__(self):
+        status = (
+            "Closed"
+            if self.is_closed
+            else f"Open ({self.opening_time}-{self.closing_time})"
+        )
+        return f"{self.experience.name} Exception on {self.date}: {status}"
 
 
 class Trip(models.Model):

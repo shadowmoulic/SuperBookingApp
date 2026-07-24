@@ -40,6 +40,17 @@ const SuccessPage = lazy(() => import("./pages/SuccessPage"));
 const FailedPage = lazy(() => import("./pages/FailedPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 
+// Provider & Enterprise pages
+const ProviderLayout = lazy(() => import("./pages/provider/ProviderLayout"));
+const ProviderDashboard = lazy(() => import("./pages/provider/ProviderDashboard"));
+const ProviderBookings = lazy(() => import("./pages/provider/ProviderBookings"));
+const ProviderAnalytics = lazy(() => import("./pages/provider/ProviderAnalytics"));
+const ProviderTicketValidation = lazy(() => import("./pages/provider/ProviderTicketValidation"));
+
+const EnterpriseLayout = lazy(() => import("./pages/enterprise/EnterpriseLayout"));
+const EnterpriseDashboard = lazy(() => import("./pages/enterprise/EnterpriseDashboard"));
+const EnterpriseBulkBooking = lazy(() => import("./pages/enterprise/EnterpriseBulkBooking"));
+
 function AppContent() {
   const { isLoginModalOpen } = useContext(ModalContext);
 
@@ -79,6 +90,20 @@ function AppContent() {
                 </ProtectedRoute>
               }
             />
+
+            {/* Provider Routes */}
+            <Route path="/provider" element={<ProtectedRoute requires={["analytics.view"]}><ProviderLayout /></ProtectedRoute>}>
+              <Route index element={<ProviderDashboard />} />
+              <Route path="bookings" element={<ProviderBookings />} />
+              <Route path="analytics" element={<ProviderAnalytics />} />
+              <Route path="validate" element={<ProtectedRoute requires={["booking.validate"]}><ProviderTicketValidation /></ProtectedRoute>} />
+            </Route>
+
+            {/* Enterprise Routes */}
+            <Route path="/enterprise" element={<ProtectedRoute requires={["booking.bulk"]}><EnterpriseLayout /></ProtectedRoute>}>
+              <Route index element={<EnterpriseDashboard />} />
+              <Route path="bulk-booking" element={<EnterpriseBulkBooking />} />
+            </Route>
 
             <Route path="/booking/:id" element={<BookingPage />} />
             <Route path="/payment/:id" element={<CheckoutPage />} />
