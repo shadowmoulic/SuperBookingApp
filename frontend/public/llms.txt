@@ -1,13 +1,17 @@
-Zeque is a premier booking and travel platform.
+# ZeQue - Heritage & Attraction Ticket Booking Platform
 
-Site Structure:
-- Home: https://zeque.in/
-- States: https://zeque.in/states
-- Cities: https://zeque.in/cities
-- Categories: https://zeque.in/categories
-- Attractions: https://zeque.in/attractions
+> ZeQue is a digital platform for discovering, exploring, and booking instant entry tickets for museums, historical monuments, forts, and cultural experiences across India.
 
-Current Data Statistics:
-- States available: 0
-- Cities available: 8
-- Attractions available: 32
+## Key Resources & Navigation
+
+- [Home Page](https://zeque.in/): Primary landing page with search and featured heritage sites.
+- [States Index](https://zeque.in/states): Explore experiences and monuments grouped by Indian states.
+- [Cities Index](https://zeque.in/cities): Browse attractions across major heritage cities.
+- [Categories Index](https://zeque.in/categories): Filter attractions by type (Museums, Forts, Palaces, Temples).
+- [XML Sitemap](https://zeque.in/sitemap.xml): Machine-readable catalog of all indexed attraction URLs.
+
+## Platform Capabilities
+
+- Instant online ticket booking and digital pass generation.
+- Slot selection and queue-less entry management.
+- Dynamic location-aware recommendations for local attractions.

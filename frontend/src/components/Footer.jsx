@@ -258,13 +258,13 @@ export default function Footer() {
       </div>
 
       {/* Decorative Elements */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.03]">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
         <div
-          className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full mix-blend-multiply filter blur-3xl"
+          className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full filter blur-3xl"
           style={{ animation: "float 6s ease-in-out infinite" }}
         ></div>
         <div
-          className="absolute bottom-0 left-0 w-96 h-96 bg-tertiary-container rounded-full mix-blend-multiply filter blur-3xl"
+          className="absolute bottom-0 left-0 w-96 h-96 bg-tertiary-container rounded-full filter blur-3xl"
           style={{ animation: "float 8s ease-in-out infinite reverse" }}
         ></div>
       </div>

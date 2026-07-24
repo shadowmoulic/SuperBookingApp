@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={contextData}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

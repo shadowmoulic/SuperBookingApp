@@ -17,7 +17,7 @@ export const LocationProvider = ({ children }) => {
     sanitizeInput(localStorage.getItem("selectedLocation") || "Kolkata")
   );
   const [coords, setCoords] = useState(null);
-  const [loadingLocation, setLoadingLocation] = useState(true);
+  const [loadingLocation, setLoadingLocation] = useState(false);
 
   const loadCitiesList = async (userCoords) => {
     try {
@@ -54,9 +54,9 @@ export const LocationProvider = ({ children }) => {
   };
 
   useEffect(() => {
-
     const initializeLocation = async () => {
-      setLoadingLocation(true);
+      // If we already have a cached location or default, unblock immediately
+      setLoadingLocation(false);
 
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -67,16 +67,17 @@ export const LocationProvider = ({ children }) => {
             };
             setCoords(locCoords);
             await loadCitiesList(locCoords);
-            setLoadingLocation(false);
           },
           async (err) => {
             console.warn("Geolocation failed or was denied:", err);
-            // Fallback: Fetch locations without coordinates
             const allCities = await loadCitiesList(null);
 
-            // Fetch user location via IP as backup
+            // Fetch user location via IP as fast backup with 1.5s timeout
             try {
-              const ipRes = await fetch("https://ipapi.co/json/");
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 1500);
+              const ipRes = await fetch("https://ipapi.co/json/", { signal: controller.signal });
+              clearTimeout(timeoutId);
               const ipData = await ipRes.json();
               const userCity = ipData.city;
 
@@ -91,15 +92,13 @@ export const LocationProvider = ({ children }) => {
                 }
               }
             } catch (ipErr) {
-              console.warn("IP Geolocation fallback failed:", ipErr);
+              console.warn("IP Geolocation fallback timed out or failed:", ipErr);
             }
-            setLoadingLocation(false);
           },
-          { timeout: 5000 }
+          { timeout: 3000 }
         );
       } else {
         await loadCitiesList(null);
-        setLoadingLocation(false);
       }
     };
 

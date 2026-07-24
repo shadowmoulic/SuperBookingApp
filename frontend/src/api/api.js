@@ -4,6 +4,7 @@ import { getApiUrl } from "../config";
 const api = axios.create({
   baseURL: getApiUrl(),
   withCredentials: true,
+  timeout: 15000,
 });
 
 const cacheStore = new Map();
