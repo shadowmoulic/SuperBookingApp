@@ -11,7 +11,7 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom') || id.includes('scheduler')) {
               return 'vendor-react';
             }
             if (id.includes('firebase')) {
@@ -20,7 +20,7 @@ export default defineConfig({
             if (id.includes('lucide-react')) {
               return 'vendor-icons';
             }
-            return 'vendor';
+            return 'vendor-libs';
           }
         }
       }

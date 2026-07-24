@@ -24,7 +24,11 @@ from booking.throttles import (
 from booking.services import BookingLimitService, BookingVerificationService, CaptchaService
 from django.conf import settings
 from django.shortcuts import render
+import logging
 import datetime
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
 from django.utils import timezone
 from django.utils.text import slugify
 import json
@@ -74,6 +78,18 @@ class CategoryView(generics.RetrieveAPIView):
             norm_lookup = slugify(lookup_val.lower().rstrip('s'))
             if norm_cat == norm_lookup:
                 return category
+
+        # Fallback auto-resolution: get or create category by title-cased slug name
+        clean_name = lookup_val.replace("-", " ").strip().title()
+        if clean_name:
+            category, _ = ContentModel.Category.objects.get_or_create(
+                name=clean_name,
+                defaults={
+                    "description": f"Discover top {clean_name} and heritage experiences with instant entry ticket booking on ZeQue.",
+                    "image_url": "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=1200&q=80"
+                }
+            )
+            return category
 
         raise Http404("Category not found")
 
@@ -156,12 +172,13 @@ class ExperienceListView(generics.ListAPIView):
             else:
                 normalized_cat_singular = normalized_cat
 
-            queryset = queryset.filter(
-                Q(category__name__iexact=category_param) |
-                Q(category__name__iexact=normalized_cat_singular) |
-                Q(category__name__icontains=normalized_cat_singular) |
-                Q(category__id=category_param if category_param.isdigit() else None)
-            )
+            cat_q = Q(category__name__iexact=category_param) | \
+                    Q(category__name__iexact=normalized_cat_singular) | \
+                    Q(category__name__icontains=normalized_cat_singular)
+            if category_param.isdigit():
+                cat_q |= Q(category__id=int(category_param))
+
+            queryset = queryset.filter(cat_q)
 
         if search_query:
             queryset = queryset.filter(

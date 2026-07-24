@@ -20,12 +20,6 @@ import Home from "./pages/Home";
 const ExperienceDetails = lazy(() =>
   import("./pages/ExperienceDetails").then((m) => ({ default: m.ExperienceDetails }))
 );
-const AttractionDetailsTemp = lazy(() =>
-  import("./pages/AttractionDetailsTemp").then((m) => ({ default: m.AttractionDetailsTemp }))
-);
-const BookingTemp = lazy(() =>
-  import("./pages/BookingTemp").then((m) => ({ default: m.BookingTemp }))
-);
 
 const CityIndex = lazy(() => import("./pages/CityIndex"));
 const CityDetails = lazy(() => import("./pages/CityDetails"));
@@ -66,8 +60,6 @@ function AppContent() {
             <Route path="/" element={<Home />} />
             <Route path="/attraction/:id" element={<ExperienceDetails />} />
             <Route path="/attraction/:id/booking" element={<BookingPage />} />
-            <Route path="/attraction-temp/:slug" element={<AttractionDetailsTemp />} />
-            <Route path="/attraction-temp/:slug/booking" element={<BookingTemp />} />
 
             <Route path="/states" element={<StateIndex />} />
             <Route path="/state" element={<StateIndex />} />
@@ -79,6 +71,11 @@ function AppContent() {
 
             <Route path="/categories" element={<CategoryIndex />} />
             <Route path="/category/:id" element={<CategoryDetails />} />
+            <Route path="/amusement-parks" element={<CategoryDetails />} />
+            <Route path="/museums" element={<CategoryDetails />} />
+            <Route path="/forts" element={<CategoryDetails />} />
+            <Route path="/temples" element={<CategoryDetails />} />
+            <Route path="/category-detail/:categorySlug" element={<CategoryDetails />} />
 
             <Route path="/itineraries" element={<ItineraryIndex />} />
 

@@ -6,7 +6,8 @@ import { DetailSkeleton } from "../components/SkeletonLoaders";
 import { ErrorScreen } from "../components/ErrorScreen";
 
 export default function CategoryDetails() {
-  const { id } = useParams();
+  const { id, categorySlug } = useParams();
+  const categoryId = id || categorySlug || "amusement-parks";
 
   // Newsletter state
   const [email, setEmail] = useState("");
@@ -33,12 +34,12 @@ export default function CategoryDetails() {
 
   useEffect(() => {
     loadCategory();
-  }, [id]);
+  }, [categoryId]);
 
   const loadCategory = () => {
     setLoading(true);
     api
-      .get(`/api/category/${id}`)
+      .get(`/api/category/${categoryId}`)
       .then((res) => {
         setCategoryData(res.data);
         setError(null);
